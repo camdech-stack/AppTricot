@@ -3,42 +3,30 @@
   align-items: center;
   justify-content: space-between;
   background: var(--color-bg);
-  padding: calc(var(--safe-top) + 12px) calc(var(--safe-right) + 16px) 12px calc(var(--safe-left) + 16px);
+  padding: calc(var(--safe-top) + var(--space-12)) calc(var(--safe-right) + var(--space-16)) var(--space-12)
+    calc(var(--safe-left) + var(--space-16));
   border-bottom: 1px solid var(--color-border);
 }
 
-@media (min-width: 860px) {
+@media (min-width: 768px) {
   .header {
-    padding-top: 20px;
+    padding-top: var(--space-20);
   }
-
-  .title {
-    display: none;
-  }
-}
-
-.title {
-  font-weight: 700;
-  font-size: 17px;
 }
 
 .settingsLink {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: var(--tap-min);
+  height: var(--tap-min);
   border-radius: 50%;
   color: var(--color-text);
   text-decoration: none;
   margin-left: auto;
-}
-
-.settingsLink svg {
-  width: 22px;
-  height: 22px;
+  transition: background-color var(--transition-fast);
 }
 
 .settingsLink:hover {
-  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  background: var(--color-primary-soft);
 }
