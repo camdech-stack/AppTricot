@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom'
+import { CheckCircle2 } from 'lucide-react'
 import styles from './ProjectCard.module.css'
 import patterns from '../../styles/patterns.module.css'
-import { Pill, StripedProgressBar } from '../ui'
+import { Pill } from '../ui'
 import { computeProjectProgress, type ProjectRecord } from '../../data'
 import { useCounters } from '../../hooks/useCounters'
 import { useCoverImageUrl } from '../../hooks/useCoverImageUrl'
-import { useRelativeTime } from '../../hooks/useRelativeTime'
+import { formatDateFr } from '../../utils/formatDate'
 import { STATUS_LABELS, STATUS_PILL_COLORS } from './statusMeta'
+import { projectColorVar } from './colorMeta'
 
 const STRIPE_CLASS_BY_COLOR: Record<ProjectRecord['colorKey'], string | undefined> = {
   prune: patterns.stripesProjectPrune,
@@ -24,28 +26,40 @@ interface ProjectCardProps {
 export function ProjectCard({ project }: ProjectCardProps) {
   const coverUrl = useCoverImageUrl(project.id)
   const counters = useCounters(project.id)
-  const lastActivity = useRelativeTime(project.lastActivityAt)
   const progress = computeProjectProgress(counters ?? [])
+  const isDone = project.status === 'done'
 
   return (
-    <Link to={`/projets/${project.id}`} className={styles.card}>
+    <Link
+      to={`/projets/${project.id}`}
+      className={styles.card}
+      style={{ borderColor: projectColorVar(project.colorKey) }}
+    >
       <div
-        className={coverUrl ? styles.cover : `${styles.cover} ${patterns.stripes} ${STRIPE_CLASS_BY_COLOR[project.colorKey]}`}
+        className={
+          coverUrl ? styles.cover : `${styles.cover} ${patterns.stripes} ${STRIPE_CLASS_BY_COLOR[project.colorKey]}`
+        }
         style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
       />
-      <div className={styles.body}>
+
+      <Pill color={STATUS_PILL_COLORS[project.status]} className={styles.statusBadge}>
+        {STATUS_LABELS[project.status]}
+      </Pill>
+
+      {isDone && (
+        <span className={styles.doneBadge} aria-label="Projet terminé">
+          <CheckCircle2 size={18} strokeWidth={2} />
+        </span>
+      )}
+
+      <div className={styles.overlay}>
+        <span className={styles.progressBadge}>
+          {progress.kind === 'percent' ? `${Math.round(progress.ratio * 100)} %` : `${progress.rows} rangs`}
+        </span>
         <div className={styles.name}>{project.name}</div>
-        <Pill color={STATUS_PILL_COLORS[project.status]}>{STATUS_LABELS[project.status]}</Pill>
-        {progress.kind === 'percent' ? (
-          <StripedProgressBar
-            progress={progress.ratio}
-            projectColor={project.colorKey}
-            label={`Progression de ${project.name}`}
-          />
-        ) : (
-          <div className={styles.rowsCount}>{progress.rows} rangs</div>
+        {project.targetEndDate && (
+          <div className={styles.endDate}>Fin prévue le {formatDateFr(project.targetEndDate)}</div>
         )}
-        {lastActivity && <div className={styles.activity}>Activité {lastActivity}</div>}
       </div>
     </Link>
   )

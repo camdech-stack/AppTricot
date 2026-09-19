@@ -10,11 +10,11 @@
 }
 
 .track {
-  stroke: var(--color-primary-soft);
+  stroke: var(--ring-track-color, var(--color-primary-soft));
 }
 
 .progress {
-  stroke: var(--color-primary);
+  stroke: var(--ring-color, var(--color-primary));
   transition: stroke-dashoffset var(--transition-base);
 }
 
