@@ -80,6 +80,26 @@ class AppDatabase extends Dexie {
           await table.update(event.id, { sequence })
         }
       })
+
+    // Adds `targetEndDate` (planned end date, distinct from completedAt) to
+    // projects. Not indexed, so the schema string is unchanged; still
+    // bumping the version to backfill existing rows.
+    this.version(5)
+      .stores({
+        settings: 'id',
+        projects: 'id, status, lastActivityAt',
+        counters: 'id, projectId, [projectId+position]',
+        counterEvents: 'id, counterId, [counterId+createdAt]',
+        coverImages: 'id, projectId',
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table('projects')
+          .toCollection()
+          .modify((project: Record<string, unknown>) => {
+            project.targetEndDate = null
+          })
+      })
   }
 }
 

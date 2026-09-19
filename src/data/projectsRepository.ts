@@ -12,6 +12,7 @@ export interface NewProjectInput {
   status?: ProjectStatus
   startedAt?: string | null
   completedAt?: string | null
+  targetEndDate?: string | null
 }
 
 export interface ProjectUpdateInput {
@@ -23,6 +24,7 @@ export interface ProjectUpdateInput {
   notes?: string
   startedAt?: string | null
   completedAt?: string | null
+  targetEndDate?: string | null
   activeCounterId?: string | null
 }
 
@@ -51,6 +53,7 @@ export async function createProject(input: NewProjectInput): Promise<ProjectReco
       notes: '',
       startedAt: input.startedAt ?? (status === 'in_progress' ? todayDateString() : null),
       completedAt: input.completedAt ?? (status === 'done' ? todayDateString() : null),
+      targetEndDate: input.targetEndDate ?? null,
       lastActivityAt: now,
       activeCounterId: counterId,
       createdAt: now,

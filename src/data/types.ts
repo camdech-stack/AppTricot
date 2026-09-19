@@ -33,6 +33,9 @@ export interface ProjectRecord extends BaseEntity {
   // input, independent of when the record itself was created/touched.
   startedAt: string | null
   completedAt: string | null
+  // Planned/target end date, distinct from completedAt (the actual date the
+  // project was marked done). Purely informational, never auto-filled.
+  targetEndDate: string | null
   lastActivityAt: string
   activeCounterId: string | null
 }
