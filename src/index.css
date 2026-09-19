@@ -14,12 +14,7 @@
     -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
 
   --safe-top: env(safe-area-inset-top, 0px);
-  /* iOS intermittently recalculates env(safe-area-inset-bottom) to 0 for
-     fixed-position elements on standalone home-indicator devices (a WebKit
-     bug), making the bottom bar's padding flicker. This app only targets
-     iPhone models with a home indicator in portrait, where that inset is a
-     fixed 34px per Apple's HIG, so we floor it instead of trusting env(). */
-  --safe-bottom: max(env(safe-area-inset-bottom, 0px), 34px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
 

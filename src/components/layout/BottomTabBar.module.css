@@ -10,6 +10,10 @@
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
   z-index: 10;
+  /* Forces its own compositing layer so iOS can't paint a hardware-
+     accelerated scrolling sibling above this fixed bar (a known WebKit
+     stacking bug, regardless of z-index). */
+  transform: translateZ(0);
 }
 
 @media (min-width: 860px) {
