@@ -1,7 +1,8 @@
 import styles from './StripedProgressBar.module.css'
 import patterns from '../../styles/patterns.module.css'
+import type { ProjectColorKey } from '../../data/types'
 
-export type ProjectColor = 'prune' | 'pervenche' | 'terracotta' | 'peche' | 'rouge' | 'rose'
+export type ProjectColor = ProjectColorKey
 
 const PROJECT_STRIPE_CLASS: Record<ProjectColor, string | undefined> = {
   prune: patterns.stripesProjectPrune,

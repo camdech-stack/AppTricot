@@ -1,0 +1,13 @@
+.message {
+  color: var(--color-text-muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-12);
+}
+
+.dangerButton {
+  background: var(--color-danger);
+}
