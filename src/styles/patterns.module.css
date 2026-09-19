@@ -1,0 +1,44 @@
+/* Signature stripe motif — echoes a knitted fabric's rows. Reusable on any
+   element via the `.stripes` utility class: set `--stripe-color` (and
+   optionally `--stripe-color-soft`, `--stripe-size`) before applying it,
+   rather than repeating the gradient in each component's CSS module. */
+.stripes {
+  --stripe-size: 16px;
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--stripe-color, var(--color-primary)) 0px,
+    var(--stripe-color, var(--color-primary)) calc(var(--stripe-size) / 2),
+    var(--stripe-color-soft, transparent) calc(var(--stripe-size) / 2),
+    var(--stripe-color-soft, transparent) var(--stripe-size)
+  );
+}
+
+.stripesProjectPrune {
+  --stripe-color: var(--color-project-prune);
+  --stripe-color-soft: var(--color-project-prune-soft);
+}
+
+.stripesProjectPervenche {
+  --stripe-color: var(--color-project-pervenche);
+  --stripe-color-soft: var(--color-project-pervenche-soft);
+}
+
+.stripesProjectTerracotta {
+  --stripe-color: var(--color-project-terracotta);
+  --stripe-color-soft: var(--color-project-terracotta-soft);
+}
+
+.stripesProjectPeche {
+  --stripe-color: var(--color-project-peche);
+  --stripe-color-soft: var(--color-project-peche-soft);
+}
+
+.stripesProjectRouge {
+  --stripe-color: var(--color-project-rouge);
+  --stripe-color-soft: var(--color-project-rouge-soft);
+}
+
+.stripesProjectRose {
+  --stripe-color: var(--color-project-rose);
+  --stripe-color-soft: var(--color-project-rose-soft);
+}

@@ -1,26 +1,26 @@
 .page {
-  padding: 20px 20px 32px;
+  padding: var(--space-20) var(--space-20) var(--space-32);
   max-width: 640px;
   margin: 0 auto;
 }
 
 .section {
-  margin-bottom: 28px;
+  margin-bottom: var(--space-24);
 }
 
 .sectionTitle {
-  font-size: 14px;
+  font-size: var(--text-sm);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--color-text-muted);
-  margin-bottom: 10px;
+  margin-bottom: var(--space-12);
 }
 
 .card {
-  background: var(--color-bg-elevated);
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -28,8 +28,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px 16px;
+  gap: var(--space-16);
+  padding: var(--space-12) var(--space-16);
 }
 
 .row + .row {
@@ -42,13 +42,13 @@
 
 .rowValue {
   color: var(--color-text-muted);
-  font-size: 14px;
+  font-size: var(--text-sm);
 }
 
 .segmented {
   display: inline-flex;
   border: 1px solid var(--color-border);
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
@@ -56,9 +56,9 @@
   border: none;
   background: transparent;
   color: var(--color-text);
-  padding: 8px 14px;
-  font-size: 14px;
-  min-height: 40px;
+  padding: var(--space-8) var(--space-16);
+  font-size: var(--text-sm);
+  min-height: var(--tap-min);
 }
 
 .segmented button + button {
@@ -66,17 +66,19 @@
 }
 
 .segmented button[aria-pressed='true'] {
-  background: var(--color-accent);
-  color: var(--color-accent-contrast);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   font-weight: 600;
 }
 
 .status {
-  font-size: 14px;
+  font-size: var(--text-sm);
 }
 
+/* Not --color-sage: it's reserved for fills/icons, never small text (low
+   contrast on --color-bg). */
 .statusOk {
-  color: #3f7a4c;
+  color: var(--color-primary-strong);
 }
 
 .statusWarn {
@@ -84,12 +86,12 @@
 }
 
 .persistButton {
-  border: 1px solid var(--color-accent);
-  color: var(--color-accent);
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
   background: transparent;
-  border-radius: 10px;
-  padding: 8px 14px;
-  font-size: 14px;
+  border-radius: var(--radius-sm);
+  padding: var(--space-8) var(--space-16);
+  font-size: var(--text-sm);
   font-weight: 600;
-  min-height: 40px;
+  min-height: var(--tap-min);
 }
