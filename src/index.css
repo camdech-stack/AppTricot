@@ -1,0 +1,111 @@
+:root {
+  color-scheme: light dark;
+
+  --color-bg: #fdf6ef;
+  --color-bg-elevated: #ffffff;
+  --color-text: #2b2622;
+  --color-text-muted: #746a5c;
+  --color-accent: #b5654a;
+  --color-accent-contrast: #fdf6ef;
+  --color-border: #e7ddd0;
+  --color-danger: #ad3b3b;
+
+  --font-sans:
+    -apple-system, system-ui, 'Segoe UI', Roboto, sans-serif;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  --bottom-nav-height: 64px;
+  --side-nav-width: 240px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #211c19;
+    --color-bg-elevated: #2b2622;
+    --color-text: #f3ece3;
+    --color-text-muted: #b3a695;
+    --color-accent: #dd8a68;
+    --color-accent-contrast: #211c19;
+    --color-border: #3a332d;
+    --color-danger: #e0736f;
+  }
+}
+
+/* Explicit user choice overrides the system preference. */
+:root[data-theme='light'] {
+  --color-bg: #fdf6ef;
+  --color-bg-elevated: #ffffff;
+  --color-text: #2b2622;
+  --color-text-muted: #746a5c;
+  --color-accent: #b5654a;
+  --color-accent-contrast: #fdf6ef;
+  --color-border: #e7ddd0;
+}
+
+:root[data-theme='dark'] {
+  --color-bg: #211c19;
+  --color-bg-elevated: #2b2622;
+  --color-text: #f3ece3;
+  --color-text-muted: #b3a695;
+  --color-accent: #dd8a68;
+  --color-accent-contrast: #211c19;
+  --color-border: #3a332d;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.2;
+  margin: 0 0 8px;
+}
+
+p {
+  margin: 0 0 12px;
+}
