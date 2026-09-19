@@ -3,8 +3,9 @@
 Ce document décrit la structure interne d'un guide de patron : comment un patron
 est décomposé, comment l'utilisateur (ou plus tard un import automatisé) le
 construit, et comment l'application retient où en est le tricot. Il précède
-l'implémentation (étape 5 de la feuille de route) ; il sert de contrat entre le
-schéma Dexie, l'éditeur de guide et le mode tricot.
+l'implémentation (étapes 5a et 5b de la feuille de route) ; il sert de
+contrat entre le schéma Dexie, l'éditeur de guide (étape 5a) et le mode
+suivi (étape 5b).
 
 Toutes les entités listées suivent la convention `BaseEntity` du projet
 (`id`, `createdAt`, `updatedAt`, voir `src/data/types.ts`) : elle n'est pas
@@ -229,7 +230,7 @@ interface GuideProgress {
   (compteurs multiples par projet) : elle indique *où* on en est dans le
   texte du guide, tandis qu'un compteur associé indique *combien* de rangs
   ont été tricotés. Les deux coexistent et peuvent être liés par un futur
-  champ, à définir au moment de l'implémentation de l'étape 5.
+  champ, à définir au moment de l'implémentation du mode suivi (étape 5b).
 
 ## 8. Invariants à valider côté application
 

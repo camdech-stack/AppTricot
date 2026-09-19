@@ -91,17 +91,17 @@ Par ailleurs, pas de compte utilisateur ni de système de paiement/abonnement (s
 
 | Étape | Contenu | Statut |
 | --- | --- | --- |
-| 0 | Fondations : projet, PWA installable, navigation squelette, couche de données Dexie, réglages minimaux, déploiement GitHub Pages | ✅ Fait |
+| 0 | Fondations et design : projet, PWA installable, navigation squelette, couche de données Dexie, réglages minimaux, déploiement GitHub Pages | ✅ Fait |
 | 1 | Projets + compteurs (plusieurs compteurs par projet, objectif, +/-, annulation, historique, compteur autonome) | ⬜ À faire |
-| 2 | Suivi du temps et sessions | ⬜ À faire |
+| 2 | Suivi du temps automatique | ⬜ À faire |
 | 3 | Stock de laine, consommation, vérification de disponibilité | ⬜ À faire |
 | 4 | Bibliothèque de patrons PDF + visionneuse (pdf.js) | ⬜ À faire |
-| 5 | Guides manuels, mode tricot, répétitions, notes associées aux rangs | ⬜ À faire |
+| 5a | Guides — modèle de données + éditeur manuel | ⬜ À faire |
+| 5b | Guides — mode suivi (compteur intégré, étape actuelle mémorisée) | ⬜ À faire |
 | 6 | Accueil avec reprise rapide + statistiques | ⬜ À faire |
-| 7 | Recherche globale + export/import + sauvegarde complète (PDF inclus) | ⬜ À faire |
+| 7 | Export/import + sauvegarde complète | ⬜ À faire |
 | 8 | Cartes exportables en image (projets et laine) | ⬜ À faire |
-| 9 | Analyseur IA de patrons + système de crédits | ⬜ À faire |
-| 10 | Diagrammes | ⬜ À faire |
-| 11 | Synchronisation multi-appareils (optionnelle) | ⬜ À faire |
+| 9 | Analyseur IA de patrons (génère un guide au format du modèle défini à l'étape 5a) | ⬜ À faire |
+| 10 | Synchronisation multi-appareils | ⬜ À faire |
 
-Les étapes 9 et 11 demandent des décisions d'architecture (appel à une API IA sans exposer de clé dans un site statique ; synchronisation multi-appareils). Elles ne sont pas implémentées, mais la porte reste ouverte : UUID, `updatedAt` et couche de données isolée sont déjà en place depuis l'étape 0.
+Les étapes 9 et 10 demandent des décisions d'architecture (appel à une API IA sans exposer de clé dans un site statique ; synchronisation multi-appareils). Elles ne sont pas implémentées, mais la porte reste ouverte : UUID, `updatedAt` et couche de données isolée sont déjà en place depuis l'étape 0.
