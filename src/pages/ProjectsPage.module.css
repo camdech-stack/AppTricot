@@ -13,20 +13,6 @@
   margin: 0;
 }
 
-.freeCounter {
-  display: flex;
-  align-items: center;
-  gap: var(--space-12);
-  margin-top: var(--space-16);
-  padding: var(--space-16) var(--space-20);
-  background: var(--gradient-hero);
-  color: var(--color-on-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  text-decoration: none;
-  font-weight: 600;
-}
-
 .pills {
   display: flex;
   flex-wrap: wrap;

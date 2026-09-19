@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Hash, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import styles from './ProjectsPage.module.css'
 import { useProjects } from '../hooks/useProjects'
 import { ProjectCard } from '../components/projects/ProjectCard'
@@ -39,11 +39,6 @@ export function ProjectsPage() {
           <Button icon={<Plus size={18} strokeWidth={1.75} />}>Nouveau</Button>
         </Link>
       </div>
-
-      <Link to="/compteur" className={styles.freeCounter}>
-        <Hash size={22} strokeWidth={1.75} />
-        <span>Compteur libre</span>
-      </Link>
 
       <div className={styles.pills} role="tablist" aria-label="Filtrer par statut">
         <button

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Hash, Minus, Plus, RotateCcw, Settings, Target, Undo2 } from 'lucide-react'
+import { ArrowLeft, Minus, Plus, RotateCcw, Rows3, Settings, Target, Undo2 } from 'lucide-react'
 import styles from './CounterPage.module.css'
 import { IconButton, Pill, StripedProgressBar, WaveDivider, ConfirmDialog } from '../components/ui'
 import { CounterCard } from '../components/counters/CounterCard'
@@ -96,7 +96,7 @@ export function CounterPage() {
             onClick={handleBack}
           />
           <div className={styles.avatar}>
-            {coverUrl ? <img src={coverUrl} alt="" /> : <Hash size={22} strokeWidth={1.75} />}
+            {coverUrl ? <img src={coverUrl} alt="" /> : <Rows3 size={22} strokeWidth={1.75} />}
           </div>
           <IconButton
             icon={<Settings strokeWidth={1.75} />}
