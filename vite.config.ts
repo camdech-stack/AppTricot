@@ -53,6 +53,13 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        // Without this, a freshly installed SW only controls the *next*
+        // navigation: the tab that triggered the install stays uncontrolled
+        // until it's fully closed and reopened, so it still hits the
+        // network for everything — which is exactly what fails offline on
+        // iOS right after the very first (online) launch.
+        clientsClaim: true,
+        skipWaiting: true,
       },
     }),
   ],

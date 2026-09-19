@@ -67,6 +67,11 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
+  /* The app shell (src/components/layout) owns scrolling internally, in a
+     single inner pane. If the document itself scrolls, iOS recalculates
+     safe-area-inset-bottom for our fixed bottom bar mid-scroll/momentum,
+     making its padding flicker in and out. */
+  overflow: hidden;
 }
 
 body {
@@ -81,7 +86,8 @@ body {
 }
 
 #root {
-  min-height: 100dvh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 button,
