@@ -87,12 +87,33 @@ D'après la section « Confidentialité » du cahier des charges (l'app est mono
 
 Par ailleurs, pas de compte utilisateur ni de système de paiement/abonnement (section 1). Les patrons importés restent privés et ne doivent jamais servir à entraîner un modèle d'IA (section 32).
 
+## Modèle de données (étape 1)
+
+- Schéma Dexie en version 3 (`src/data/db.ts`) : ajoute `projects`, `counters`, `counterEvents`, `coverImages` sans toucher `settings`.
+- `projects` : name, craft (tricot/crochet), description, status (à faire/en cours/en pause/terminé), colorKey (une des 6 couleurs de projet — source unique `ProjectColorKey` dans `src/data/types.ts`, réexportée en `ProjectColor` par `StripedProgressBar`), notes, startedAt/completedAt (dates calendaires `YYYY-MM-DD`, nullable, modifiables à la main), lastActivityAt, activeCounterId.
+- `counters` : projectId (`null` = compteur autonome — jamais indexé par IndexedDB, `getCounters` fait un scan complet uniquement pour ce cas), name, value, goal, position, isMain, lastTappedAt. Un projet a toujours un compteur principal "Rangs" créé avec lui, non supprimable.
+- `counterEvents` : counterId, type (increment/decrement/reset/set), delta, valueBefore, valueAfter, undoneAt. Jamais supprimé à l'annulation, seulement marqué `undoneAt`.
+- `coverImages` : id = projectId (relation 1:1), blob compressé (max 1200 px, JPEG qualité 0,8, orientation EXIF respectée via `createImageBitmap`).
+- `computeProjectProgress` (`src/data/progress.ts`) est une fonction pure isolée et testée : progression du compteur principal s'il a un objectif, sinon moyenne des compteurs qui en ont un, sinon nombre de rangs affiché tel quel. Sera remplacée par la progression du guide à l'étape 5b.
+
+## Fiabilité du compteur
+
+- Chaque +1/-1/+5/remise à zéro/valeur manuelle/annulation passe par une seule transaction Dexie (`src/data/countersRepository.ts`) qui lit la valeur courante dans la transaction (jamais depuis l'état React), met à jour le compteur, ajoute l'événement et touche `lastActivityAt` du projet. Les transactions Dexie sur les mêmes tables sont sérialisées par IndexedDB : des appuis en rafale ne perdent jamais de comptage (testé avec 30 appels concurrents dans `countersRepository.test.ts`).
+- L'annulation restaure `valueBefore` du dernier événement non annulé et le marque `undoneAt` ; répétable indéfiniment, pas de "rétablir" pour l'instant.
+- Écran allumé via l'API Wake Lock (`useWakeLock`), avec repli silencieux si indisponible, refusée, ou en cas d'échec (à confirmer sur iOS réel).
+
+## Décisions d'interface (étape 1)
+
+- La fiche projet, le formulaire de création/modification et l'écran compteur vivent hors `AppLayout` (routes de premier niveau dans `src/app/router.tsx`) : ils dessinent leur propre en-tête (retour + action) plutôt que l'`AppHeader` générique. Seuls la liste et la fiche projet gardent le `FloatingTabBar` ; l'écran compteur le masque entièrement pour maximiser la place et éviter les faux appuis.
+- Feuilles modales génériques `Sheet` et `ConfirmDialog` (`src/components/ui`) réutilisées par tous les éditeurs de compteur (renommer, objectif, valeur, historique) et toutes les confirmations obligatoires (suppression, remise à zéro).
+- Compteur autonome : créé automatiquement au premier accès à `/#/compteur`, mêmes composants et logique transactionnelle qu'un compteur de projet, sans section "Autres compteurs" (un seul compteur, pas de projet associé).
+
 ## Feuille de route
 
 | Étape | Contenu | Statut |
 | --- | --- | --- |
 | 0 | Fondations et design : projet, PWA installable, navigation squelette, couche de données Dexie, réglages minimaux, déploiement GitHub Pages | ✅ Fait |
-| 1 | Projets + compteurs (plusieurs compteurs par projet, objectif, +/-, annulation, historique, compteur autonome) | ⬜ À faire |
+| 1 | Projets + compteurs (plusieurs compteurs par projet, objectif, +/-, annulation, historique, compteur autonome) | ✅ Fait |
 | 2 | Suivi du temps automatique | ⬜ À faire |
 | 3 | Stock de laine, consommation, vérification de disponibilité | ⬜ À faire |
 | 4 | Bibliothèque de patrons PDF + visionneuse (pdf.js) | ⬜ À faire |
