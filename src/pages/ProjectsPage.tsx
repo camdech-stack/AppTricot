@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Filter, Plus } from 'lucide-react'
 import styles from './ProjectsPage.module.css'
 import { useProjects } from '../hooks/useProjects'
 import { ProjectCard } from '../components/projects/ProjectCard'
-import { Button } from '../components/ui'
+import { Button, IconButton, Sheet } from '../components/ui'
 import { STATUS_FILTER_ORDER, STATUS_LABELS } from '../components/projects/statusMeta'
 import type { ProjectStatus } from '../data'
 
@@ -13,6 +13,7 @@ type StatusFilter = 'all' | ProjectStatus
 export function ProjectsPage() {
   const projects = useProjects()
   const [filter, setFilter] = useState<StatusFilter>('all')
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false)
 
   if (projects === undefined) {
     return <div className={styles.page} />
@@ -31,37 +32,26 @@ export function ProjectsPage() {
     .slice()
     .sort((a, b) => b.lastActivityAt.localeCompare(a.lastActivityAt))
 
+  function selectFilter(next: StatusFilter) {
+    setFilter(next)
+    setFilterSheetOpen(false)
+  }
+
   return (
     <div className={styles.page}>
       <div className={styles.header}>
         <h1>Projets</h1>
-        <Link to="/projets/nouveau">
-          <Button icon={<Plus size={18} strokeWidth={1.75} />}>Nouveau</Button>
-        </Link>
-      </div>
-
-      <div className={styles.pills} role="tablist" aria-label="Filtrer par statut">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={filter === 'all'}
-          className={filter === 'all' ? styles.pillActive : styles.pill}
-          onClick={() => setFilter('all')}
-        >
-          Tous ({counts.all})
-        </button>
-        {STATUS_FILTER_ORDER.map((status) => (
-          <button
-            key={status}
-            type="button"
-            role="tab"
-            aria-selected={filter === status}
-            className={filter === status ? styles.pillActive : styles.pill}
-            onClick={() => setFilter(status)}
-          >
-            {STATUS_LABELS[status]} ({counts[status]})
-          </button>
-        ))}
+        <div className={styles.headerActions}>
+          <IconButton
+            icon={<Filter strokeWidth={1.75} />}
+            label="Filtrer par statut"
+            className={filter !== 'all' ? styles.filterButtonActive : undefined}
+            onClick={() => setFilterSheetOpen(true)}
+          />
+          <Link to="/projets/nouveau">
+            <Button icon={<Plus size={18} strokeWidth={1.75} />}>Nouveau</Button>
+          </Link>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
@@ -84,6 +74,32 @@ export function ProjectsPage() {
           ))}
         </div>
       )}
+
+      <Sheet open={filterSheetOpen} onClose={() => setFilterSheetOpen(false)} title="Filtrer par statut">
+        <div className={styles.pills} role="tablist" aria-label="Filtrer par statut">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={filter === 'all'}
+            className={filter === 'all' ? styles.pillActive : styles.pill}
+            onClick={() => selectFilter('all')}
+          >
+            Tous ({counts.all})
+          </button>
+          {STATUS_FILTER_ORDER.map((status) => (
+            <button
+              key={status}
+              type="button"
+              role="tab"
+              aria-selected={filter === status}
+              className={filter === status ? styles.pillActive : styles.pill}
+              onClick={() => selectFilter(status)}
+            >
+              {STATUS_LABELS[status]} ({counts[status]})
+            </button>
+          ))}
+        </div>
+      </Sheet>
     </div>
   )
 }
