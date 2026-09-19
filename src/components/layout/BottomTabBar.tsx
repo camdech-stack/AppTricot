@@ -4,7 +4,7 @@ import { NAV_ITEMS } from './navItems'
 
 export function BottomTabBar() {
   return (
-    <nav className={styles.bar} aria-label="Navigation principale">
+    <nav className={styles.bar} aria-label="Navigation principale" data-diagnostic="bottom-tab-bar">
       {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
         <NavLink
           key={to}

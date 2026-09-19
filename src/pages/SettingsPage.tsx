@@ -25,7 +25,7 @@ function useSafeAreaDebugInfo(): string {
       const envSafeBottom = getComputedStyle(probe).paddingBottom
       document.body.removeChild(probe)
 
-      const bar = document.querySelector('nav[aria-label="Navigation principale"]')
+      const bar = document.querySelector('[data-diagnostic="bottom-tab-bar"]')
       const rect = bar?.getBoundingClientRect()
       const vv = window.visualViewport
 
