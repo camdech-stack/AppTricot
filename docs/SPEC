@@ -1,0 +1,592 @@
+Application PWA personnelle de tricot
+1. Objectif
+
+Créer une Progressive Web App personnelle permettant de centraliser la gestion des projets de tricot et de crochet, les patrons, les compteurs de rangs, le stock de laine, le suivi du temps et la progression dans les patrons.
+L'application doit être utilisable sur ordinateur, tablette et smartphone, avec une priorité donnée à l'expérience mobile.
+Toutes les fonctionnalités doivent être disponibles sans abonnement ni système de paiement.
+L'application est privée et personnelle : aucune fonctionnalité sociale n'est nécessaire.
+
+2. Gestion des projets
+Créer une bibliothèque de projets.
+Chaque projet doit pouvoir contenir au minimum :
+nom du projet ;
+photo de couverture ;
+description ;
+statut ;
+patron associé ;
+date de création ;
+date de début ;
+date de fin ;
+laine utilisée ;
+quantité de laine prévue ;
+quantité de laine consommée ;
+notes personnelles ;
+compteurs de rangs associés ;
+temps de travail ;
+progression ;
+historique des sessions ;
+guide de patron associé.
+Statuts
+
+Prévoir au minimum :
+
+À faire / prévu ;
+En cours ;
+En pause ;
+Terminé.
+
+Plusieurs projets doivent pouvoir être actifs simultanément.
+L'utilisateur doit pouvoir reprendre n'importe quel projet exactement à l'endroit où il l'avait laissé.
+
+3. Compteurs de rangs
+Chaque projet peut posséder plusieurs compteurs indépendants.
+
+Exemples :
+compteur principal ;
+manche gauche ;
+manche droite ;
+devant ;
+dos ;
+répétitions ;
+torsades ;
+diminutions ;
+augmentations.
+
+Chaque compteur doit comporter :
+valeur actuelle ;
+objectif ;
+bouton + ;
+bouton - ou annulation ;
+remise à zéro ;
+progression vers l'objectif ;
+indication de l'objectif atteint.
+Historique du compteur
+
+Conserver les modifications du compteur afin de permettre :
+annulation de la dernière action ;
+restauration après erreur ;
+reprise après fermeture de l'application.
+Compteur autonome
+
+Prévoir un compteur qui ne dépend d'aucun projet.
+
+Il peut être utilisé temporairement pour :
+compter des rangs ;
+compter des répétitions ;
+compter des mailles ;
+compter n'importe quelle quantité.
+
+5. Suivi du temps
+
+L'application doit mesurer automatiquement le temps consacré à chaque projet.
+
+Fonctionnement :
+détection de la session active ;
+sauvegarde automatique.
+
+Chaque session doit conserver :
+date ;
+heure de début ;
+heure de fin ;
+durée ;
+projet concerné.
+Statistiques de temps
+
+Pour chaque projet :
+temps total travaillé ;
+nombre de sessions ;
+durée moyenne d'une session ;
+dernière session ;
+temps travaillé par période.
+
+Pour l'ensemble de l'application :
+temps total de tricot ;
+temps par jour ;
+temps par semaine ;
+temps par mois ;
+historique des sessions.
+
+6. Bibliothèque de patrons
+Créer une bibliothèque centralisée de patrons.
+
+L'utilisateur doit pouvoir :
+importer des fichiers PDF ;
+stocker les PDF localement ;
+nommer les patrons ;
+ajouter une couverture ;
+ajouter des tags ;
+rechercher un patron ;
+filtrer les patrons ;
+associer un patron à un projet ;
+supprimer un patron ;
+remplacer une version du patron.
+
+La bibliothèque doit pouvoir contenir autant de patrons que le stockage disponible.
+
+7. Visionneuse PDF
+
+Intégrer un lecteur PDF directement dans l'application.
+
+Fonctionnalités :
+
+affichage du PDF ;
+zoom ;
+navigation entre pages ;
+recherche de texte lorsque le PDF le permet ;
+mémorisation de la dernière page consultée ;
+possibilité d'afficher le PDF à côté du compteur de rangs ;
+affichage du PDF pendant le travail sur un projet.
+
+Sur mobile, prévoir une interface adaptée permettant de basculer rapidement entre :
+
+patron ;
+compteur ;
+guide.
+
+8. Analyseur intelligent de patrons
+Créer un système d'analyse de PDF utilisant un modèle d'IA.
+L'utilisateur importe un patron PDF.
+
+L'IA doit :
+lire le contenu textuel du patron ;
+identifier les différentes sections ;
+identifier les tailles proposées ;
+identifier les instructions ;
+identifier les répétitions ;
+identifier les rangs ;
+identifier les abréviations lorsque possible ;
+identifier les instructions conditionnelles ;
+transformer le contenu en étapes structurées ;
+permettre à l'utilisateur de sélectionner sa taille ;
+générer un guide adapté à cette taille.
+
+L'objectif n'est pas de générer un nouveau patron.
+L'objectif est de transformer le patron existant en une interface structurée et séquentielle plus facile à suivre.
+
+Résultat de l'analyse
+
+Créer une structure de données de type :
+section ;
+sous-section ;
+rang ;
+instruction ;
+répétition ;
+condition ;
+nombre de mailles attendu ;
+note ;
+étape suivante.
+
+L'utilisateur doit pouvoir modifier manuellement le résultat produit par l'IA.
+
+10. Patrons
+
+Permettre à l'utilisateur de créer manuellement un guide sans utiliser l'IA.
+
+Un guide doit être composé de :
+sections ;
+étapes ;
+rangs ;
+instructions ;
+notes ;
+répétitions ;
+objectifs ;
+diagrammes éventuels.
+
+Chaque étape doit pouvoir être :
+
+marquée comme terminée ;
+rouverte ;
+modifiée ;
+supprimée ;
+déplacée.
+
+L'application doit mémoriser automatiquement l'étape actuelle.
+
+15. Récupération automatique des brouillons
+
+Toute modification d'un guide doit être sauvegardée automatiquement.
+
+En cas de :
+
+fermeture de l'application ;
+crash ;
+perte de connexion ;
+changement d'appareil ;
+interruption de session ;
+
+l'utilisateur doit pouvoir reprendre son travail.
+
+Conserver notamment :
+
+étape actuelle ;
+rang actuel ;
+répétition actuelle ;
+position dans le diagramme ;
+page PDF actuelle ;
+compteurs ;
+notes ;
+progression.
+
+16. Stock de laine
+
+Créer une bibliothèque personnelle de fils.
+
+Chaque entrée doit pouvoir contenir :
+
+nom du fil ;
+marque ;
+gamme ;
+couleur ;
+référence couleur ;
+poids/épaisseur ;
+métrage par pelote ;
+poids par pelote ;
+nombre de pelotes ;
+photo ;
+lot de teinture ;
+notes ;
+prix éventuellement ;
+date d'achat éventuellement.
+
+Les unités doivent être configurables :
+
+grammes ;
+mètres ;
+yards.
+
+Aucune limite artificielle sur le nombre de fils ou de pelotes.
+
+17. Gestion des quantités de laine
+
+Pour chaque fil, suivre :
+
+quantité initiale ;
+quantité disponible ;
+quantité réservée à un projet ;
+quantité consommée ;
+quantité restante.
+
+Permettre de gérer plusieurs pelotes du même fil.
+
+Exemple :
+
+Fil : Malabrigo Rios
+Couleur : Azul
+Pelotes : 5
+Métrage/pelote : 192 m
+Total : 960 m
+
+18. Suivi de consommation de laine
+
+Pour chaque projet, permettre d'indiquer la quantité réellement consommée.
+
+Suivre :
+
+poids consommé ;
+métrage consommé ;
+nombre de pelotes utilisées ;
+quantité restante.
+
+Déduire automatiquement la consommation du stock lorsque l'utilisateur l'enregistre.
+
+Afficher également :
+
+quantité prévue ;
+quantité consommée ;
+quantité restante ;
+pourcentage consommé.
+
+19. Vérification de disponibilité de la laine
+
+Lorsqu'un projet possède un besoin en laine, l'application doit vérifier automatiquement le stock.
+
+Exemple :
+
+Projet :
+Pull X
+
+Besoin :
+600 g
+
+Stock :
+750 g
+
+Résultat :
+✓ Stock suffisant
+
+Ou :
+
+Besoin :
+800 g
+
+Stock :
+650 g
+
+Résultat :
+⚠ 150 g manquants
+
+Cette vérification doit fonctionner à partir du stock de fils existant.
+
+20. Recherche dans le stock
+
+Permettre de rechercher et filtrer les fils par :
+
+nom ;
+marque ;
+couleur ;
+poids ;
+métrage ;
+quantité disponible ;
+projet associé.
+21. Statistiques personnelles
+
+Créer un tableau de bord personnel.
+
+Afficher notamment :
+
+nombre de projets ;
+projets terminés ;
+projets en cours ;
+projets en pause ;
+temps total de tricot ;
+nombre de sessions ;
+quantité de laine consommée ;
+nombre de patrons ;
+nombre de projets terminés par période.
+
+Prévoir des vues :
+
+semaine ;
+mois ;
+année ;
+tout l'historique.
+
+22. Statistiques par projet
+
+Pour chaque projet :
+
+progression ;
+temps total ;
+nombre de sessions ;
+date de début ;
+date de fin ;
+durée totale du projet ;
+laine prévue ;
+laine consommée ;
+nombre de rangs ;
+nombre de compteurs ;
+dernière activité.
+23. Cartes de statistiques de projet
+
+Prévoir la génération d'une carte visuelle résumant un projet.
+
+La carte peut afficher :
+
+nom du projet ;
+photo ;
+durée ;
+temps total ;
+date de début ;
+date de fin ;
+laine utilisée ;
+progression ;
+nombre de sessions.
+
+La carte doit pouvoir être exportée en image.
+
+Cette fonctionnalité est destinée à un usage personnel ; aucun système social ou publication intégrée n'est nécessaire.
+
+24. Cartes de stock de laine
+
+Prévoir également une carte visuelle pour une entrée ou un ensemble de laine.
+
+Afficher par exemple :
+
+photo ;
+nom ;
+marque ;
+couleur ;
+quantité ;
+métrage ;
+poids ;
+date d'achat.
+
+Permettre l'export en image.
+
+25. Mode hors ligne
+
+L'application doit être une véritable PWA offline-first.
+
+Les fonctionnalités suivantes doivent fonctionner sans connexion :
+
+consulter les projets ;
+consulter les patrons déjà téléchargés ;
+consulter les guides ;
+utiliser les compteurs ;
+modifier les notes ;
+suivre la progression ;
+enregistrer les sessions ;
+consulter le stock de laine ;
+modifier le stock ;
+consulter les statistiques locales.
+
+Les modifications doivent être enregistrées localement puis synchronisées lorsqu'une connexion est disponible, si une architecture avec backend est utilisée.
+
+L'analyse IA d'un nouveau patron nécessite une connexion.
+
+26. Installation PWA
+
+L'application doit être installable sur :
+
+smartphone ;
+tablette ;
+ordinateur.
+
+Prévoir :
+
+manifest PWA ;
+icônes ;
+splash screen ;
+service worker ;
+cache des ressources ;
+fonctionnement offline ;
+installation depuis le navigateur.
+27. Interface mobile
+
+L'interface doit être conçue en priorité pour une utilisation pendant le tricot.
+
+Prévoir une navigation simple avec par exemple :
+
+Accueil ;
+Projets ;
+Patrons ;
+Laine ;
+Statistiques.
+
+Le projet actuellement utilisé doit être accessible très rapidement.
+
+Le compteur doit être utilisable d'une seule main.
+
+Les boutons de comptage doivent être suffisamment grands pour éviter les erreurs.
+
+28. Reprise rapide
+
+Au lancement de l'application, afficher les projets récemment utilisés.
+
+Pour chaque projet :
+
+dernière activité ;
+rang actuel ;
+étape actuelle ;
+progression ;
+bouton « Reprendre ».
+
+Un clic doit permettre de revenir directement au contexte de travail précédent.
+
+30. Données et stockage
+
+L'application étant personnelle, privilégier une architecture simple et robuste.
+Les données doivent être stockées localement lorsque cela est possible.
+Les données importantes doivent être exportables.
+Prévoir une fonctionnalité :
+Exporter mes données
+avec possibilité d'exporter :
+projets ;
+compteurs ;
+guides ;
+patrons/métadonnées ;
+stock de laine ;
+sessions ;
+statistiques.
+
+Prévoir également :
+Importer une sauvegarde afin de pouvoir restaurer l'application.
+
+31. Sauvegarde
+
+Prévoir une sauvegarde complète de la base de données.
+La sauvegarde doit inclure :
+données des projets ;
+progression ;
+compteurs ;
+guides ;
+notes ;
+stock ;
+historique ;
+paramètres.
+
+Les fichiers PDF doivent être inclus dans la sauvegarde ou être sauvegardés séparément selon leur taille.
+
+32. Confidentialité
+
+L'application est destinée à un seul utilisateur.
+Il n'est pas nécessaire de créer :
+profils publics ;
+followers ;
+likes ;
+commentaires ;
+fil d'actualité ;
+messagerie ;
+partage communautaire.
+Les patrons importés doivent rester privés.
+Les fichiers de patrons ne doivent pas être utilisés pour entraîner le modèle d'IA.
+
+33. Architecture fonctionnelle recommandée
+
+Organiser l'application autour des modules suivants :
+
+Dashboard
+projets récents ;
+projets actifs ;
+reprise rapide ;
+statistiques ;
+sessions récentes.
+
+Projects
+bibliothèque ;
+fiche projet ;
+progression ;
+compteurs ;
+temps ;
+notes ;
+laine ;
+patron associé.
+
+Patterns
+bibliothèque PDF ;
+visionneuse ;
+analyse IA ;
+guides ;
+diagrammes ;
+mode tricot.
+
+Yarn
+stock ;
+pelotes ;
+couleurs ;
+métrage ;
+poids ;
+consommation ;
+disponibilité par projet.
+
+Counters
+compteurs de projets ;
+compteur autonome ;
+objectifs ;
+notes de rang ;
+historique.
+
+Statistics
+temps ;
+projets ;
+sessions ;
+laine consommée ;
+historique.
+
+Settings
+unités ;
+sauvegarde ;
+restauration ;
+export ;
+paramètres IA ;
+paramètres PWA.
