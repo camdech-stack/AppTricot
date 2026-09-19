@@ -7,7 +7,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 const BASE_PATH = '/AppTricot/'
 
 // Keep in sync with APP_NAME in src/config/appInfo.ts.
-const APP_NAME = 'Mon carnet de tricot'
+const APP_NAME = 'Tricot'
 
 export default defineConfig({
   base: BASE_PATH,
@@ -22,7 +22,7 @@ export default defineConfig({
       manifest: {
         id: BASE_PATH,
         name: APP_NAME,
-        short_name: 'Carnet tricot',
+        short_name: APP_NAME,
         description:
           'Suivi personnel de projets de tricot et crochet : compteurs, patrons, laine et statistiques.',
         lang: 'fr',

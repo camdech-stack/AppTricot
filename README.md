@@ -1,4 +1,4 @@
-# Mon carnet de tricot
+# Tricot
 
 Application web personnelle (PWA) pour suivre mes projets de tricot et de crochet : compteurs de rangs, patrons, stock de laine, temps de travail et statistiques.
 

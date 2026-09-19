@@ -24,6 +24,7 @@ import {
   type IconComponent,
 } from '../components/icons'
 import { Logo } from '../components/Logo'
+import { APP_NAME } from '../config/appInfo'
 
 const COLOR_GROUPS: { title: string; swatches: { name: string; varName: string; hex: string }[] }[] = [
   {
@@ -102,7 +103,7 @@ export function StyleguidePage() {
     <div className={styles.page}>
       <h1>Styleguide</h1>
       <p className={styles.intro}>
-        Système visuel de {'"Mon carnet de tricot"'} — thème clair uniquement. Toute valeur affichée ici vient
+        Système visuel de {`"${APP_NAME}"`} — thème clair uniquement. Toute valeur affichée ici vient
         d'un token de <code>src/styles/tokens.css</code>.
       </p>
 

@@ -1,10 +1,10 @@
-# CLAUDE.md — Mon carnet de tricot
+# CLAUDE.md — Tricot
 
 Ce fichier est la référence de travail pour tout agent (Claude ou humain) qui intervient sur ce dépôt.
 
 ## Résumé de l'application
 
-"Mon carnet de tricot" est une PWA personnelle et privée (un seul utilisateur, pas de compte, pas de paiement, aucune fonctionnalité sociale) pour centraliser :
+"Tricot" est une PWA personnelle et privée (un seul utilisateur, pas de compte, pas de paiement, aucune fonctionnalité sociale) pour centraliser :
 
 - la gestion des projets de tricot/crochet (statut, patron associé, laine, notes, progression) ;
 - des compteurs de rangs multiples par projet, plus un compteur autonome ;
