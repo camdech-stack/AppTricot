@@ -44,6 +44,7 @@ export function ProjectFormPage() {
   const [status, setStatus] = useState<ProjectStatus>('in_progress')
   const [startedAt, setStartedAt] = useState('')
   const [completedAt, setCompletedAt] = useState('')
+  const [targetEndDate, setTargetEndDate] = useState('')
   const [coverBlob, setCoverBlob] = useState<Blob | null>(null)
   const [photoProcessing, setPhotoProcessing] = useState(false)
   const [photoError, setPhotoError] = useState<string>()
@@ -66,6 +67,7 @@ export function ProjectFormPage() {
         setStatus(project.status)
         setStartedAt(project.startedAt ?? '')
         setCompletedAt(project.completedAt ?? '')
+        setTargetEndDate(project.targetEndDate ?? '')
         setLoaded(true)
       })
       .catch((error: unknown) => {
@@ -116,6 +118,7 @@ export function ProjectFormPage() {
     try {
       const startedAtValue = dateOrUndefined(startedAt)
       const completedAtValue = dateOrUndefined(completedAt)
+      const targetEndDateValue = dateOrUndefined(targetEndDate) ?? null
 
       const project: ProjectRecord = projectId
         ? await updateProject(projectId, {
@@ -126,6 +129,7 @@ export function ProjectFormPage() {
             status,
             startedAt: startedAtValue,
             completedAt: completedAtValue,
+            targetEndDate: targetEndDateValue,
           })
         : await createProject({
             name: name.trim(),
@@ -135,6 +139,7 @@ export function ProjectFormPage() {
             status,
             startedAt: startedAtValue,
             completedAt: completedAtValue,
+            targetEndDate: targetEndDateValue,
           })
 
       if (coverBlob) {
@@ -264,6 +269,16 @@ export function ProjectFormPage() {
               className={styles.input}
               value={completedAt}
               onChange={(event) => setCompletedAt(event.target.value)}
+            />
+          </label>
+
+          <label className={styles.field}>
+            <span className={styles.label}>Date de fin prévue</span>
+            <input
+              type="date"
+              className={styles.input}
+              value={targetEndDate}
+              onChange={(event) => setTargetEndDate(event.target.value)}
             />
           </label>
 
