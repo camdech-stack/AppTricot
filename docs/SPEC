@@ -143,7 +143,7 @@ patron ;
 compteur ;
 guide.
 
-8. Analyseur intelligent de patrons
+8. Analyseur intelligent de patrons pour créer des guides de patrons.
 Créer un système d'analyse de PDF utilisant un modèle d'IA.
 L'utilisateur importe un patron PDF.
 
@@ -163,43 +163,13 @@ générer un guide adapté à cette taille.
 L'objectif n'est pas de générer un nouveau patron.
 L'objectif est de transformer le patron existant en une interface structurée et séquentielle plus facile à suivre.
 
-Résultat de l'analyse
-
-Créer une structure de données de type :
-section ;
-sous-section ;
-rang ;
-instruction ;
-répétition ;
-condition ;
-nombre de mailles attendu ;
-note ;
-étape suivante.
+Résultat de l'analyse : guide de patron selon le modèle décrit dans /docs/Guidespatrons
 
 L'utilisateur doit pouvoir modifier manuellement le résultat produit par l'IA.
 
-10. Patrons
+10. Guide de patrons manuel
 
 Permettre à l'utilisateur de créer manuellement un guide sans utiliser l'IA.
-
-Un guide doit être composé de :
-sections ;
-étapes ;
-rangs ;
-instructions ;
-notes ;
-répétitions ;
-objectifs ;
-diagrammes éventuels.
-
-Chaque étape doit pouvoir être :
-
-marquée comme terminée ;
-rouverte ;
-modifiée ;
-supprimée ;
-déplacée.
-
 L'application doit mémoriser automatiquement l'étape actuelle.
 
 15. Récupération automatique des brouillons
