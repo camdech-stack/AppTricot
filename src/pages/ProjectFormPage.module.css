@@ -1,12 +1,23 @@
+/* Standalone route (outside AppLayout, see CLAUDE.md): #root itself has
+   overflow:hidden, so this page must own its scrolling, or content past the
+   fold is simply unreachable on a short viewport like an iPhone. */
 .page {
-  padding-bottom: var(--space-32);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.scrollArea {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .form {
   display: flex;
   flex-direction: column;
   gap: var(--space-20);
-  padding: 0 var(--space-20);
+  padding: 0 var(--space-20) calc(var(--safe-bottom) + var(--space-32));
 }
 
 .field {
@@ -89,5 +100,15 @@
 }
 
 .deleteButton {
+  color: var(--color-danger);
+}
+
+.photoStatus {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.photoError {
+  font-size: var(--text-sm);
   color: var(--color-danger);
 }

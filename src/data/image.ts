@@ -6,7 +6,7 @@ const MAX_SIDE = 1200
 const JPEG_QUALITY = 0.8
 
 export async function compressCoverImage(file: File): Promise<Blob> {
-  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
+  const bitmap = await loadBitmap(file)
   try {
     const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height))
     const width = Math.round(bitmap.width * scale)
@@ -28,5 +28,17 @@ export async function compressCoverImage(file: File): Promise<Blob> {
     })
   } finally {
     bitmap.close()
+  }
+}
+
+// Some browsers (older iPadOS Safari in particular) reject the
+// imageOrientation option outright instead of ignoring it: retry without it
+// rather than failing the whole upload — the photo just keeps whatever
+// rotation the bitmap decoder applies by default.
+async function loadBitmap(file: File): Promise<ImageBitmap> {
+  try {
+    return await createImageBitmap(file, { imageOrientation: 'from-image' })
+  } catch {
+    return createImageBitmap(file)
   }
 }

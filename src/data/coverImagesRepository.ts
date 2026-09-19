@@ -1,13 +1,17 @@
 import { db } from './db'
 import { nowIso } from './date'
-import { compressCoverImage } from './image'
 import type { CoverImageRecord } from './types'
 
+// The caller compresses the photo (see src/data/image.ts) before calling
+// this: compressing at selection time, right when the file is picked,
+// means the raw full-resolution original is never held onto or rendered —
+// only its already-downscaled result reaches this repository and any
+// preview <img>.
+//
 // The cover is 1:1 with its project, so the project's own id doubles as the
 // cover's primary key — no separate uuid or projectId index needed to look
 // one up.
-export async function setCoverImage(projectId: string, file: File): Promise<CoverImageRecord> {
-  const blob = await compressCoverImage(file)
+export async function setCoverImage(projectId: string, blob: Blob): Promise<CoverImageRecord> {
   const now = nowIso()
   const existing = await db.coverImages.get(projectId)
   const record: CoverImageRecord = {

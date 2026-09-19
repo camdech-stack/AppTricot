@@ -1,11 +1,14 @@
+/* PageHeader stands in for AppHeader on standalone routes (project form,
+   counter screen, ...), so it must claim the top safe area itself — nothing
+   else above it will. */
 .wrap {
-  padding: var(--space-20) var(--space-20) var(--space-8);
+  padding: calc(var(--safe-top) + var(--space-20)) var(--space-20) var(--space-8);
 }
 
 .wrapColored {
   background: var(--gradient-hero);
   color: var(--color-on-primary);
-  padding-top: var(--space-20);
+  padding-top: calc(var(--safe-top) + var(--space-20));
 }
 
 .bar {

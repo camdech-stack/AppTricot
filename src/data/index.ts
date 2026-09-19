@@ -28,6 +28,7 @@ export {
   getCounterEvents,
 } from './countersRepository'
 export { setCoverImage, getCoverImage, deleteCoverImage } from './coverImagesRepository'
+export { compressCoverImage } from './image'
 export { computeProjectProgress, type ProjectProgress, type ProgressCounterInput } from './progress'
 export { nowIso, todayDateString } from './date'
 export type {
