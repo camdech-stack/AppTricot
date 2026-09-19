@@ -26,7 +26,9 @@ Le cahier des charges complet est dans `docs/SPEC`. C'est la référence fonctio
 - Dexie (IndexedDB) pour les données, via un module d'accès unique (`src/data`)
 - vite-plugin-pwa (manifest + service worker)
 - React Router (`createHashRouter`, HashRouter — nécessaire sur GitHub Pages, qui ne sait pas réécrire les routes côté serveur)
-- CSS Modules (pas de librairie UI)
+- CSS Modules (pas de librairie UI), système de tokens dans `src/styles/tokens.css`
+- lucide-react pour les icônes (+ `YarnBallIcon`, une icône perso pour l'onglet Laine)
+- Polices variables installées en local (`@fontsource-variable/outfit`, `@fontsource-variable/dm-sans`), jamais de CDN
 - Interface en français, code/variables/commentaires en anglais
 
 Ne pas ajouter d'autre dépendance sans validation explicite de l'utilisateur. Si une alternative semble meilleure, la justifier en 2 lignes avant de l'utiliser.
@@ -42,13 +44,26 @@ Ne pas ajouter d'autre dépendance sans validation explicite de l'utilisateur. S
 
 ## Principes de design
 
-- **Offline-first** : toute fonctionnalité listée à la section 25 du cahier des charges doit fonctionner sans réseau, y compris juste après l'installation.
-- **Mobile-first** : on conçoit d'abord pour iPhone, puis on adapte à iPad/ordinateur (navigation latérale plutôt que barre d'onglets au-delà de 860px, voir `src/components/layout`).
+- **Offline-first** : toute fonctionnalité listée à la section 25 du cahier des charges doit fonctionner sans réseau, y compris juste après l'installation. Les polices sont installées en local et précachées par le service worker (`globPatterns` inclut `woff2` dans `vite.config.ts`) pour la même raison.
+- **Mobile-first** : on conçoit d'abord pour iPhone, puis on adapte à iPad/ordinateur (navigation latérale plutôt que pilule flottante au-delà de 768px, voir `src/components/layout/FloatingTabBar`).
 - **Utilisable d'une seule main** : les actions fréquentes (compteurs, navigation principale) doivent être atteignables par le pouce, en bas d'écran.
-- **Gros boutons tactiles** : cibles d'au moins 40–44px de hauteur pour toute action interactive.
-- **Safe areas iOS** : toujours respecter `env(safe-area-inset-*)` (variables `--safe-top/bottom/left/right` définies dans `src/index.css`) sur les éléments collés aux bords de l'écran (header, barre d'onglets, contenu plein écran).
-- Thème clair/sombre automatique (`prefers-color-scheme`), avec possibilité de forcer un thème via les réglages (`data-theme` sur `<html>`).
-- Design 100 % original : le cahier des charges s'inspire des fonctionnalités d'une app existante, mais on ne reprend ni son nom, ni son logo, ni son design visuel.
+- **Gros boutons tactiles** : zone tactile minimale 48px (`--tap-min`), boutons de comptage 72px minimum (`--counter-btn-min`).
+- **Safe areas iOS** : toujours respecter `env(safe-area-inset-*)` (variables `--safe-top/bottom/left/right` définies dans `src/styles/tokens.css`) sur les éléments collés aux bords de l'écran (header, barre flottante, contenu plein écran), y compris en paysage sur iPad (safe areas gauche/droite).
+- **Thème clair uniquement.** Ne pas ajouter de mode sombre sans demande explicite de l'utilisateur : pas de `prefers-color-scheme: dark`, pas de réglage de thème, pas de valeurs sombres dans les tokens. `color-scheme: light` et les meta iOS/manifest sont alignés sur le fond crème (`#FCF8F3`).
+- Design 100 % original, style doux/chaleureux/artisanal inspiré du tricot (fond crème, framboise en couleur principale, cartes très arrondies, séparations ondulées, motif de rayures) : le cahier des charges s'inspire des fonctionnalités d'une app existante, mais on ne reprend ni son nom, ni son logo, ni son design visuel.
+
+## Système de design
+
+- Tous les tokens (couleurs, rayons, espacements, tailles de texte, ombres, transitions, zones tactiles, safe areas) vivent dans `src/styles/tokens.css`, seul fichier de ce type. Aucune valeur en dur dans les composants : toujours passer par un token.
+- Motif de rayures (signature visuelle, rappel du tricot) : utilitaire CSS dans `src/styles/patterns.module.css` (`.stripes` + une classe par couleur de projet), utilisé par `StripedProgressBar` et à réutiliser pour les couvertures de projet par défaut.
+- Composants de base réutilisables dans `src/components/ui` : `Button`, `IconButton`, `Card`, `HeroCard`, `Pill`, `StatTile`, `ProgressRing`, `StripedProgressBar`, `WaveDivider`, `PageHeader`, `SectionTitle`. Aucun ne contient de logique métier.
+- Navigation : `FloatingTabBar` (`src/components/layout`) est un seul composant à deux rendus pilotés par media query — pilule flottante sur mobile, navigation latérale à partir de 768px. Les Réglages restent accessibles via l'icône `Settings` dans `AppHeader`, pas dans la barre de navigation.
+- Icônes : lucide-react (trait 1.75, tailles 20/24/28), wrappées dans `src/components/icons/lucide.tsx` pour appliquer le trait uniformément. `YarnBallIcon` (`src/components/icons/YarnBallIcon.tsx`) est une icône SVG perso pour l'onglet Laine et le `Logo` (`src/components/Logo.tsx`, provisoire, lit `APP_NAME`).
+- Page `/#/styleguide` (`src/pages/StyleguidePage.tsx`) : référence visuelle vivante — palette, échelles, typographie, icônes, composants dans leurs variantes, couleurs de projet avec rayures, et un exemple de page type. À tenir à jour à chaque ajout de token ou de composant.
+- Couleurs de projet (prune, pervenche, terracotta, pêche, rouge, rose) : chacune a une variante `-soft` dérivée via `color-mix()` dans les tokens. Le doré et le sage ne servent jamais pour du petit texte (contraste insuffisant sur fond crème) : uniquement fonds/icônes/barres/badges.
+- Croquis de référence dans `docs/design/sketches/` (compteur, accueil, fiche projet), pour les étapes 1 et 6 :
+  - Compteur : gros boutons dans la moitié basse de l'écran (zone du pouce), +1 nettement le plus grand, -1 plus petit et à l'écart de +1.
+  - Accueil et fiche projet : même anneau de progression (`ProgressRing`) et même bouton d'action principal.
 
 ## Règles de travail
 
