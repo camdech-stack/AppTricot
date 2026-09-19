@@ -1,13 +1,7 @@
 import { useEffect, useState } from 'react'
 import styles from './SettingsPage.module.css'
 import { useSettings } from '../hooks/useSettings'
-import {
-  isStoragePersisted,
-  requestPersistentStorage,
-  updateSettings,
-  type LengthUnit,
-  type ThemePreference,
-} from '../data'
+import { isStoragePersisted, requestPersistentStorage, updateSettings, type LengthUnit } from '../data'
 
 // TEMPORARY: diagnosing a bottom safe-area rendering bug on a real iPhone,
 // which can't be reproduced or measured from this dev environment. Remove
@@ -63,12 +57,6 @@ function useSafeAreaDebugInfo(): string {
   return info
 }
 
-const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
-  { value: 'system', label: 'Auto' },
-  { value: 'light', label: 'Clair' },
-  { value: 'dark', label: 'Sombre' },
-]
-
 const LENGTH_OPTIONS: { value: LengthUnit; label: string }[] = [
   { value: 'm', label: 'Mètres' },
   { value: 'yd', label: 'Yards' },
@@ -118,27 +106,6 @@ export function SettingsPage() {
       </section>
 
       <section className={styles.section}>
-        <div className={styles.sectionTitle}>Apparence</div>
-        <div className={styles.card}>
-          <div className={styles.row}>
-            <span className={styles.rowLabel}>Thème</span>
-            <div className={styles.segmented} role="group" aria-label="Thème">
-              {THEME_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  aria-pressed={settings?.theme === option.value}
-                  onClick={() => updateSettings({ theme: option.value })}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className={styles.section}>
         <div className={styles.sectionTitle}>Stockage</div>
         <div className={styles.card}>
           <div className={styles.row}>
@@ -173,10 +140,10 @@ export function SettingsPage() {
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-all',
             fontSize: 12,
-            background: 'var(--color-bg-elevated)',
+            background: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
-            borderRadius: 14,
-            padding: 12,
+            borderRadius: 'var(--radius-sm)',
+            padding: 'var(--space-12)',
           }}
         >
           {safeAreaDebugInfo}

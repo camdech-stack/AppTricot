@@ -18,6 +18,22 @@ class AppDatabase extends Dexie {
     this.version(1).stores({
       settings: 'id',
     })
+
+    // Dropped the `theme` field: the app is light-only now (see CLAUDE.md).
+    // Not indexed, so the schema string is unchanged; still bumping the
+    // version to backfill existing installs per the migration convention above.
+    this.version(2)
+      .stores({
+        settings: 'id',
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table('settings')
+          .toCollection()
+          .modify((record: Record<string, unknown>) => {
+            delete record.theme
+          })
+      })
   }
 }
 

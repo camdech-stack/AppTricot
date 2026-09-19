@@ -1,6 +1,6 @@
 import { liveQuery } from 'dexie'
 import { db } from './db'
-import type { AppSettingsRecord, LengthUnit, ThemePreference } from './types'
+import type { AppSettingsRecord, LengthUnit } from './types'
 
 const SETTINGS_ID = 'app-settings'
 
@@ -9,7 +9,6 @@ function defaultSettings(now: string): AppSettingsRecord {
     id: SETTINGS_ID,
     lengthUnit: 'm',
     weightUnit: 'g',
-    theme: 'system',
     createdAt: now,
     updatedAt: now,
   }
@@ -34,7 +33,7 @@ export async function getSettings(): Promise<AppSettingsRecord> {
 }
 
 export async function updateSettings(
-  patch: Partial<Pick<AppSettingsRecord, 'lengthUnit' | 'theme'>>,
+  patch: Partial<Pick<AppSettingsRecord, 'lengthUnit'>>,
 ): Promise<AppSettingsRecord> {
   const current = await getSettings()
   const updated: AppSettingsRecord = {
@@ -50,4 +49,4 @@ export function watchSettings() {
   return liveQuery(() => db.settings.get(SETTINGS_ID))
 }
 
-export type { AppSettingsRecord, LengthUnit, ThemePreference }
+export type { AppSettingsRecord, LengthUnit }

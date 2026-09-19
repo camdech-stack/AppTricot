@@ -30,8 +30,8 @@ export default defineConfig({
         scope: BASE_PATH,
         display: 'standalone',
         orientation: 'portrait-primary',
-        background_color: '#fdf6ef',
-        theme_color: '#b5654a',
+        background_color: '#FCF8F3',
+        theme_color: '#FCF8F3',
         icons: [
           {
             src: `${BASE_PATH}icons/icon-192.png`,
@@ -52,7 +52,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest}'],
+        // woff2: local Outfit/DM Sans font files, precached so typography
+        // still renders correctly with no network (see CLAUDE.md).
+        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,woff2}'],
         // Without this, a freshly installed SW only controls the *next*
         // navigation: the tab that triggered the install stays uncontrolled
         // until it's fully closed and reopened, so it still hits the

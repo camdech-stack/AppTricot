@@ -9,10 +9,8 @@ export interface BaseEntity {
 
 export type LengthUnit = 'm' | 'yd'
 export type WeightUnit = 'g'
-export type ThemePreference = 'system' | 'light' | 'dark'
 
 export interface AppSettingsRecord extends BaseEntity {
   lengthUnit: LengthUnit
   weightUnit: WeightUnit
-  theme: ThemePreference
 }
