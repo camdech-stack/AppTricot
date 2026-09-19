@@ -57,6 +57,10 @@ export interface CounterEventRecord extends BaseEntity {
   valueBefore: number
   valueAfter: number
   undoneAt: string | null
+  // Monotonic per-counter ordering key (0, 1, 2, ...), computed inside the
+  // same transaction as the write. createdAt alone can't order events
+  // reliably: two rapid taps can land in the same millisecond.
+  sequence: number
 }
 
 export interface CoverImageRecord extends BaseEntity {

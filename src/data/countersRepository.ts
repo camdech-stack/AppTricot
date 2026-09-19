@@ -4,7 +4,7 @@ import { nowIso } from './date'
 import type { CounterEventRecord, CounterEventType, CounterRecord } from './types'
 
 const MAIN_COUNTER_NAME = 'Rangs'
-const STANDALONE_COUNTER_NAME = 'Compteur'
+const STANDALONE_COUNTER_NAME = 'Compteur de rang'
 const HISTORY_LIMIT = 100
 
 export async function getCounters(projectId: string | null): Promise<CounterRecord[]> {
@@ -122,18 +122,7 @@ export async function applyCounterDelta(id: string, delta: number): Promise<Coun
     }
     await db.counters.put(updated)
 
-    const event: CounterEventRecord = {
-      id: createId(),
-      counterId: id,
-      type: appliedDelta > 0 ? 'increment' : 'decrement',
-      delta: appliedDelta,
-      valueBefore,
-      valueAfter,
-      undoneAt: null,
-      createdAt: now,
-      updatedAt: now,
-    }
-    await db.counterEvents.add(event)
+    await recordEvent(id, appliedDelta > 0 ? 'increment' : 'decrement', appliedDelta, valueBefore, valueAfter, now)
 
     if (counter.projectId) {
       await db.projects.update(counter.projectId, { lastActivityAt: now })
@@ -186,6 +175,10 @@ export async function resetCounter(id: string): Promise<CounterRecord> {
   })
 }
 
+// Assigns each event a strictly increasing per-counter sequence number,
+// computed from inside the caller's transaction (so it stays correct even
+// when several events are written back-to-back within the same
+// millisecond, e.g. a burst of taps).
 async function recordEvent(
   counterId: string,
   type: CounterEventType,
@@ -194,6 +187,7 @@ async function recordEvent(
   valueAfter: number,
   now: string,
 ): Promise<void> {
+  const sequence = await db.counterEvents.where('counterId').equals(counterId).count()
   const event: CounterEventRecord = {
     id: createId(),
     counterId,
@@ -202,6 +196,7 @@ async function recordEvent(
     valueBefore,
     valueAfter,
     undoneAt: null,
+    sequence,
     createdAt: now,
     updatedAt: now,
   }
@@ -210,7 +205,7 @@ async function recordEvent(
 
 export async function getCounterEvents(counterId: string): Promise<CounterEventRecord[]> {
   const events = await db.counterEvents.where('counterId').equals(counterId).toArray()
-  return events.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, HISTORY_LIMIT)
+  return events.sort((a, b) => b.sequence - a.sequence).slice(0, HISTORY_LIMIT)
 }
 
 // Reverts the most recent non-undone event by restoring its `valueBefore`,
@@ -219,9 +214,7 @@ export async function getCounterEvents(counterId: string): Promise<CounterEventR
 export async function undoLastEvent(counterId: string): Promise<CounterRecord | undefined> {
   return db.transaction('rw', db.counters, db.counterEvents, db.projects, async () => {
     const events = await db.counterEvents.where('counterId').equals(counterId).toArray()
-    const lastActive = events
-      .filter((event) => !event.undoneAt)
-      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]
+    const lastActive = events.filter((event) => !event.undoneAt).sort((a, b) => b.sequence - a.sequence)[0]
     if (!lastActive) return undefined
 
     const counter = await db.counters.get(counterId)

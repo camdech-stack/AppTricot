@@ -36,3 +36,35 @@ describe('schema migration to v3', () => {
     expect(await db.coverImages.count()).toBe(0)
   })
 })
+
+describe('schema migration to v4', () => {
+  it('backfills a monotonic per-counter sequence, ordered by createdAt', async () => {
+    // Simulate a step-1 install already on schema v3, with events that
+    // collide on the same millisecond timestamp (a burst of rapid taps) —
+    // exactly the case createdAt-only ordering gets wrong.
+    const legacy = new Dexie(DB_NAME)
+    legacy.version(1).stores({ settings: 'id' })
+    legacy.version(2).stores({ settings: 'id' })
+    legacy.version(3).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+    })
+    await legacy.open()
+    const sameTimestamp = '2024-01-01T00:00:00.000Z'
+    await legacy.table('counterEvents').bulkAdd([
+      { id: 'evt-1', counterId: 'counter-a', type: 'increment', delta: 1, valueBefore: 0, valueAfter: 1, undoneAt: null, createdAt: sameTimestamp, updatedAt: sameTimestamp },
+      { id: 'evt-2', counterId: 'counter-a', type: 'increment', delta: 1, valueBefore: 1, valueAfter: 2, undoneAt: null, createdAt: sameTimestamp, updatedAt: sameTimestamp },
+      { id: 'evt-3', counterId: 'counter-a', type: 'increment', delta: 1, valueBefore: 2, valueAfter: 3, undoneAt: null, createdAt: sameTimestamp, updatedAt: sameTimestamp },
+    ])
+    legacy.close()
+
+    await db.open()
+
+    const events = await db.counterEvents.where('counterId').equals('counter-a').toArray()
+    const sequences = events.map((event) => event.sequence).sort((a, b) => a - b)
+    expect(sequences).toEqual([0, 1, 2])
+  })
+})
