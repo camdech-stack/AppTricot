@@ -1,5 +1,11 @@
 import Dexie, { type EntityTable } from 'dexie'
-import type { AppSettingsRecord } from './types'
+import type {
+  AppSettingsRecord,
+  CounterEventRecord,
+  CounterRecord,
+  CoverImageRecord,
+  ProjectRecord,
+} from './types'
 
 // Schema migration convention:
 // - Never edit a past `.version(n)` call once it has shipped.
@@ -11,6 +17,10 @@ import type { AppSettingsRecord } from './types'
 //   still bump the version and backfill them in `.upgrade()`.
 class AppDatabase extends Dexie {
   settings!: EntityTable<AppSettingsRecord, 'id'>
+  projects!: EntityTable<ProjectRecord, 'id'>
+  counters!: EntityTable<CounterRecord, 'id'>
+  counterEvents!: EntityTable<CounterEventRecord, 'id'>
+  coverImages!: EntityTable<CoverImageRecord, 'id'>
 
   constructor() {
     super('mon-carnet-de-tricot')
@@ -34,6 +44,16 @@ class AppDatabase extends Dexie {
             delete record.theme
           })
       })
+
+    // Step 1: projects, their counters, counter events and cover images.
+    // `settings` is repeated unchanged so existing installs keep it intact.
+    this.version(3).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+    })
   }
 }
 
