@@ -1,0 +1,15 @@
+.input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-12) var(--space-16);
+  font-size: var(--text-md);
+  min-height: var(--tap-min);
+  margin-bottom: var(--space-16);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}

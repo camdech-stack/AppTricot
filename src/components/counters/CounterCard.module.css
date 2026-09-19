@@ -1,0 +1,55 @@
+.card,
+.cardGoalReached {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-16);
+}
+
+.cardGoalReached {
+  background: var(--color-sage-soft);
+  border-color: transparent;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.name {
+  font-weight: 600;
+}
+
+.value {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.incrementButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+}
+
+.incrementButton:active {
+  transform: scale(var(--press-scale));
+}
