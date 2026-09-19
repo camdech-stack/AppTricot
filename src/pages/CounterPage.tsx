@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Minus, Plus, RotateCcw, Rows3, Settings, Target, Undo2 } from 'lucide-react'
+import { ArrowLeft, ListOrdered, RotateCcw, Plus, Settings, Square, Target, Undo2 } from 'lucide-react'
 import styles from './CounterPage.module.css'
 import { IconButton, Pill, StripedProgressBar, WaveDivider, ConfirmDialog } from '../components/ui'
 import { CounterCard } from '../components/counters/CounterCard'
@@ -13,9 +13,10 @@ import { useProject } from '../hooks/useProject'
 import { useCounters } from '../hooks/useCounters'
 import { useCounter } from '../hooks/useCounter'
 import { useCounterEvents } from '../hooks/useCounterEvents'
-import { useCoverImageUrl } from '../hooks/useCoverImageUrl'
 import { useRelativeTime } from '../hooks/useRelativeTime'
 import { useWakeLock } from '../hooks/useWakeLock'
+import { useElapsedTimer } from '../hooks/useElapsedTimer'
+import { formatDuration } from '../utils/formatDuration'
 import {
   addCounter,
   applyCounterDelta,
@@ -46,8 +47,8 @@ export function CounterPage() {
   const isStandalone = !projectId
 
   const project = useProject(projectId)
-  const coverUrl = useCoverImageUrl(projectId)
   const counters = useCounters(projectId ?? null)
+  const timer = useElapsedTimer()
 
   useEffect(() => {
     if (!isStandalone) return
@@ -70,11 +71,12 @@ export function CounterPage() {
   const events = useCounterEvents(sheet === 'history' ? activeCounter?.id : undefined)
 
   function handleBack() {
-    navigate(projectId ? `/projets/${projectId}` : '/projets')
+    navigate(projectId ? `/projets/${projectId}` : '/')
   }
 
   function handleDelta(delta: number) {
     if (!activeCounter) return
+    timer.start()
     void applyCounterDelta(activeCounter.id, delta)
   }
 
@@ -95,9 +97,13 @@ export function CounterPage() {
             className={styles.heroIconButton}
             onClick={handleBack}
           />
-          <div className={styles.avatar}>
-            {coverUrl ? <img src={coverUrl} alt="" /> : <Rows3 size={22} strokeWidth={1.75} />}
-          </div>
+          {isStandalone ? (
+            <div className={styles.avatar}>
+              <ListOrdered size={22} strokeWidth={1.75} />
+            </div>
+          ) : (
+            <div className={styles.projectName}>{project?.name}</div>
+          )}
           <IconButton
             icon={<Settings strokeWidth={1.75} />}
             label="Menu du compteur"
@@ -116,6 +122,23 @@ export function CounterPage() {
               {activeCounter?.value ?? 0}
             </div>
             {lastTapped && <div className={styles.lastTap}>Dernier appui : {lastTapped}</div>}
+            {timer.started && (
+              <div className={styles.timerRow}>
+                <span className={styles.timerText}>{formatDuration(timer.elapsedMs)}</span>
+                {timer.running ? (
+                  <button
+                    type="button"
+                    className={styles.timerStopButton}
+                    onClick={timer.stop}
+                    aria-label="Arrêter le chronomètre"
+                  >
+                    <Square size={12} strokeWidth={1.75} fill="currentColor" />
+                  </button>
+                ) : (
+                  <span className={styles.timerStoppedLabel}>Arrêté</span>
+                )}
+              </div>
+            )}
             {activeCounter?.goal != null && (
               <div className={styles.goalBlock}>
                 <div className={styles.goalText}>
@@ -142,11 +165,9 @@ export function CounterPage() {
               disabled={!activeCounter || activeCounter.value === 0}
               onClick={() => handleDelta(-1)}
             >
-              <Minus size={22} strokeWidth={1.75} />
               -1
             </button>
             <button type="button" className={styles.plusButton} onClick={() => handleDelta(1)}>
-              <Plus size={32} strokeWidth={1.75} />
               +1
             </button>
             <button type="button" className={styles.plusFiveButton} onClick={() => handleDelta(5)}>
@@ -182,7 +203,10 @@ export function CounterPage() {
                   key={counter.id}
                   counter={counter}
                   onSelect={() => handleSelectCounter(counter.id)}
-                  onIncrement={() => void applyCounterDelta(counter.id, 1)}
+                  onIncrement={() => {
+                    timer.start()
+                    void applyCounterDelta(counter.id, 1)
+                  }}
                 />
               ))}
             </div>

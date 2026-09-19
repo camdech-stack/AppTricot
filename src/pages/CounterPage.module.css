@@ -42,6 +42,18 @@
   object-fit: cover;
 }
 
+.projectName {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: var(--text-md);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 var(--space-8);
+}
+
 .scrollArea {
   flex: 1;
   min-height: 0;
@@ -114,6 +126,40 @@
 .lastTap {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
+}
+
+/* Visual-only chrono (see useElapsedTimer): no data behind it yet, real
+   time tracking arrives with step 2. */
+.timerRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.timerText {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.timerStopButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.timerStoppedLabel {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .goalBlock {

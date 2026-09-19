@@ -1,4 +1,4 @@
-import { Rows3 } from 'lucide-react'
+import { ListOrdered } from 'lucide-react'
 import styles from './HomePage.module.css'
 import { SectionTitle, SquareTile } from '../components/ui'
 
@@ -10,7 +10,7 @@ export function HomePage() {
       <section className={styles.section}>
         <SectionTitle title="Outils" />
         <div className={styles.tools}>
-          <SquareTile to="/compteur" icon={<Rows3 size={28} strokeWidth={1.75} />} label="Compteur de rang" />
+          <SquareTile to="/compteur" icon={<ListOrdered size={28} strokeWidth={1.75} />} label="Compteur de rang" />
         </div>
       </section>
 
