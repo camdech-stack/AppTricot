@@ -10,6 +10,7 @@ import { useProject } from '../hooks/useProject'
 import { useCounters } from '../hooks/useCounters'
 import { useCoverImageUrl } from '../hooks/useCoverImageUrl'
 import { useRelativeTime } from '../hooks/useRelativeTime'
+import { formatDateFr } from '../utils/formatDate'
 import { computeProjectProgress, updateProject } from '../data'
 
 const NOTES_SAVE_DELAY_MS = 600
@@ -98,7 +99,7 @@ export function ProjectDetailPage() {
             <div className={styles.statsGrid}>
               <StatTile
                 icon={<Calendar size={22} strokeWidth={1.75} />}
-                value={project.startedAt ?? '—'}
+                value={project.startedAt ? formatDateFr(project.startedAt) : '—'}
                 label="Début"
               />
               <StatTile
