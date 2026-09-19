@@ -1,0 +1,28 @@
+.wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.svg {
+  transform: rotate(0deg);
+}
+
+.track {
+  stroke: var(--color-primary-soft);
+}
+
+.progress {
+  stroke: var(--color-primary);
+  transition: stroke-dashoffset var(--transition-base);
+}
+
+.label {
+  position: absolute;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}

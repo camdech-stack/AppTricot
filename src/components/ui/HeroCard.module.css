@@ -1,0 +1,12 @@
+.hero {
+  background: var(--gradient-hero);
+  color: var(--color-on-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-24);
+}
+
+.hero :global(a),
+.hero :global(button) {
+  color: inherit;
+}

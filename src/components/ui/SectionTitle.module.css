@@ -1,0 +1,19 @@
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-12);
+  margin-bottom: var(--space-12);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.link {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: none;
+}

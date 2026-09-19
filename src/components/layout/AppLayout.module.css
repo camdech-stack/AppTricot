@@ -12,20 +12,20 @@
 }
 
 /* The only scrolling pane in the app: keeping html/body/.shell fixed means
-   the bottom tab bar's position and safe-area padding never get
+   the floating tab bar's position and safe-area padding never get
    recalculated mid-scroll (see the comment in src/index.css). */
 .content {
   flex: 1;
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
-  padding-bottom: var(--bottom-nav-height);
+  padding-bottom: var(--floating-bar-space);
   padding-left: var(--safe-left);
   padding-right: var(--safe-right);
 }
 
-@media (min-width: 860px) {
+@media (min-width: 768px) {
   .content {
-    padding-bottom: 20px;
+    padding-bottom: var(--space-20);
   }
 }

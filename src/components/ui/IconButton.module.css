@@ -1,0 +1,30 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text);
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.button svg {
+  width: 24px;
+  height: 24px;
+}
+
+.button:active {
+  transform: scale(var(--press-scale));
+}
+
+.button:hover {
+  background: var(--color-primary-soft);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
