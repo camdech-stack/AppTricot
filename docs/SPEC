@@ -163,7 +163,7 @@ générer un guide adapté à cette taille.
 L'objectif n'est pas de générer un nouveau patron.
 L'objectif est de transformer le patron existant en une interface structurée et séquentielle plus facile à suivre.
 
-Résultat de l'analyse : guide de patron selon le modèle décrit dans /docs/Guidespatrons
+Résultat de l'analyse : guide de patron selon un modèle précis qui sera décrit au moment voulu
 
 L'utilisateur doit pouvoir modifier manuellement le résultat produit par l'IA.
 
