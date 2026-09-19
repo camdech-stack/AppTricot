@@ -6,6 +6,7 @@ import { PatternsPage } from '../pages/PatternsPage'
 import { YarnPage } from '../pages/YarnPage'
 import { StatsPage } from '../pages/StatsPage'
 import { SettingsPage } from '../pages/SettingsPage'
+import { StyleguidePage } from '../pages/StyleguidePage'
 
 // GitHub Pages only serves the app's own index.html, so client-side routes
 // can't rely on server rewrites for deep links: HashRouter keeps every
@@ -21,6 +22,7 @@ export const router = createHashRouter([
       { path: 'laine', element: <YarnPage /> },
       { path: 'stats', element: <StatsPage /> },
       { path: 'reglages', element: <SettingsPage /> },
+      { path: 'styleguide', element: <StyleguidePage /> },
     ],
   },
 ])
