@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { RAVELRY_RUNTIME_CACHING_RULE } from './src/ravelry/serviceWorkerRule.ts'
 
 // GitHub Pages serves this project from /AppTricot/, so every absolute
 // asset/route reference in the app must be prefixed with this base.
@@ -62,6 +63,11 @@ export default defineConfig({
         // iOS right after the very first (online) launch.
         clientsClaim: true,
         skipWaiting: true,
+        // Ravelry's license forbids caching their responses (see
+        // src/ravelry/serviceWorkerRule.ts and CLAUDE.md): explicit
+        // NetworkOnly, checked before the default navigation fallback would
+        // ever apply.
+        runtimeCaching: [RAVELRY_RUNTIME_CACHING_RULE],
       },
     }),
   ],
