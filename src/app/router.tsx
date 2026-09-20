@@ -6,6 +6,9 @@ import { ProjectFormPage } from '../pages/ProjectFormPage'
 import { ProjectDetailPage } from '../pages/ProjectDetailPage'
 import { CounterPage } from '../pages/CounterPage'
 import { PatternsPage } from '../pages/PatternsPage'
+import { PatternDetailPage } from '../pages/PatternDetailPage'
+import { PatternViewerPage } from '../pages/PatternViewerPage'
+import { ProjectWorkPage } from '../pages/ProjectWorkPage'
 import { YarnPage } from '../pages/YarnPage'
 import { YarnFormPage } from '../pages/YarnFormPage'
 import { YarnDetailPage } from '../pages/YarnDetailPage'
@@ -40,7 +43,10 @@ export const router = createHashRouter([
   { path: '/projets/:projectId', element: <ProjectDetailPage /> },
   { path: '/projets/:projectId/modifier', element: <ProjectFormPage /> },
   { path: '/projets/:projectId/compteur', element: <CounterPage /> },
+  { path: '/projets/:projectId/travail', element: <ProjectWorkPage /> },
   { path: '/compteur', element: <CounterPage /> },
+  { path: '/patrons/:patternId', element: <PatternDetailPage /> },
+  { path: '/patrons/:patternId/lire', element: <PatternViewerPage /> },
   { path: '/laine/nouveau', element: <YarnFormPage /> },
   { path: '/laine/:yarnId', element: <YarnDetailPage /> },
   { path: '/laine/:yarnId/modifier', element: <YarnFormPage /> },

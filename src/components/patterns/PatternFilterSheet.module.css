@@ -1,0 +1,51 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-bottom: var(--space-20);
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.select {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-8) var(--space-12);
+  font-size: var(--text-md);
+  background: var(--color-surface);
+  min-height: var(--tap-min);
+}
+
+.segmented {
+  display: flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.segmented button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: var(--space-8) var(--space-12);
+  font-size: var(--text-sm);
+  min-height: var(--tap-min);
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--color-border);
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 600;
+}
+
+.resetButton {
+  width: 100%;
+}
