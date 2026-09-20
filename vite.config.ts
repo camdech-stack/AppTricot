@@ -54,8 +54,17 @@ export default defineConfig({
       },
       workbox: {
         // woff2: local Outfit/DM Sans font files, precached so typography
-        // still renders correctly with no network (see CLAUDE.md).
-        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,woff2}'],
+        // still renders correctly with no network (see CLAUDE.md). mjs: the
+        // pdf.js worker, imported via `?url` so Vite copies it verbatim
+        // instead of bundling it as a regular chunk (still `.mjs`, not the
+        // `.js` already covered above). pfb/ttf: pdf.js's standard font
+        // data (see scripts/copy-pdfjs-assets.mjs) — both needed for the
+        // PDF viewer to work fully offline (step 4).
+        globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,woff2,mjs,pfb,ttf}'],
+        // The pdf.js worker alone is ~1.3MB, above workbox's 2MB default —
+        // bumped so it (and the standard font files) still get precached
+        // instead of silently skipped.
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         // Without this, a freshly installed SW only controls the *next*
         // navigation: the tab that triggered the install stays uncontrolled
         // until it's fully closed and reopened, so it still hits the

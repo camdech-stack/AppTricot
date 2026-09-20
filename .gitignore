@@ -31,3 +31,8 @@ pnpm-debug.log*
 /exports/
 *.pdf
 !docs/**/*.pdf
+
+# pdf.js standard font data, copied from node_modules by
+# scripts/copy-pdfjs-assets.mjs (predev/prebuild) — node_modules is the
+# single source of truth, never committed.
+/public/pdf/
