@@ -5,6 +5,7 @@ import { StripedProgressBar } from '../ui'
 import { useYarnImageUrl } from '../../hooks/useYarnImageUrl'
 import { useSettings } from '../../hooks/useSettings'
 import { formatYarnQuantity } from '../../utils/formatYarnQuantity'
+import { yarnColorFamilyBorderStyle } from './colorFamilyMeta'
 import type { YarnRecord } from '../../data'
 import type { YarnStockSummary } from '../../data'
 
@@ -25,7 +26,7 @@ export function YarnCard({ yarn, stock }: YarnCardProps) {
   )
 
   return (
-    <Link to={`/laine/${yarn.id}`} className={styles.card}>
+    <Link to={`/laine/${yarn.id}`} className={styles.card} style={yarnColorFamilyBorderStyle(yarn.colorFamily)}>
       <div
         className={coverUrl ? styles.thumb : `${styles.thumb} ${patterns.stripes}`}
         style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}

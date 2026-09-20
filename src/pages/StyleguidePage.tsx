@@ -14,6 +14,8 @@ import {
   WaveDivider,
   type ProjectColor,
 } from '../components/ui'
+import { COLOR_FAMILY_LABELS, COLOR_FAMILY_OPTIONS } from '../components/yarn/yarnMeta'
+import { yarnColorFamilyBorderStyle } from '../components/yarn/colorFamilyMeta'
 import {
   HomeIcon,
   PatternsIcon,
@@ -137,6 +139,30 @@ export function StyleguidePage() {
               <div className={styles.swatchName}>{project.name}</div>
               <div className={styles.swatchHex}>{project.hex}</div>
               <StripedProgressBar progress={0.6} projectColor={project.color} label={`Progression ${project.name}`} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <SectionTitle title="Couleurs de laine (étape 3a)" />
+        <div className={styles.projectGrid}>
+          {COLOR_FAMILY_OPTIONS.map((family) => (
+            <div key={family} className={styles.projectCard}>
+              <div
+                className={styles.swatchColor}
+                style={
+                  family === 'multicolore'
+                    ? {
+                        ...yarnColorFamilyBorderStyle(family),
+                        borderWidth: '4px',
+                        borderStyle: 'solid',
+                        background: 'var(--color-surface)',
+                      }
+                    : { background: `var(--color-yarn-${family})` }
+                }
+              />
+              <div className={styles.swatchName}>{COLOR_FAMILY_LABELS[family]}</div>
             </div>
           ))}
         </div>

@@ -50,6 +50,37 @@
   --color-project-rose: #ee8fb8;
   --color-project-rose-soft: color-mix(in srgb, var(--color-project-rose) 22%, white);
 
+  /* Yarn color families (étape 3a), one per `YarnColorFamily` value — a
+     fixed vocabulary from the cahier des charges (section 16), kept
+     separate from the 6 project colors above since the two are unrelated
+     concepts (a yarn's real-world color vs. a project's UI accent). */
+  --color-yarn-rouge: #c43b3b;
+  --color-yarn-rouge-soft: color-mix(in srgb, var(--color-yarn-rouge) 22%, white);
+  --color-yarn-rose: #e58bb0;
+  --color-yarn-rose-soft: color-mix(in srgb, var(--color-yarn-rose) 22%, white);
+  --color-yarn-orange: #db7b3e;
+  --color-yarn-orange-soft: color-mix(in srgb, var(--color-yarn-orange) 22%, white);
+  --color-yarn-jaune: #d2a93e;
+  --color-yarn-jaune-soft: color-mix(in srgb, var(--color-yarn-jaune) 22%, white);
+  --color-yarn-vert: #6e9c5d;
+  --color-yarn-vert-soft: color-mix(in srgb, var(--color-yarn-vert) 22%, white);
+  --color-yarn-bleu: #5b7fc7;
+  --color-yarn-bleu-soft: color-mix(in srgb, var(--color-yarn-bleu) 22%, white);
+  --color-yarn-violet: #8a63a8;
+  --color-yarn-violet-soft: color-mix(in srgb, var(--color-yarn-violet) 22%, white);
+  --color-yarn-marron: #8a5a3b;
+  --color-yarn-marron-soft: color-mix(in srgb, var(--color-yarn-marron) 22%, white);
+  --color-yarn-gris: #8d8378;
+  --color-yarn-gris-soft: color-mix(in srgb, var(--color-yarn-gris) 22%, white);
+  --color-yarn-noir: #2b1a20;
+  --color-yarn-noir-soft: color-mix(in srgb, var(--color-yarn-noir) 22%, white);
+  --color-yarn-blanc: #d9ccc0;
+  --color-yarn-blanc-soft: color-mix(in srgb, var(--color-yarn-blanc) 22%, white);
+  /* No single hue fits "multicolore" — YarnCard borders it with a gradient
+     across the other yarn colors instead (see colorFamilyMeta.ts); this is
+     only a plain-color fallback for contexts that need one. */
+  --color-yarn-multicolore: var(--color-primary);
+
   /* Radii */
   --radius-sm: 12px;
   --radius-md: 20px;
