@@ -28,6 +28,12 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const counters = useCounters(project.id)
   const progress = computeProjectProgress(counters ?? [])
   const isDone = project.status === 'done'
+  // The card always shows a percentage, even without a counter goal to
+  // compute a real ratio from: a done project reads 100%, anything else 0%
+  // (row counts read as clutter next to the other cards' real percentages).
+  // Once progress comes from the guide (step 5b) every project will have a
+  // real ratio here.
+  const progressPercent = progress.kind === 'percent' ? Math.round(progress.ratio * 100) : isDone ? 100 : 0
 
   return (
     <Link
@@ -53,9 +59,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
       )}
 
       <div className={styles.overlay}>
-        <span className={styles.progressBadge}>
-          {progress.kind === 'percent' ? `${Math.round(progress.ratio * 100)} %` : `${progress.rows} rangs`}
-        </span>
+        <span className={styles.progressBadge}>{progressPercent} %</span>
         <div className={styles.name}>{project.name}</div>
         {project.targetEndDate && (
           <div className={styles.endDate}>Fin prévue le {formatDateFr(project.targetEndDate)}</div>
