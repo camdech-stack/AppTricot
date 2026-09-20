@@ -1,0 +1,136 @@
+.page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: calc(var(--safe-top) + var(--space-8)) calc(var(--safe-right) + var(--space-16)) var(--space-8)
+    calc(var(--safe-left) + var(--space-16));
+  border-bottom: 1px solid var(--color-border);
+}
+
+.headerTitle {
+  font-weight: 700;
+  font-family: var(--font-heading);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tabBar {
+  display: flex;
+  gap: var(--space-8);
+  padding: var(--space-12) calc(var(--safe-left) + var(--space-16)) 0 calc(var(--safe-right) + var(--space-16));
+}
+
+.tabBar button {
+  flex: 1;
+  min-height: var(--tap-min);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.tabBar button[aria-selected='true'] {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.tabDisabled {
+  opacity: 0.5;
+}
+
+.panes {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.paneVisible {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.paneHidden {
+  display: none;
+}
+
+.viewerHost {
+  flex: 1;
+  min-height: 0;
+}
+
+.patternSelector {
+  display: flex;
+  gap: var(--space-8);
+  overflow-x: auto;
+  padding: var(--space-12) calc(var(--safe-left) + var(--space-16)) 0 calc(var(--safe-right) + var(--space-16));
+}
+
+.patternSelector button {
+  flex: none;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-16);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.patternSelector button[aria-pressed='true'] {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary-strong);
+}
+
+.emptyPattern {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-32);
+}
+
+/* iPad / desktop landscape: side-by-side split view instead of tabs — both
+   panes stay in the DOM either way, only the layout changes (see CLAUDE.md
+   "iPad et écrans larges en paysage"). */
+@media (min-width: 1024px) and (orientation: landscape) {
+  .tabBar {
+    display: none;
+  }
+
+  .panes {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .paneVisible,
+  .paneHidden {
+    display: flex !important;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .paneVisible[data-pane='pattern'],
+  .paneHidden[data-pane='pattern'] {
+    flex: 0 0 60%;
+    border-right: 1px solid var(--color-border);
+  }
+
+  .paneVisible[data-pane='counter'],
+  .paneHidden[data-pane='counter'] {
+    flex: 0 0 40%;
+  }
+}

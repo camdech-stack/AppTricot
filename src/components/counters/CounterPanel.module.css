@@ -1,0 +1,246 @@
+.scrollArea {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-24);
+  padding: var(--space-8) calc(var(--safe-left) + var(--space-20)) calc(var(--safe-bottom) + var(--space-32))
+    calc(var(--safe-right) + var(--space-20));
+}
+
+/* Anti-mis-tap zone: no text selection, callout, or double-tap zoom while
+   counting (see CLAUDE.md, "Anti-erreurs iOS"). */
+.countingZone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.centralCard,
+.centralCardGoalReached {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-24) var(--space-20);
+  text-align: center;
+}
+
+.centralCardGoalReached {
+  background: var(--color-sage-soft);
+  border-color: transparent;
+}
+
+.counterName {
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.bigNumber {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--text-counter);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  animation: counterPop var(--transition-base);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bigNumber {
+    animation: none;
+  }
+}
+
+@keyframes counterPop {
+  from {
+    transform: scale(0.85);
+    opacity: 0.6;
+  }
+}
+
+.lastTap {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.chronoButton,
+.chronoButtonRunning {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: var(--tap-min);
+  padding: var(--space-8) var(--space-16);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.chronoButton {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.chronoButtonRunning {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+}
+
+.chronoDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  animation: chronoPulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chronoDot {
+    animation: none;
+  }
+}
+
+@keyframes chronoPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.goalBlock {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.goalText {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.undoButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: var(--tap-min);
+  padding: var(--space-8) var(--space-16);
+  border: none;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  margin-top: var(--space-8);
+}
+
+.buttonsRow {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: var(--space-12);
+  align-items: stretch;
+}
+
+.minusButton,
+.plusButton,
+.plusFiveButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-height: var(--counter-btn-min);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-weight: 700;
+  transition: transform var(--transition-fast);
+}
+
+.minusButton:active,
+.plusButton:active,
+.plusFiveButton:active {
+  transform: scale(var(--press-scale));
+}
+
+.minusButton {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.minusButton:disabled {
+  opacity: 0.4;
+}
+
+.plusButton {
+  background: var(--gradient-hero);
+  color: var(--color-on-primary);
+  min-height: calc(var(--counter-btn-min) * 1.3);
+  font-size: var(--text-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.plusFiveButton {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+}
+
+.roundButtonsRow {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-32);
+}
+
+.roundButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.roundButton svg {
+  width: 56px;
+  height: 56px;
+  padding: var(--space-16);
+  border-radius: 50%;
+  background: var(--color-surface-alt);
+  box-sizing: border-box;
+}
+
+.othersSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.othersHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.othersList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
