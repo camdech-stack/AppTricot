@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, ListOrdered, RotateCcw, Plus, Settings, Square, Target, Undo2 } from 'lucide-react'
+import { ArrowLeft, ListOrdered, Pause, Play, RotateCcw, Plus, Settings, Target, Undo2 } from 'lucide-react'
 import styles from './CounterPage.module.css'
 import { IconButton, Pill, StripedProgressBar, WaveDivider, ConfirmDialog } from '../components/ui'
 import { CounterCard } from '../components/counters/CounterCard'
@@ -9,13 +9,15 @@ import { TextPromptSheet } from '../components/counters/TextPromptSheet'
 import { GoalSheet } from '../components/counters/GoalSheet'
 import { SetValueSheet } from '../components/counters/SetValueSheet'
 import { HistorySheet } from '../components/counters/HistorySheet'
+import { SessionHistorySheet } from '../components/sessions/SessionHistorySheet'
 import { useProject } from '../hooks/useProject'
 import { useCounters } from '../hooks/useCounters'
 import { useCounter } from '../hooks/useCounter'
 import { useCounterEvents } from '../hooks/useCounterEvents'
 import { useRelativeTime } from '../hooks/useRelativeTime'
 import { useWakeLock } from '../hooks/useWakeLock'
-import { useElapsedTimer } from '../hooks/useElapsedTimer'
+import { useCounterChrono } from '../hooks/useCounterChrono'
+import { useSettings } from '../hooks/useSettings'
 import { formatDuration } from '../utils/formatDuration'
 import {
   addCounter,
@@ -37,6 +39,7 @@ type ActiveSheet =
   | 'goal'
   | 'setValue'
   | 'history'
+  | 'sessionHistory'
   | 'resetConfirm'
   | 'deleteConfirm'
   | null
@@ -48,7 +51,8 @@ export function CounterPage() {
 
   const project = useProject(projectId)
   const counters = useCounters(projectId ?? null)
-  const timer = useElapsedTimer()
+  const settings = useSettings()
+  const chrono = useCounterChrono({ projectId: projectId ?? null }, 'counter')
 
   useEffect(() => {
     if (!isStandalone) return
@@ -76,7 +80,6 @@ export function CounterPage() {
 
   function handleDelta(delta: number) {
     if (!activeCounter) return
-    timer.start()
     void applyCounterDelta(activeCounter.id, delta)
   }
 
@@ -122,22 +125,26 @@ export function CounterPage() {
               {activeCounter?.value ?? 0}
             </div>
             {lastTapped && <div className={styles.lastTap}>Dernier appui : {lastTapped}</div>}
-            {timer.started && (
-              <div className={styles.timerRow}>
-                <span className={styles.timerText}>{formatDuration(timer.elapsedMs)}</span>
-                {timer.running ? (
-                  <button
-                    type="button"
-                    className={styles.timerStopButton}
-                    onClick={timer.stop}
-                    aria-label="Arrêter le chronomètre"
-                  >
-                    <Square size={12} strokeWidth={1.75} fill="currentColor" />
-                  </button>
+            {settings?.trackingEnabled !== false && (
+              <button
+                type="button"
+                className={chrono.running ? styles.chronoButtonRunning : styles.chronoButton}
+                onClick={chrono.toggle}
+                aria-label={chrono.running ? `En cours : ${formatDuration(chrono.elapsedMs)}, arrêter le chrono` : chrono.label}
+              >
+                {chrono.running ? (
+                  <>
+                    <span className={styles.chronoDot} aria-hidden="true" />
+                    <span>En cours : {formatDuration(chrono.elapsedMs)}</span>
+                    <Pause size={18} strokeWidth={1.75} />
+                  </>
                 ) : (
-                  <span className={styles.timerStoppedLabel}>Arrêté</span>
+                  <>
+                    <Play size={18} strokeWidth={1.75} />
+                    <span>{chrono.label}</span>
+                  </>
                 )}
-              </div>
+              </button>
             )}
             {activeCounter?.goal != null && (
               <div className={styles.goalBlock}>
@@ -203,10 +210,7 @@ export function CounterPage() {
                   key={counter.id}
                   counter={counter}
                   onSelect={() => handleSelectCounter(counter.id)}
-                  onIncrement={() => {
-                    timer.start()
-                    void applyCounterDelta(counter.id, 1)
-                  }}
+                  onIncrement={() => void applyCounterDelta(counter.id, 1)}
                 />
               ))}
             </div>
@@ -222,8 +226,13 @@ export function CounterPage() {
         onSetGoal={() => setSheet('goal')}
         onSetValue={() => setSheet('setValue')}
         onShowHistory={() => setSheet('history')}
+        onShowSessionHistory={isStandalone ? () => setSheet('sessionHistory') : undefined}
         onDelete={() => setSheet('deleteConfirm')}
       />
+
+      {sheet === 'sessionHistory' && (
+        <SessionHistorySheet target={{ projectId: projectId ?? null }} onClose={closeSheet} />
+      )}
 
       {sheet === 'rename' && activeCounter && (
         <TextPromptSheet

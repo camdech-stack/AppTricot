@@ -1,8 +1,18 @@
+// Single French duration formatter (see CLAUDE.md "Formatage des durées"),
+// used everywhere a session/time-tracking duration is shown: "12 h 30"
+// above an hour, "45 min" below, "< 1 min" below a minute.
 export function formatDuration(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000)
-  const hours = Math.floor(totalSeconds / 3600)
-  const minutes = Math.floor((totalSeconds % 3600) / 60)
-  const seconds = totalSeconds % 60
-  const pad = (value: number) => String(value).padStart(2, '0')
-  return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${pad(minutes)}:${pad(seconds)}`
+  if (ms < 60_000) return '< 1 min'
+
+  const totalMinutes = Math.round(ms / 60_000)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+
+  if (hours === 0) return `${minutes} min`
+  if (minutes === 0) return `${hours} h`
+  return `${hours} h ${pad2(minutes)}`
+}
+
+function pad2(value: number): string {
+  return String(value).padStart(2, '0')
 }

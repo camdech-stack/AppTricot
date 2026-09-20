@@ -128,38 +128,52 @@
   color: var(--color-text-muted);
 }
 
-/* Visual-only chrono (see useElapsedTimer): no data behind it yet, real
-   time tracking arrives with step 2. */
-.timerRow {
-  display: flex;
+.chronoButton,
+.chronoButtonRunning {
+  display: inline-flex;
   align-items: center;
   gap: var(--space-8);
+  min-height: var(--tap-min);
+  padding: var(--space-8) var(--space-16);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.timerText {
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
+.chronoButton {
+  background: var(--color-surface-alt);
   color: var(--color-text);
 }
 
-.timerStopButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 50%;
-  background: var(--color-danger-soft);
-  color: var(--color-danger);
+.chronoButtonRunning {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
 }
 
-.timerStoppedLabel {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+.chronoDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  animation: chronoPulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chronoDot {
+    animation: none;
+  }
+}
+
+@keyframes chronoPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
 }
 
 .goalBlock {
