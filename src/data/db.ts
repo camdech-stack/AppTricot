@@ -5,6 +5,7 @@ import type {
   CounterRecord,
   CoverImageRecord,
   ProjectRecord,
+  SessionRecord,
 } from './types'
 
 // Schema migration convention:
@@ -21,6 +22,7 @@ class AppDatabase extends Dexie {
   counters!: EntityTable<CounterRecord, 'id'>
   counterEvents!: EntityTable<CounterEventRecord, 'id'>
   coverImages!: EntityTable<CoverImageRecord, 'id'>
+  sessions!: EntityTable<SessionRecord, 'id'>
 
   constructor() {
     super('mon-carnet-de-tricot')
@@ -98,6 +100,32 @@ class AppDatabase extends Dexie {
           .toCollection()
           .modify((project: Record<string, unknown>) => {
             project.targetEndDate = null
+          })
+      })
+
+    // Step 2: time tracking. Adds the `sessions` table and `trackingEnabled`
+    // on settings (not indexed, so its schema string is unchanged).
+    // `startedAt` is indexed (not `endedAt`, which is null while a session
+    // is open — IndexedDB never indexes a null property, see
+    // countersRepository's standalone-counter comment for the same
+    // constraint) so history/stats queries can sort project sessions
+    // without a full-table scan; open-session lookups (closeOrphanSessions)
+    // scan the small `sessions` table directly, same as standalone counters.
+    this.version(6)
+      .stores({
+        settings: 'id',
+        projects: 'id, status, lastActivityAt',
+        counters: 'id, projectId, [projectId+position]',
+        counterEvents: 'id, counterId, [counterId+createdAt]',
+        coverImages: 'id, projectId',
+        sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table('settings')
+          .toCollection()
+          .modify((settings: Record<string, unknown>) => {
+            settings.trackingEnabled = true
           })
       })
   }

@@ -13,6 +13,7 @@ export type WeightUnit = 'g'
 export interface AppSettingsRecord extends BaseEntity {
   lengthUnit: LengthUnit
   weightUnit: WeightUnit
+  trackingEnabled: boolean
 }
 
 export type ProjectCraft = 'knitting' | 'crochet'
@@ -69,4 +70,31 @@ export interface CounterEventRecord extends BaseEntity {
 export interface CoverImageRecord extends BaseEntity {
   projectId: string
   blob: Blob
+}
+
+// How a session was created: `auto` = the first counter tap on a target
+// opened it implicitly; `manual` = the chrono button (or the "add a manual
+// session" form in the history sheet) created it explicitly.
+export type SessionSource = 'auto' | 'manual'
+
+// What triggered/created the session. `guide` is unused until step 5b, which
+// will call `recordActivity`/`startSession` with origin "guide" and the
+// guide's projectId — see CLAUDE.md.
+export type SessionOrigin = 'counter' | 'guide' | 'manual'
+
+export type SessionEndReason = 'user_stop' | 'app_hidden' | 'switched' | 'recovered'
+
+export interface SessionRecord extends BaseEntity {
+  // null = time spent on the standalone counter (counted in global stats,
+  // never in a project's time stats — see CLAUDE.md "Attribution du temps").
+  projectId: string | null
+  startedAt: string
+  // null while the session is open.
+  endedAt: string | null
+  // Recovery-only heartbeat, written every 10s while open and visible, and
+  // on every activity write. Never used as an inactivity timeout.
+  lastHeartbeatAt: string
+  source: SessionSource
+  origin: SessionOrigin
+  endReason: SessionEndReason | null
 }

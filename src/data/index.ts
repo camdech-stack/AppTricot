@@ -31,6 +31,38 @@ export { setCoverImage, getCoverImage, deleteCoverImage } from './coverImagesRep
 export { compressCoverImage } from './image'
 export { computeProjectProgress, type ProjectProgress, type ProgressCounterInput } from './progress'
 export { nowIso, todayDateString } from './date'
+export {
+  recordActivity,
+  startSession,
+  stopSession,
+  handleForegroundLoss,
+  touchHeartbeat,
+  closeOrphanSessions,
+  getOpenSession,
+  getSessionsForTarget,
+  getAllSessions,
+  addManualSession,
+  updateSessionTimes,
+  deleteSession,
+  validateSessionTimes,
+  isManuallyStoppedFor,
+  getManualStopTarget,
+  getLiveSessionId,
+  type SessionTarget,
+  type SessionTimesCandidate,
+} from './sessionsRepository'
+export {
+  getSessionDuration,
+  computeProjectTimeStats,
+  computeGlobalTimeStats,
+  aggregateTimeByPeriod,
+  type SessionLike,
+  type TimeStats,
+  type GlobalTimeStats,
+  type TimePeriod,
+  type TimeRange,
+  type TimeBucket,
+} from './timeStats'
 export type {
   BaseEntity,
   AppSettingsRecord,
@@ -44,4 +76,8 @@ export type {
   CounterEventRecord,
   CounterEventType,
   CoverImageRecord,
+  SessionRecord,
+  SessionSource,
+  SessionOrigin,
+  SessionEndReason,
 } from './types'

@@ -1,6 +1,7 @@
 import { db } from './db'
 import { createId } from './id'
 import { nowIso } from './date'
+import { recordActivity } from './sessionsRepository'
 import type { CounterEventRecord, CounterEventType, CounterRecord } from './types'
 
 const MAIN_COUNTER_NAME = 'Rangs'
@@ -103,7 +104,7 @@ export async function deleteCounter(id: string): Promise<void> {
 // counter update, the event and the project's lastActivityAt atomically, so
 // rapid taps can never race or drop a count.
 export async function applyCounterDelta(id: string, delta: number): Promise<CounterRecord> {
-  return db.transaction('rw', db.counters, db.counterEvents, db.projects, async () => {
+  return db.transaction('rw', db.counters, db.counterEvents, db.projects, db.sessions, db.settings, async (tx) => {
     const counter = await db.counters.get(id)
     if (!counter) throw new Error(`Compteur introuvable : ${id}`)
 
@@ -128,12 +129,14 @@ export async function applyCounterDelta(id: string, delta: number): Promise<Coun
       await db.projects.update(counter.projectId, { lastActivityAt: now })
     }
 
+    await recordActivity({ projectId: counter.projectId }, now, tx, { origin: 'counter' })
+
     return updated
   })
 }
 
 export async function setCounterValue(id: string, value: number): Promise<CounterRecord> {
-  return db.transaction('rw', db.counters, db.counterEvents, db.projects, async () => {
+  return db.transaction('rw', db.counters, db.counterEvents, db.projects, db.sessions, db.settings, async (tx) => {
     const counter = await db.counters.get(id)
     if (!counter) throw new Error(`Compteur introuvable : ${id}`)
 
@@ -150,12 +153,14 @@ export async function setCounterValue(id: string, value: number): Promise<Counte
       await db.projects.update(counter.projectId, { lastActivityAt: now })
     }
 
+    await recordActivity({ projectId: counter.projectId }, now, tx, { origin: 'counter' })
+
     return updated
   })
 }
 
 export async function resetCounter(id: string): Promise<CounterRecord> {
-  return db.transaction('rw', db.counters, db.counterEvents, db.projects, async () => {
+  return db.transaction('rw', db.counters, db.counterEvents, db.projects, db.sessions, db.settings, async (tx) => {
     const counter = await db.counters.get(id)
     if (!counter) throw new Error(`Compteur introuvable : ${id}`)
 
@@ -170,6 +175,8 @@ export async function resetCounter(id: string): Promise<CounterRecord> {
     if (counter.projectId) {
       await db.projects.update(counter.projectId, { lastActivityAt: now })
     }
+
+    await recordActivity({ projectId: counter.projectId }, now, tx, { origin: 'counter' })
 
     return updated
   })
@@ -212,7 +219,7 @@ export async function getCounterEvents(counterId: string): Promise<CounterEventR
 // then marks it undoneAt. Repeatable: calling it again undoes the event
 // that was previously second-to-last. No "redo" for now.
 export async function undoLastEvent(counterId: string): Promise<CounterRecord | undefined> {
-  return db.transaction('rw', db.counters, db.counterEvents, db.projects, async () => {
+  return db.transaction('rw', db.counters, db.counterEvents, db.projects, db.sessions, db.settings, async (tx) => {
     const events = await db.counterEvents.where('counterId').equals(counterId).toArray()
     const lastActive = events.filter((event) => !event.undoneAt).sort((a, b) => b.sequence - a.sequence)[0]
     if (!lastActive) return undefined
@@ -229,6 +236,8 @@ export async function undoLastEvent(counterId: string): Promise<CounterRecord | 
     if (counter.projectId) {
       await db.projects.update(counter.projectId, { lastActivityAt: now })
     }
+
+    await recordActivity({ projectId: counter.projectId }, now, tx, { origin: 'counter' })
 
     return updated
   })

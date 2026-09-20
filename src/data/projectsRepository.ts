@@ -2,6 +2,7 @@ import { db } from './db'
 import { createId } from './id'
 import { nowIso, todayDateString } from './date'
 import { getCounters, MAIN_COUNTER_NAME } from './countersRepository'
+import { deleteProjectSessions } from './sessionsRepository'
 import type { CounterRecord, ProjectCraft, ProjectColorKey, ProjectRecord, ProjectStatus } from './types'
 
 export interface NewProjectInput {
@@ -109,7 +110,7 @@ export async function updateProject(id: string, patch: ProjectUpdateInput): Prom
 }
 
 export async function deleteProject(id: string): Promise<void> {
-  await db.transaction('rw', db.projects, db.counters, db.counterEvents, db.coverImages, async () => {
+  await db.transaction('rw', db.projects, db.counters, db.counterEvents, db.coverImages, db.sessions, async (tx) => {
     const counters = await getCounters(id)
     const counterIds = counters.map((counter) => counter.id)
     if (counterIds.length > 0) {
@@ -117,6 +118,8 @@ export async function deleteProject(id: string): Promise<void> {
       await db.counters.bulkDelete(counterIds)
     }
     await db.coverImages.delete(id)
+    // Standalone-counter sessions (projectId null) are never touched here.
+    await deleteProjectSessions(id, tx)
     await db.projects.delete(id)
   })
 }

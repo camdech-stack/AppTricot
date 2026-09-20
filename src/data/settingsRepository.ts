@@ -9,6 +9,7 @@ function defaultSettings(now: string): AppSettingsRecord {
     id: SETTINGS_ID,
     lengthUnit: 'm',
     weightUnit: 'g',
+    trackingEnabled: true,
     createdAt: now,
     updatedAt: now,
   }
@@ -33,7 +34,7 @@ export async function getSettings(): Promise<AppSettingsRecord> {
 }
 
 export async function updateSettings(
-  patch: Partial<Pick<AppSettingsRecord, 'lengthUnit'>>,
+  patch: Partial<Pick<AppSettingsRecord, 'lengthUnit' | 'trackingEnabled'>>,
 ): Promise<AppSettingsRecord> {
   const current = await getSettings()
   const updated: AppSettingsRecord = {
