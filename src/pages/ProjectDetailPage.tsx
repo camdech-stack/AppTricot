@@ -9,10 +9,12 @@ import { Button, IconButton, Pill, ProgressRing, StatTile, WaveDivider } from '.
 import { TimeCard } from '../components/sessions/TimeCard'
 import { SessionHistorySheet } from '../components/sessions/SessionHistorySheet'
 import { ProjectYarnCard } from '../components/yarn/ProjectYarnCard'
+import { ProjectPatternCard } from '../components/projects/ProjectPatternCard'
 import { CRAFT_LABELS, STATUS_LABELS, STATUS_PILL_COLORS } from '../components/projects/statusMeta'
 import { projectColorVar, projectColorSoftVar, projectGradient } from '../components/projects/colorMeta'
 import { useProject } from '../hooks/useProject'
 import { useCounters } from '../hooks/useCounters'
+import { useProjectPatterns } from '../hooks/useProjectPatterns'
 import { useCoverImageUrl } from '../hooks/useCoverImageUrl'
 import { useRelativeTime } from '../hooks/useRelativeTime'
 import { useNow } from '../hooks/useNow'
@@ -36,6 +38,7 @@ export function ProjectDetailPage() {
   const navigate = useNavigate()
   const project = useProject(projectId)
   const counters = useCounters(projectId ?? null)
+  const patternLinks = useProjectPatterns(projectId ?? '')
   const coverUrl = useCoverImageUrl(projectId)
   const lastActivity = useRelativeTime(project?.lastActivityAt)
 
@@ -78,6 +81,7 @@ export function ProjectDetailPage() {
   const progress = computeProjectProgress(counters ?? [])
   const totalRows = (counters ?? []).reduce((sum, counter) => sum + counter.value, 0)
   const isDone = project.status === 'done'
+  const hasPatterns = (patternLinks?.length ?? 0) > 0
 
   const heroStyle: CSSProperties = coverUrl
     ? {
@@ -211,29 +215,32 @@ export function ProjectDetailPage() {
 
             <ProjectYarnCard projectId={projectId} />
 
-            <div className={styles.comingSoonGrid}>
-              <div className={styles.comingSoonCard}>
-                Patron
-                <span>Bientôt</span>
-              </div>
-              <div className={styles.comingSoonCard}>
-                Guide de patron
-                <span>Bientôt</span>
-              </div>
+            <ProjectPatternCard projectId={projectId} />
+
+            <div className={styles.comingSoonCard}>
+              Guide de patron
+              <span>Bientôt</span>
             </div>
 
             <Button
               size="lg"
               className={styles.continueButton}
               style={{ background: projectGradient(project.colorKey) }}
-              onClick={() => navigate(`/projets/${projectId}/compteur`)}
+              onClick={() => navigate(hasPatterns ? `/projets/${projectId}/travail` : `/projets/${projectId}/compteur`)}
             >
               Continuer
             </Button>
 
-            <Button size="md" variant="secondary" disabled className={styles.guideButton}>
-              Guide de patron (bientôt)
-            </Button>
+            <div className={styles.secondaryActionsRow}>
+              {hasPatterns && (
+                <Button size="md" variant="secondary" onClick={() => navigate(`/projets/${projectId}/compteur`)}>
+                  Compteur seul
+                </Button>
+              )}
+              <Button size="md" variant="secondary" disabled className={styles.guideButton}>
+                Guide de patron (bientôt)
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import styles from './SettingsPage.module.css'
 import { useSettings } from '../hooks/useSettings'
-import { isStoragePersisted, requestPersistentStorage, updateSettings, type LengthUnit, type YarnQuantityUnit } from '../data'
+import { formatFileSize } from '../utils/formatFileSize'
+import { getPatterns, isStoragePersisted, requestPersistentStorage, updateSettings, type LengthUnit, type YarnQuantityUnit } from '../data'
 import { RavelrySettingsSection } from '../ravelry'
 
 // TEMPORARY: diagnosing a bottom safe-area rendering bug on a real iPhone,
@@ -73,6 +75,8 @@ export function SettingsPage() {
   const settings = useSettings()
   const [persisted, setPersisted] = useState<boolean | null>(null)
   const safeAreaDebugInfo = useSafeAreaDebugInfo()
+  const patterns = useLiveQuery(() => getPatterns(), [])
+  const patternsSizeBytes = (patterns ?? []).reduce((sum, pattern) => sum + pattern.sizeBytes, 0)
 
   useEffect(() => {
     isStoragePersisted().then(setPersisted).catch(() => setPersisted(false))
@@ -155,6 +159,14 @@ export function SettingsPage() {
       <section className={styles.section}>
         <div className={styles.sectionTitle}>Stockage</div>
         <div className={styles.card}>
+          <div className={styles.row}>
+            <span className={styles.rowLabel}>Patrons</span>
+            <span className={styles.rowValue}>
+              {patterns === undefined
+                ? '…'
+                : `${patterns.length} fichier${patterns.length > 1 ? 's' : ''} · ${formatFileSize(patternsSizeBytes)}`}
+            </span>
+          </div>
           <div className={styles.row}>
             <span className={styles.rowLabel}>Stockage persistant</span>
             {persisted === null ? (

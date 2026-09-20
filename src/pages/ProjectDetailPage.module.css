@@ -144,12 +144,6 @@
   outline: none;
 }
 
-.comingSoonGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-12);
-}
-
 .comingSoonCard {
   display: flex;
   flex-direction: column;
@@ -173,6 +167,15 @@
 
 .continueButton {
   width: 100%;
+}
+
+.secondaryActionsRow {
+  display: flex;
+  gap: var(--space-12);
+}
+
+.secondaryActionsRow > * {
+  flex: 1;
 }
 
 .guideButton {
