@@ -289,3 +289,96 @@ describe('schema migration to v8', () => {
     expect(yarn?.catalogFetchedAt).toBeNull()
   })
 })
+
+describe('schema migration to v9', () => {
+  it('adds the pattern tables and backfills lastWorkTab without losing existing data', async () => {
+    // Simulate a step-3b install already on schema v8, with a project
+    // predating lastWorkTab.
+    const legacy = new Dexie(DB_NAME)
+    legacy.version(1).stores({ settings: 'id' })
+    legacy.version(2).stores({ settings: 'id' })
+    legacy.version(3).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+    })
+    legacy.version(4).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+    })
+    legacy.version(5).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+    })
+    legacy.version(6).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+    })
+    legacy.version(7).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+      yarns: 'id, name',
+      yarnImages: 'id, yarnId',
+      projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+      yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+    })
+    legacy.version(8).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+      yarns: 'id, name',
+      yarnImages: 'id, yarnId',
+      projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+      yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+    })
+    await legacy.open()
+    await legacy.table('projects').put({
+      id: 'project-a',
+      name: 'Écharpe',
+      craft: 'knitting',
+      description: '',
+      status: 'in_progress',
+      colorKey: 'prune',
+      notes: '',
+      startedAt: '2024-01-01',
+      completedAt: null,
+      targetEndDate: null,
+      lastActivityAt: '2024-01-01T00:00:00.000Z',
+      activeCounterId: null,
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    })
+    legacy.close()
+
+    await db.open()
+
+    const project = await db.projects.get('project-a')
+    expect(project?.name).toBe('Écharpe')
+    expect(project?.lastWorkTab).toBeNull()
+
+    expect(await db.patterns.count()).toBe(0)
+    expect(await db.patternFiles.count()).toBe(0)
+    expect(await db.patternCovers.count()).toBe(0)
+    expect(await db.projectPatterns.count()).toBe(0)
+    expect(await db.patternViewStates.count()).toBe(0)
+  })
+})

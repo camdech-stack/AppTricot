@@ -98,6 +98,47 @@ export {
   type YarnListItem,
 } from './yarnSearch'
 export {
+  getPatterns,
+  getPattern,
+  findPatternByHash,
+  importPattern,
+  updatePatternMeta,
+  replacePatternFile,
+  setPatternCover,
+  getPatternCover,
+  getPatternFile,
+  touchPatternOpened,
+  deletePattern,
+  getProjectPatterns,
+  getPatternProjectLinks,
+  getAllProjectPatterns,
+  linkPatternToProject,
+  unlinkPatternFromProject,
+  getPatternViewState,
+  savePatternViewState,
+  getLastUsedPatternIdForProject,
+  type NewPatternInput,
+  type PatternMetaUpdateInput,
+  type ReplacePatternFileInput,
+  type PatternViewStateInput,
+} from './patternsRepository'
+export { hashBytes } from './patternHash'
+export {
+  validatePdfSignature,
+  pdfValidationMessage,
+  defaultPatternName,
+  PATTERN_SIZE_WARNING_BYTES,
+  type PdfValidationError,
+} from './patternValidation'
+export { normalizeTag, normalizeTags, suggestTags } from './tagUtils'
+export {
+  DEFAULT_PATTERN_FILTERS,
+  filterAndSortPatterns,
+  type PatternSortOption,
+  type PatternListFilters,
+  type PatternListItem,
+} from './patternSearch'
+export {
   METERS_PER_YARD,
   yardsToMeters,
   metersToYards,
@@ -135,6 +176,13 @@ export type {
   SessionSource,
   SessionOrigin,
   SessionEndReason,
+  ProjectWorkTab,
+  PatternRecord,
+  PatternFileRecord,
+  PatternCoverRecord,
+  PatternCoverKind,
+  ProjectPatternRecord,
+  PatternViewStateRecord,
   YarnRecord,
   YarnDraft,
   YarnColorFamily,

@@ -4,6 +4,11 @@ import type {
   CounterEventRecord,
   CounterRecord,
   CoverImageRecord,
+  PatternCoverRecord,
+  PatternFileRecord,
+  PatternRecord,
+  PatternViewStateRecord,
+  ProjectPatternRecord,
   ProjectRecord,
   ProjectYarnRecord,
   SessionRecord,
@@ -31,6 +36,11 @@ class AppDatabase extends Dexie {
   yarnImages!: EntityTable<YarnImageRecord, 'id'>
   projectYarns!: EntityTable<ProjectYarnRecord, 'id'>
   yarnUsages!: EntityTable<YarnUsageRecord, 'id'>
+  patterns!: EntityTable<PatternRecord, 'id'>
+  patternFiles!: EntityTable<PatternFileRecord, 'id'>
+  patternCovers!: EntityTable<PatternCoverRecord, 'id'>
+  projectPatterns!: EntityTable<ProjectPatternRecord, 'id'>
+  patternViewStates!: EntityTable<PatternViewStateRecord, 'id'>
 
   constructor() {
     super('mon-carnet-de-tricot')
@@ -198,6 +208,41 @@ class AppDatabase extends Dexie {
             settings.ravelryEnabled = false
             settings.ravelryUsername = null
             settings.ravelryPassword = null
+          })
+      })
+
+    // Step 4: pattern library. Adds `patterns`, `patternFiles` (1:1, PDF
+    // blob), `patternCovers` (1:1, JPEG blob), `projectPatterns` (many-to-
+    // many link, one per project/pattern pair) and `patternViewStates`
+    // (reading position per patternId+projectId pair — projectId can be
+    // null, which IndexedDB never indexes, so it's looked up by patternId
+    // alone and filtered in JS, same workaround as standalone counters/
+    // sessions). Also adds `lastWorkTab` on projects (not indexed, so its
+    // schema string is unchanged).
+    this.version(9)
+      .stores({
+        settings: 'id',
+        projects: 'id, status, lastActivityAt',
+        counters: 'id, projectId, [projectId+position]',
+        counterEvents: 'id, counterId, [counterId+createdAt]',
+        coverImages: 'id, projectId',
+        sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+        yarns: 'id, name',
+        yarnImages: 'id, yarnId',
+        projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+        yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+        patterns: 'id, name, *tags, fileHash, createdAt, lastOpenedAt',
+        patternFiles: 'id, patternId',
+        patternCovers: 'id, patternId',
+        projectPatterns: 'id, projectId, patternId, [projectId+patternId]',
+        patternViewStates: 'id, patternId, projectId',
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table('projects')
+          .toCollection()
+          .modify((project: Record<string, unknown>) => {
+            project.lastWorkTab = null
           })
       })
   }

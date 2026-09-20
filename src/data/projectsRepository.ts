@@ -3,7 +3,7 @@ import { createId } from './id'
 import { nowIso, todayDateString } from './date'
 import { getCounters, MAIN_COUNTER_NAME } from './countersRepository'
 import { deleteProjectSessions } from './sessionsRepository'
-import type { CounterRecord, ProjectCraft, ProjectColorKey, ProjectRecord, ProjectStatus } from './types'
+import type { CounterRecord, ProjectCraft, ProjectColorKey, ProjectRecord, ProjectStatus, ProjectWorkTab } from './types'
 
 export interface NewProjectInput {
   name: string
@@ -27,6 +27,7 @@ export interface ProjectUpdateInput {
   completedAt?: string | null
   targetEndDate?: string | null
   activeCounterId?: string | null
+  lastWorkTab?: ProjectWorkTab | null
 }
 
 export async function getProjects(): Promise<ProjectRecord[]> {
@@ -57,6 +58,7 @@ export async function createProject(input: NewProjectInput): Promise<ProjectReco
       targetEndDate: input.targetEndDate ?? null,
       lastActivityAt: now,
       activeCounterId: counterId,
+      lastWorkTab: null,
       createdAt: now,
       updatedAt: now,
     }
@@ -117,7 +119,17 @@ export async function updateProject(id: string, patch: ProjectUpdateInput): Prom
 export async function deleteProject(id: string, keepYarnUsage = true): Promise<void> {
   await db.transaction(
     'rw',
-    [db.projects, db.counters, db.counterEvents, db.coverImages, db.sessions, db.projectYarns, db.yarnUsages],
+    [
+      db.projects,
+      db.counters,
+      db.counterEvents,
+      db.coverImages,
+      db.sessions,
+      db.projectYarns,
+      db.yarnUsages,
+      db.projectPatterns,
+      db.patternViewStates,
+    ],
     async (tx) => {
       const counters = await getCounters(id)
       const counterIds = counters.map((counter) => counter.id)
@@ -135,6 +147,11 @@ export async function deleteProject(id: string, keepYarnUsage = true): Promise<v
       } else {
         await db.yarnUsages.where('projectId').equals(id).delete()
       }
+
+      // The pattern itself is never deleted here — only this project's
+      // links and reading position (see CLAUDE.md "Suppression et laine").
+      await db.projectPatterns.where('projectId').equals(id).delete()
+      await db.patternViewStates.where('projectId').equals(id).delete()
 
       await db.projects.delete(id)
     },

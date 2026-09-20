@@ -34,6 +34,11 @@ export type ProjectStatus = 'todo' | 'in_progress' | 'paused' | 'done'
 // `colorKey` field and the UI (StripedProgressBar re-exports this type).
 export type ProjectColorKey = 'prune' | 'pervenche' | 'terracotta' | 'peche' | 'rouge' | 'rose'
 
+// Which pane of the project work view (step 4) was last active. Read by
+// step 6's "Continuer" to reopen a project exactly where it was left, and
+// unused (null) until a project has at least one linked pattern.
+export type ProjectWorkTab = 'pattern' | 'counter' | 'guide'
+
 export interface ProjectRecord extends BaseEntity {
   name: string
   craft: ProjectCraft
@@ -50,6 +55,7 @@ export interface ProjectRecord extends BaseEntity {
   targetEndDate: string | null
   lastActivityAt: string
   activeCounterId: string | null
+  lastWorkTab: ProjectWorkTab | null
 }
 
 export interface CounterRecord extends BaseEntity {
@@ -214,4 +220,70 @@ export interface YarnUsageRecord extends BaseEntity {
   unit: YarnQuantityUnitValue
   usedAt: string
   note: string
+}
+
+// Step 4: pattern library. `craft` is nullable (unlike ProjectRecord's,
+// which is required) since a pattern can be imported before its craft is
+// known or simply left unset.
+export interface PatternRecord extends BaseEntity {
+  name: string
+  craft: ProjectCraft | null
+  // Normalized (trimmed, deduplicated case-insensitively) — see
+  // src/data/tagUtils.ts. Indexed multiEntry for tag search/filters.
+  tags: string[]
+  source: string
+  notes: string
+  pageCount: number
+  sizeBytes: number
+  fileName: string
+  // SHA-256 hex digest of the PDF bytes, used for duplicate detection on
+  // import — see src/data/patternHash.ts.
+  fileHash: string
+  // Starts at 1, incremented every time the file is replaced (never the
+  // metadata-only edits) — see replacePatternFile.
+  fileVersion: number
+  fileUpdatedAt: string
+  lastOpenedAt: string | null
+}
+
+// The PDF bytes themselves, in a separate table from `patterns` so list
+// queries never touch large blobs — same reasoning as coverImages/
+// yarnImages. 1:1 with its pattern (id doubles as patternId), replaced in
+// place on "Remplacer le fichier" rather than versioned.
+export interface PatternFileRecord extends BaseEntity {
+  patternId: string
+  blob: Blob
+}
+
+export type PatternCoverKind = 'auto' | 'custom'
+
+// 1:1 with its pattern, same id-doubling convention as PatternFileRecord.
+// `kind` distinguishes the auto-generated first-page render (regenerated
+// whenever the file is replaced) from a user-chosen photo (kept as-is).
+export interface PatternCoverRecord extends BaseEntity {
+  patternId: string
+  blob: Blob
+  kind: PatternCoverKind
+}
+
+// Many-to-many: a project can link several patterns (position orders them),
+// and a pattern can be linked to several projects. At most one link per
+// (projectId, patternId) pair.
+export interface ProjectPatternRecord extends BaseEntity {
+  projectId: string
+  patternId: string
+  position: number
+}
+
+// Reading position for a pattern, scoped per (patternId, projectId) pair —
+// projectId null means "opened straight from the library, not from a
+// project". page/zoom/offset are normalized (independent of screen size),
+// at most one row per pair (see savePatternViewState).
+export interface PatternViewStateRecord extends BaseEntity {
+  patternId: string
+  projectId: string | null
+  page: number
+  zoom: number
+  offsetX: number
+  offsetY: number
 }
