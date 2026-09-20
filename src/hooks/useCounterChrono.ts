@@ -11,7 +11,7 @@ import {
 } from '../data'
 import { useNow } from './useNow'
 
-const REFRESH_INTERVAL_MS = 10_000
+const REFRESH_INTERVAL_MS = 1_000
 
 export interface CounterChrono {
   running: boolean
@@ -22,7 +22,9 @@ export interface CounterChrono {
 
 // Backs the chrono button on the counter screen (CLAUDE.md, "Interface" >
 // "Bouton de chrono"): reads the single app-wide open session and reflects
-// whether it belongs to *this* target, refreshed every 10s while running.
+// whether it belongs to *this* target, refreshed every second (hh:mm:ss
+// display) while running — still derived from stored timestamps each tick,
+// never an in-memory chronometer.
 export function useCounterChrono(target: SessionTarget, origin: SessionOrigin): CounterChrono {
   const openSession = useLiveQuery(() => getOpenSession(), [])
   const running = Boolean(openSession && openSession.projectId === target.projectId)

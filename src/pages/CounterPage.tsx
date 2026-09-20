@@ -18,7 +18,7 @@ import { useRelativeTime } from '../hooks/useRelativeTime'
 import { useWakeLock } from '../hooks/useWakeLock'
 import { useCounterChrono } from '../hooks/useCounterChrono'
 import { useSettings } from '../hooks/useSettings'
-import { formatDuration } from '../utils/formatDuration'
+import { formatClockDuration, formatDuration } from '../utils/formatDuration'
 import {
   addCounter,
   applyCounterDelta,
@@ -135,7 +135,7 @@ export function CounterPage() {
                 {chrono.running ? (
                   <>
                     <span className={styles.chronoDot} aria-hidden="true" />
-                    <span>En cours : {formatDuration(chrono.elapsedMs)}</span>
+                    <span>En cours : {formatClockDuration(chrono.elapsedMs)}</span>
                     <Pause size={18} strokeWidth={1.75} />
                   </>
                 ) : (

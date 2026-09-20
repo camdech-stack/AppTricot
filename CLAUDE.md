@@ -136,7 +136,7 @@ API (`src/data/sessionsRepository.ts`, jamais Dexie dans les composants) :
 
 ## Décisions d'interface (étape 2)
 
-- **Bouton de chrono** (`useCounterChrono`, écran compteur) : lit la session ouverte pour toute l'app et compare son `projectId` à la cible affichée — n'apparaît pas si `settings.trackingEnabled` est `false`. Rafraîchi toutes les 10 s (`useNow`), jamais via un chronomètre en mémoire.
+- **Bouton de chrono** (`useCounterChrono`, écran compteur) : lit la session ouverte pour toute l'app et compare son `projectId` à la cible affichée — n'apparaît pas si `settings.trackingEnabled` est `false`. Affiché au format `hh:mm:ss` (`formatClockDuration`, `src/utils/formatDuration.ts`), rafraîchi chaque seconde (`useNow`) mais toujours calculé depuis les horodatages stockés, jamais via un chronomètre en mémoire. Le `aria-label` reste en français (`formatDuration`) pour la lecture par un lecteur d'écran.
 - **Historique des sessions** (`SessionHistorySheet`, `src/components/sessions`) : un seul composant, réutilisé tel quel depuis la carte "Temps" de la fiche projet et depuis le menu du compteur autonome (entrée "Historique des sessions" dans `CounterMenuSheet`, visible uniquement pour ce dernier — un projet y accède via sa carte "Temps"). Sessions groupées par jour ; la session actuellement ouverte n'est ni modifiable ni supprimable depuis cet écran (affichée "en cours").
 - **Réglages** : section "Suivi du temps" avec un interrupteur (pas de composant `Toggle` partagé pour l'instant, un seul endroit en a besoin) et une phrase d'explication courte, au-dessus de la section "Stockage".
 
