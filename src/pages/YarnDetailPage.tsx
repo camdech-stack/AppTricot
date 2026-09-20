@@ -5,6 +5,7 @@ import styles from './YarnDetailPage.module.css'
 import layoutStyles from '../components/layout/AppLayout.module.css'
 import { FloatingTabBar } from '../components/layout/FloatingTabBar'
 import { IconButton, StripedProgressBar, WaveDivider } from '../components/ui'
+import { YarnStockBar } from '../components/yarn/YarnStockBar'
 import { AdjustStockSheet } from '../components/yarn/AdjustStockSheet'
 import { LogUsageSheet } from '../components/yarn/LogUsageSheet'
 import { EditUsageSheet } from '../components/yarn/EditUsageSheet'
@@ -14,7 +15,7 @@ import { useYarnImageUrl } from '../hooks/useYarnImageUrl'
 import { useYarnUsages } from '../hooks/useYarnUsages'
 import { useSettings } from '../hooks/useSettings'
 import { formatDateFr } from '../utils/formatDate'
-import { formatYarnAmount, formatYarnQuantity } from '../utils/formatYarnQuantity'
+import { formatYarnAmount } from '../utils/formatYarnQuantity'
 import { computeProjectYarnLinkProgress, computeYarnStockSummary, type YarnUsageRecord } from '../data'
 
 export function YarnDetailPage() {
@@ -70,35 +71,7 @@ export function YarnDetailPage() {
               {yarn.dyeLot && <span className={styles.metaPill}>Lot {yarn.dyeLot}</span>}
             </div>
 
-            <div className={styles.quantitiesCard}>
-              <div className={styles.quantityGrid}>
-                <div className={styles.quantityItem}>
-                  <span className={styles.quantityLabel}>Initiale</span>
-                  <span className={styles.quantityValue}>{formatYarnQuantity(stock.initialSkeins, yarn, displayUnit, lengthUnit)}</span>
-                </div>
-                <div className={styles.quantityItem}>
-                  <span className={styles.quantityLabel}>Consommée</span>
-                  <span className={styles.quantityValue}>{formatYarnQuantity(stock.consumedSkeins, yarn, displayUnit, lengthUnit)}</span>
-                </div>
-                <div className={styles.quantityItem}>
-                  <span className={styles.quantityLabel}>Réservée</span>
-                  <span className={styles.quantityValue}>{formatYarnQuantity(stock.reservedSkeins, yarn, displayUnit, lengthUnit)}</span>
-                </div>
-                <div className={styles.quantityItem}>
-                  <span className={styles.quantityLabel}>Restante</span>
-                  <span className={styles.quantityValue}>{formatYarnQuantity(stock.remainingSkeins, yarn, displayUnit, lengthUnit)}</span>
-                </div>
-                <div className={styles.quantityItem}>
-                  <span className={styles.quantityLabel}>Disponible</span>
-                  <span className={styles.quantityValue}>{formatYarnQuantity(stock.availableSkeins, yarn, displayUnit, lengthUnit)}</span>
-                </div>
-                <div className={styles.quantityItem}>
-                  <span className={styles.quantityLabel}>Consommé</span>
-                  <span className={styles.quantityValue}>{stock.consumedRatio !== null ? `${Math.round(stock.consumedRatio * 100)} %` : '—'}</span>
-                </div>
-              </div>
-              <StripedProgressBar progress={stock.consumedRatio ?? 0} label="Consommation" />
-            </div>
+            <YarnStockBar yarn={yarn} stock={stock} displayUnit={displayUnit} lengthUnit={lengthUnit} />
 
             <button type="button" className={styles.shortcutButton} onClick={() => setAdjustOpen(true)}>
               J'ai acheté / retiré des pelotes

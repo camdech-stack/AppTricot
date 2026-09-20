@@ -64,37 +64,6 @@
   font-weight: 600;
 }
 
-.quantitiesCard {
-  background: var(--color-surface);
-  border-radius: var(--radius-md);
-  padding: var(--space-16);
-  box-shadow: var(--shadow-sm);
-}
-
-.quantityGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-16);
-  margin-bottom: var(--space-16);
-}
-
-.quantityItem {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.quantityLabel {
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-}
-
-.quantityValue {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: var(--text-lg);
-}
-
 .shortcutButton {
   min-height: var(--tap-min);
   padding: var(--space-12) var(--space-16);

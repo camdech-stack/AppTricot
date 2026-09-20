@@ -131,6 +131,39 @@ export function computeYarnStockSummary(
   return { initialSkeins, consumedSkeins, remainingSkeins, reservedSkeins, availableSkeins, consumedRatio }
 }
 
+export interface YarnStockBarSegments {
+  consumedRatio: number
+  reservedRatio: number
+  availableRatio: number
+  // Consumption alone exceeds the initial quantity (remainingSkeins is
+  // null): the bar reads as fully "consumed", reserved/available have no
+  // meaningful width to show.
+  stockExceeded: boolean
+}
+
+// Turns a stock summary into the three widths (0–1, always summing to at
+// most 1) a segmented stock bar draws: consumed, then reserved, then
+// available, in that order. Reserved is capped at whatever's left after
+// consumed, so a reservation bigger than the remaining stock (negative
+// `availableSkeins`) fills the rest of the bar instead of overflowing it —
+// the caller shows the negative amount as text, not as bar width.
+export function computeYarnStockBarSegments(stock: YarnStockSummary): YarnStockBarSegments {
+  if (stock.remainingSkeins === null) {
+    return { consumedRatio: stock.consumedSkeins > 0 ? 1 : 0, reservedRatio: 0, availableRatio: 0, stockExceeded: true }
+  }
+
+  if (stock.initialSkeins <= 0) {
+    return { consumedRatio: 0, reservedRatio: 0, availableRatio: 0, stockExceeded: false }
+  }
+
+  const consumedRatio = Math.min(stock.consumedSkeins / stock.initialSkeins, 1)
+  const remainingRatio = 1 - consumedRatio
+  const reservedRatio = Math.min(Math.max(stock.reservedSkeins, 0) / stock.initialSkeins, remainingRatio)
+  const availableRatio = Math.max(remainingRatio - reservedRatio, 0)
+
+  return { consumedRatio, reservedRatio, availableRatio, stockExceeded: false }
+}
+
 export interface ProjectYarnAvailability {
   status: 'ok' | 'missing' | 'unknown'
   // Missing amount, expressed in the need's own unit (only set when status === 'missing').

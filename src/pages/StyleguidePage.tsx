@@ -153,12 +153,7 @@ export function StyleguidePage() {
                 className={styles.swatchColor}
                 style={
                   family === 'multicolore'
-                    ? {
-                        ...yarnColorFamilyBorderStyle(family),
-                        borderWidth: '4px',
-                        borderStyle: 'solid',
-                        background: 'var(--color-surface)',
-                      }
+                    ? { ...yarnColorFamilyBorderStyle(family), borderWidth: '4px', borderStyle: 'solid' }
                     : { background: `var(--color-yarn-${family})` }
                 }
               />

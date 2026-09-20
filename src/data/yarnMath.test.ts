@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   checkProjectYarnAvailability,
   computeProjectYarnLinkProgress,
+  computeYarnStockBarSegments,
   computeYarnStockSummary,
   fromSkeins,
   metersToYards,
@@ -143,6 +144,63 @@ describe('checkProjectYarnAvailability', () => {
       [{ id: 'p1', status: 'in_progress' }],
     )
     expect(result.status).toBe('unknown')
+  })
+})
+
+describe('computeYarnStockBarSegments', () => {
+  it('splits a normal stock into consumed/reserved/available widths summing to 1', () => {
+    const segments = computeYarnStockBarSegments({
+      initialSkeins: 15,
+      consumedSkeins: 5,
+      remainingSkeins: 10,
+      reservedSkeins: 6,
+      availableSkeins: 4,
+      consumedRatio: 5 / 15,
+    })
+    expect(segments.consumedRatio).toBeCloseTo(5 / 15)
+    expect(segments.reservedRatio).toBeCloseTo(6 / 15)
+    expect(segments.availableRatio).toBeCloseTo(4 / 15)
+    expect(segments.consumedRatio + segments.reservedRatio + segments.availableRatio).toBeCloseTo(1)
+    expect(segments.stockExceeded).toBe(false)
+  })
+
+  it('caps the reserved width at what remains when availableSkeins is negative', () => {
+    const segments = computeYarnStockBarSegments({
+      initialSkeins: 15,
+      consumedSkeins: 2,
+      remainingSkeins: 13,
+      reservedSkeins: 14,
+      availableSkeins: -1,
+      consumedRatio: 2 / 15,
+    })
+    expect(segments.consumedRatio).toBeCloseTo(2 / 15)
+    expect(segments.reservedRatio).toBeCloseTo(13 / 15)
+    expect(segments.availableRatio).toBe(0)
+    expect(segments.consumedRatio + segments.reservedRatio).toBeCloseTo(1)
+  })
+
+  it('reads as fully consumed when the stock is exceeded', () => {
+    const segments = computeYarnStockBarSegments({
+      initialSkeins: 10,
+      consumedSkeins: 12,
+      remainingSkeins: null,
+      reservedSkeins: 0,
+      availableSkeins: null,
+      consumedRatio: 1.2,
+    })
+    expect(segments).toEqual({ consumedRatio: 1, reservedRatio: 0, availableRatio: 0, stockExceeded: true })
+  })
+
+  it('returns all zeros for a yarn with no stock at all', () => {
+    const segments = computeYarnStockBarSegments({
+      initialSkeins: 0,
+      consumedSkeins: 0,
+      remainingSkeins: 0,
+      reservedSkeins: 0,
+      availableSkeins: 0,
+      consumedRatio: null,
+    })
+    expect(segments).toEqual({ consumedRatio: 0, reservedRatio: 0, availableRatio: 0, stockExceeded: false })
   })
 })
 

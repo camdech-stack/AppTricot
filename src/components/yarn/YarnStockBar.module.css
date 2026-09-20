@@ -1,0 +1,131 @@
+.card {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-16);
+  box-shadow: var(--shadow-sm);
+}
+
+.totalRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+}
+
+.totalLabel {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.totalValue {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--text-lg);
+}
+
+.bar {
+  display: flex;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--color-surface-alt);
+}
+
+.bar > div {
+  height: 100%;
+}
+
+.segConsumed {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--color-primary) 0px,
+    var(--color-primary) 6px,
+    var(--color-primary-strong) 6px,
+    var(--color-primary-strong) 12px
+  );
+}
+
+.segReserved {
+  background: var(--color-gold);
+}
+
+.segAvailable {
+  background: var(--color-sage);
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-8);
+  margin-top: var(--space-16);
+}
+
+.legendItem {
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-sm);
+  padding: var(--space-8) var(--space-12);
+}
+
+.legendLabel {
+  display: flex;
+  align-items: center;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.legendDot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: var(--space-4);
+  flex: none;
+}
+
+.legendValue {
+  margin-top: 2px;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--text-md);
+}
+
+.legendPercent {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* The bracket "cups" the reserved+available legend cells from below: two
+   ticks rising up to meet them, joined by a horizontal line at the bottom. */
+.bracket {
+  margin-top: var(--space-8);
+}
+
+.bracketTick {
+  height: 9px;
+  border-left: 2px solid var(--color-text-muted);
+  border-right: 2px solid var(--color-text-muted);
+  border-bottom: 2px solid var(--color-text-muted);
+  border-radius: 0 0 4px 4px;
+}
+
+.bracketText {
+  margin-top: var(--space-4);
+  text-align: right;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.alert {
+  margin-top: var(--space-12);
+  padding: var(--space-8) var(--space-12);
+  background: var(--color-danger-soft);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.alert b {
+  color: var(--color-danger);
+}

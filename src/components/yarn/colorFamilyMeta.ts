@@ -21,10 +21,22 @@ const MULTICOLORE_GRADIENT = `linear-gradient(90deg, ${COLOR_FAMILY_OPTIONS.filt
   .map((family) => `var(--color-yarn-${family})`)
   .join(', ')})`
 
-// Returns either a plain border-color or, for "multicolore", a CSS
-// `border-image` shorthand value — the caller applies whichever property
-// its CSS actually declares based on `colorFamily === 'multicolore'`.
-export function yarnColorFamilyBorderStyle(family: YarnColorFamily | null): { borderColor?: string; borderImage?: string } {
-  if (family === 'multicolore') return { borderImage: `${MULTICOLORE_GRADIENT} 1` }
+// For a plain color family, a border-color is enough. "Multicolore" needs a
+// gradient, but `border-image` ignores `border-radius` (square corners even
+// on a rounded card) — the standard workaround is two backgrounds instead:
+// an opaque one clipped to the padding box (the card's real background) painted
+// over a gradient one clipped to the border box (only visible under the
+// border stroke, where the padding-box layer doesn't reach), both of which
+// respect the element's border-radius.
+export function yarnColorFamilyBorderStyle(
+  family: YarnColorFamily | null,
+  surfaceColor = 'var(--color-surface)',
+): { borderColor: string; background?: string } {
+  if (family === 'multicolore') {
+    return {
+      borderColor: 'transparent',
+      background: `linear-gradient(${surfaceColor}, ${surfaceColor}) padding-box, ${MULTICOLORE_GRADIENT} border-box`,
+    }
+  }
   return { borderColor: yarnColorFamilyVar(family) }
 }
