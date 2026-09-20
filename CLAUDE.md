@@ -119,6 +119,37 @@ Tout est calculé en pelotes en interne (`src/data/yarnMath.ts`, fonctions pures
 - `computeProjectYarnSummary(projectId)` (`src/data/yarnsRepository.ts`) : laine prévue/consommée/restante/pourcentage d'un projet tous fils confondus (en pelotes, seule unité qui peut les combiner) — exposée pour l'étape 6.
 - Recherche/tri/filtres : fonction pure `filterAndSortYarns` (`src/data/yarnSearch.ts`), testée séparément des écrans.
 
+## Modèle de données (étape 3b — recherche Ravelry)
+
+- Schéma Dexie en version 8 (`src/data/db.ts`) : v8 ajoute `ravelryPermalink`/`catalogFields`/`catalogFetchedAt` sur `yarns` et `ravelryEnabled`/`ravelryUsername`/`ravelryPassword` sur `settings`.
+- `yarns.ravelryPermalink` (nullable) : lien vers la page du fil sur Ravelry, affiché sur la fiche fil. `yarns.catalogFields` (`string[]`, vide par défaut) : noms des champs dont la valeur vient encore du catalogue — un champ en sort dès qu'il est modifié après le préremplissage (voir `computeRemainingCatalogFields`, `src/ravelry/catalogSync.ts`). `yarns.catalogFetchedAt` (nullable) : horodatage de la recherche qui a rempli le fil. `ravelryYarnId` et `catalogSource` existent depuis l'étape 3a.
+- `settings.ravelryEnabled` (défaut `false`), `ravelryUsername`/`ravelryPassword` (nullables) : identifiants de lecture seule créés par l'utilisateur sur ravelry.com. **Ce sont des secrets** : jamais logués (console ou message d'erreur), jamais dans une URL. **L'étape 7 (export/sauvegarde) devra explicitement exclure ces trois champs de tout export.**
+- Champs préremplissables par le catalogue (`YarnCatalogFieldKey`, `src/ravelry/catalogSync.ts`) : `name`, `brand`, `line`, `weightCategory`, `fiber`, `metersPerSkein`, `gramsPerSkein`. Couleur, lot de teinture, nombre de pelotes, prix, dates et photo restent toujours saisis à la main.
+
+## Règles de la licence Ravelry (résumé)
+
+L'API Ravelry est utilisée uniquement en lecture, avec les identifiants personnels en lecture seule de l'utilisateur (jamais une clé applicative partagée). Règles appliquées dans le code :
+
+- Aucune affiliation suggérée : mention "Non affilié à Ravelry" dans les Réglages et près de la recherche, pas de logo ni de couleur de marque Ravelry, nom de l'app inchangé.
+- Seul du texte technique est conservé (nom, marque, épaisseur, métrage, poids, composition, identifiant, lien) — jamais de photo, description ou avis du catalogue.
+- Aucune donnée Ravelry n'est mise en cache : le service worker exclut explicitement `api.ravelry.com` (`src/ravelry/serviceWorkerRule.ts`, stratégie NetworkOnly, vérifié par `serviceWorkerRule.test.ts` et par une inspection du `sw.js` généré).
+- La recherche ne se déclenche qu'à la demande explicite de l'utilisateur (bouton "Rechercher"), jamais en arrière-plan ni au chargement.
+- Le repo ne contient aucune donnée réelle de Ravelry : tous les tests utilisent des fils et identifiants inventés.
+- L'utilisateur peut tout supprimer à la demande : "Effacer mes identifiants" (Réglages) et "Supprimer les données Ravelry" (purge des champs encore issus du catalogue sur chaque fil, voir `purgeRavelryData`).
+
+## Isolation du module Ravelry
+
+Tout le code vit dans `src/ravelry/` (client HTTP, mapping tolérant, limiteur de débit, composants, pages), avec un point d'entrée unique `src/ravelry/index.ts`. Pour retirer complètement la fonctionnalité :
+
+1. Supprimer le dossier `src/ravelry/`.
+2. Retirer l'import et le rendu de `RavelrySettingsSection` dans `src/pages/SettingsPage.tsx`.
+3. Retirer le bouton "Rechercher dans le catalogue", le message vers les Réglages, la pill "Prérempli…" et `<RavelrySearchSheet>` dans `src/pages/YarnFormPage.tsx`, ainsi que les états/handlers `catalog*`/`ravelry*` qui leur sont propres.
+4. Retirer `<RavelryCatalogPill>` dans `src/pages/YarnDetailPage.tsx`.
+5. Retirer la route `/diagnostic-ravelry` et son import dans `src/app/router.tsx`.
+6. Retirer l'import de `RAVELRY_RUNTIME_CACHING_RULE` et l'option `runtimeCaching` dans `vite.config.ts`.
+
+Les champs `ravelryYarnId`/`catalogSource`/`ravelryPermalink`/`catalogFields`/`catalogFetchedAt` sur `yarns` et `ravelryEnabled`/`ravelryUsername`/`ravelryPassword` sur `settings` peuvent rester dans le schéma (jamais renseignés, sans effet) : un schéma Dexie déjà publié ne se modifie jamais rétroactivement (voir la convention de migration en tête de `src/data/db.ts`).
+
 ## Suppression et laine
 
 - Supprimer un fil (`deleteYarn`) : cascade sur ses `projectYarns`, ses `yarnUsages` et sa photo.
@@ -177,6 +208,14 @@ API (`src/data/sessionsRepository.ts`, jamais Dexie dans les composants) :
 - **Bloc quantités de la fiche fil** (`YarnStockBar`) : une barre segmentée plutôt qu'une grille de chiffres — la largeur du tronçon consommée/réservée/disponible est calculée par `computeYarnStockBarSegments` (pure, testée, `src/data/yarnMath.ts`), proportions relatives à `initialSkeins`. Une accolade sous les tronçons réservée+disponible (bords qui remontent vers eux, ligne de jonction en bas) porte le libellé "Restante = X". Le tronçon "consommée" reprend le motif rayé de `StripedProgressBar` (métaphore des rangs déjà tricotés) ; réservée en doré, disponible en sage. Deux dégradations : réservation supérieure au restant (`disponible` négatif) → le tronçon "réservée" occupe tout l'espace restant de la barre (pas de dépassement visuel), la valeur négative s'affiche telle quelle dans la légende et un encadré d'alerte l'explicite ; stock dépassé (`remainingSkeins` nul) → barre entièrement "consommée", pas d'accolade, alerte dédiée.
 - **`YarnCard`, encadré coloré** : bordure de la couleur de la famille de couleur du fil (12 tokens dédiés `--color-yarn-*`, `src/components/yarn/colorFamilyMeta.ts`), neutre (`--color-border`) si aucune famille n'est choisie. "Multicolore" n'a pas de teinte unique : `border-image` avec un dégradé fonctionne mais ignore `border-radius` (coins carrés) — la bordure dégradée utilise donc la double-`background` (fond uni en `padding-box` par-dessus le dégradé en `border-box`), seule technique qui respecte les coins arrondis de la carte.
 
+## Décisions d'interface (étape 3b)
+
+- **Réglages, section "Catalogue Ravelry (optionnel)"** (`RavelrySettingsSection`, sous "Suivi du temps") : interrupteur, champs identifiants (persistés à `onBlur`, jamais à chaque frappe), bouton "Tester la connexion" (états connecté/erreur classée), "Effacer mes identifiants", texte de transparence + mention "Non affilié à Ravelry" toujours visibles, bouton de purge avec confirmation affichant le nombre de fils concernés.
+- **Formulaire fil** : bouton "Rechercher dans le catalogue" tout en haut du formulaire (visible seulement si `ravelryEnabled` et identifiants renseignés, sinon lien vers les Réglages), ouvre `RavelrySearchSheet` par-dessus le formulaire déjà ouvert (pas de navigation) — le préremplissage écrit directement dans l'état du formulaire en cours, jamais dans la base tant que "Enregistrer" n'est pas pressé.
+- **Fiche fil** : `RavelryCatalogPill` (pill "Source : catalogue Ravelry" + lien "Voir sur Ravelry") juste au-dessus de la barre de stock, uniquement si `ravelryPermalink` est renseigné.
+- **Écran de diagnostic** (`RavelryDiagnosticPage`, `/#/diagnostic-ravelry`) : lit uniquement l'état en mémoire du dernier appel (`getLastRavelryCall`, `src/ravelry/client.ts`), jamais persisté, rafraîchi chaque seconde.
+- Limiteur de débit et annulation partagés (`ravelryRequestQueue`, `src/ravelry/requestQueue.ts`) : une seule requête à la fois (la précédente est annulée), 1 s minimum entre deux départs de requête, verrou de 10 s après un 429, timeout de 10 s par requête. Les fonctions de `src/ravelry/client.ts` acceptent une file en paramètre optionnel (par défaut la file partagée) uniquement pour permettre aux tests d'utiliser des files indépendantes.
+
 ## Feuille de route
 
 | Étape | Contenu | Statut |
@@ -185,7 +224,7 @@ API (`src/data/sessionsRepository.ts`, jamais Dexie dans les composants) :
 | 1 | Projets + compteurs (plusieurs compteurs par projet, objectif, +/-, annulation, historique, compteur autonome) | ✅ Fait |
 | 2 | Suivi du temps automatique | ✅ Fait |
 | 3a | Stock de laine (saisie manuelle) : fils, pelotes, consommation, réservation, disponibilité, recherche/filtres, laine dans la fiche projet | ✅ Fait |
-| 3b | Stock de laine — recherche dans le catalogue Ravelry (clé API) pour préremplir une fiche fil | ⬜ À faire |
+| 3b | Stock de laine — recherche dans le catalogue Ravelry (identifiants de lecture seule) pour préremplir une fiche fil | ✅ Fait |
 | 4 | Bibliothèque de patrons PDF + visionneuse (pdf.js) | ⬜ À faire |
 | 5a | Guides — modèle de données + éditeur manuel | ⬜ À faire |
 | 5b | Guides — mode suivi (compteur intégré, étape actuelle mémorisée) | ⬜ À faire |
