@@ -97,6 +97,32 @@ Par ailleurs, pas de compte utilisateur ni de système de paiement/abonnement (s
 - `coverImages` : id = projectId (relation 1:1), blob compressé (max 1200 px, JPEG qualité 0,8, orientation EXIF respectée via `createImageBitmap`, avec repli sans cette option si le navigateur la rejette). Compressée dès la sélection du fichier (pas à la soumission du formulaire) : l'original brut n'est jamais décodé dans un `<img>` ni conservé.
 - `computeProjectProgress` (`src/data/progress.ts`) est une fonction pure isolée et testée : progression du compteur principal s'il a un objectif, sinon moyenne des compteurs qui en ont un, sinon nombre de rangs affiché tel quel. Sera remplacée par la progression du guide à l'étape 5b. Les cartes de la liste des projets (`ProjectCard`) n'affichent cependant jamais ce nombre de rangs : sans pourcentage calculable, la carte affiche 100 % si le projet est "Terminé", 0 % sinon (voir "Décisions d'interface").
 
+## Modèle de données (étape 3a — stock de laine)
+
+- Schéma Dexie en version 7 (`src/data/db.ts`) : v7 ajoute `yarns`, `yarnImages`, `projectYarns`, `yarnUsages` et `settings.yarnQuantityUnit` (défaut `'weight'`).
+- **Aucun appel réseau dans cette étape.** `yarns.catalogSource` vaut toujours `'manual'`, `ravelryYarnId` toujours `null`. L'étape 3b (recherche dans le catalogue Ravelry, à faire) branchera un appel API pour préremplir le formulaire via le type `YarnDraft` (déjà présent, accepté par `YarnFormPage` et exposé par `toDuplicateDraft`) — jusque-là ces champs ne servent à rien.
+- `yarns` : name (obligatoire), brand, line, colorName, colorRef, colorFamily (`YarnColorFamily`, nullable), weightCategory (`YarnWeightCategory`, nullable), fiber, skeinCount (nombre ≥ 0, décimales autorisées), metersPerSkein/gramsPerSkein (nullable), dyeLot, notes, price (nullable), purchasedAt (nullable, `YYYY-MM-DD`), ravelryYarnId (nullable), catalogSource (`'manual' | 'ravelry'`).
+- `yarnImages` : id = yarnId (relation 1:1, même schéma que `coverImages`), blob compressé via `compressCoverImage` (réutilisé tel quel depuis l'étape 1, malgré son nom).
+- `projectYarns` : un lien par (projectId, yarnId) — `linkYarnToProject` met à jour le lien existant plutôt que d'en créer un second. plannedValue + plannedUnit (`'g' | 'm' | 'skein'`).
+- `yarnUsages` : journal de consommation, jamais résumé ailleurs. yarnId, projectId (nullable = non rattaché à un projet), value + unit, usedAt (`YYYY-MM-DD`), note.
+- Stockage en système métrique uniquement (grammes, mètres) : les yards ne servent qu'à la saisie/l'affichage, convertis via `yardsToMeters`/`metersToYards` (`src/data/yarnMath.ts`, 1 yd = 0,9144 m) à la frontière UI — jamais stockés tels quels.
+- `settings.yarnQuantityUnit` (`'skein' | 'weight' | 'length'`) est le réglage d'unité d'affichage des quantités de laine ; le cas `'length'` réutilise `settings.lengthUnit` (m/yd, déjà existant) pour choisir entre mètres et yards. `formatYarnQuantity`/`formatYarnAmount` (`src/utils/formatYarnQuantity.ts`) centralisent ce formatage.
+
+## Règles de calcul de la laine (étape 3a)
+
+Tout est calculé en pelotes en interne (`src/data/yarnMath.ts`, fonctions pures et testées), converties via `metersPerSkein`/`gramsPerSkein` ; `toSkeins`/`fromSkeins` renvoient `null` quand la conversion est impossible (figure par pelote manquante).
+
+- `computeYarnStockSummary(yarn, usages, projectYarns, projects)` : initiale = `skeinCount` ; consommée = somme de tous les `yarnUsages` du fil (tous projets confondus, y compris `projectId: null`) ; restante = initiale − consommée (`null` si négative → afficher "stock dépassé", jamais une valeur négative) ; réservée = somme, sur les projets liés au statut "à faire"/"en cours"/"en pause", de `max(prévu − consommé par ce projet, 0)` (un projet "terminé" ne réserve plus rien) ; disponible = restante − réservée (peut être négatif : signale une réservation supérieure à ce qu'il reste, distinct du cas "stock dépassé").
+- `checkProjectYarnAvailability(link, yarn, usages, projectYarns, projects)` : besoin = prévu − déjà consommé par ce projet ; stock = restante − réservée par les **autres** projets ; résultat `'ok' | 'missing' | 'unknown'` (`'unknown'` si la conversion est impossible — message "Vérification impossible : renseigne le poids ou le métrage par pelote du fil").
+- `computeProjectYarnLinkProgress` : consommé/prévu d'un lien projet-fil, pour la StripedProgressBar et le pourcentage.
+- `computeProjectYarnSummary(projectId)` (`src/data/yarnsRepository.ts`) : laine prévue/consommée/restante/pourcentage d'un projet tous fils confondus (en pelotes, seule unité qui peut les combiner) — exposée pour l'étape 6.
+- Recherche/tri/filtres : fonction pure `filterAndSortYarns` (`src/data/yarnSearch.ts`), testée séparément des écrans.
+
+## Suppression et laine
+
+- Supprimer un fil (`deleteYarn`) : cascade sur ses `projectYarns`, ses `yarnUsages` et sa photo.
+- Supprimer un projet (`deleteProject(id, keepYarnUsage = true)`) : ses `projectYarns` sont toujours supprimés (un prévu n'a pas de sens sans projet) ; `keepYarnUsage` (case à cocher "Conserver la laine consommée dans le stock" dans `ProjectFormPage`, cochée par défaut) décide du sort de ses `yarnUsages` — `true` les réattribue à `projectId: null` (la laine reste déduite du stock), `false` les supprime (la laine est rendue au stock).
+
 ## Fiabilité du compteur
 
 - Chaque +1/-1/+5/remise à zéro/valeur manuelle/annulation passe par une seule transaction Dexie (`src/data/countersRepository.ts`) qui lit la valeur courante dans la transaction (jamais depuis l'état React), met à jour le compteur, ajoute l'événement et touche `lastActivityAt` du projet. Les transactions Dexie sur les mêmes tables sont sérialisées par IndexedDB : des appuis en rafale ne perdent jamais de comptage (testé avec 30 appels concurrents dans `countersRepository.test.ts`).
@@ -140,6 +166,14 @@ API (`src/data/sessionsRepository.ts`, jamais Dexie dans les composants) :
 - **Historique des sessions** (`SessionHistorySheet`, `src/components/sessions`) : un seul composant, réutilisé tel quel depuis la carte "Temps" de la fiche projet et depuis le menu du compteur autonome (entrée "Historique des sessions" dans `CounterMenuSheet`, visible uniquement pour ce dernier — un projet y accède via sa carte "Temps"). Sessions groupées par jour ; la session actuellement ouverte n'est ni modifiable ni supprimable depuis cet écran (affichée "en cours").
 - **Réglages** : section "Suivi du temps" avec un interrupteur (pas de composant `Toggle` partagé pour l'instant, un seul endroit en a besoin) et une phrase d'explication courte, au-dessus de la section "Stockage".
 
+## Décisions d'interface (étape 3a)
+
+- **Onglet Laine** (`YarnPage`, dans `AppLayout`, garde le `FloatingTabBar`) : recherche + tri + bouton de filtres dans une feuille (`YarnFilterSheet` : épaisseur, famille de couleur, projet associé, en stock/épuisé, métrage minimum par pelote — converti dans l'unité de longueur choisie). En-tête : nombre de fils et de pelotes. Grille 1 colonne sur iPhone, 2 à partir de 640px, 3 à partir de 1024px — `YarnCard` est une carte horizontale (miniature + infos), pas une tuile plein cadre comme `ProjectCard`.
+- **Fiche fil** et **formulaire fil** vivent hors `AppLayout` (`YarnDetailPage`, `YarnFormPage`, mêmes routes de premier niveau que les projets) : la fiche garde le `FloatingTabBar`, le formulaire ne l'affiche pas — même convention que les projets. Le formulaire est en sections (identité, couleur, format, stock, achat, photo, notes) et accepte un `YarnDraft` optionnel via `location.state.draft` (prérempli par "Dupliquer pour une autre couleur", et futur point d'entrée de l'étape 3b).
+- Consommation et réservation partagent deux feuilles réutilisables (`src/components/yarn`) : `LogUsageSheet` (fil fixe + projet libre depuis la fiche fil, ou projet fixe + fil à choisir parmi ceux liés depuis la carte "Laine" d'un projet) et `LinkYarnSheet` (ajouter un fil au projet avec recherche, ou modifier/retirer un lien existant). `AdjustStockSheet` ("j'ai acheté / retiré des pelotes") modifie `skeinCount` directement, distinct d'une consommation.
+- **Fiche projet, carte "Laine"** (`ProjectYarnCard`, remplace la carte grisée — la grille "Bientôt" ne contient plus que Patron et Guide de patron, passée à 2 colonnes) : pill de disponibilité sage-soft "✓ Stock suffisant" / terracotta-soft "⚠ X manquants", texte toujours dans `--color-text` (jamais la couleur d'accent, voir "Système de design").
+- **Réglages** : `settings.yarnQuantityUnit` en 3ᵉ option de la section "Unités" (pelotes/poids/longueur), sous les réglages existants de longueur/poids.
+
 ## Feuille de route
 
 | Étape | Contenu | Statut |
@@ -147,7 +181,8 @@ API (`src/data/sessionsRepository.ts`, jamais Dexie dans les composants) :
 | 0 | Fondations et design : projet, PWA installable, navigation squelette, couche de données Dexie, réglages minimaux, déploiement GitHub Pages | ✅ Fait |
 | 1 | Projets + compteurs (plusieurs compteurs par projet, objectif, +/-, annulation, historique, compteur autonome) | ✅ Fait |
 | 2 | Suivi du temps automatique | ✅ Fait |
-| 3 | Stock de laine, consommation, vérification de disponibilité | ⬜ À faire |
+| 3a | Stock de laine (saisie manuelle) : fils, pelotes, consommation, réservation, disponibilité, recherche/filtres, laine dans la fiche projet | ✅ Fait |
+| 3b | Stock de laine — recherche dans le catalogue Ravelry (clé API) pour préremplir une fiche fil | ⬜ À faire |
 | 4 | Bibliothèque de patrons PDF + visionneuse (pdf.js) | ⬜ À faire |
 | 5a | Guides — modèle de données + éditeur manuel | ⬜ À faire |
 | 5b | Guides — mode suivi (compteur intégré, étape actuelle mémorisée) | ⬜ À faire |

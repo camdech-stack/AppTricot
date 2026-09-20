@@ -7,6 +7,8 @@ import { ProjectDetailPage } from '../pages/ProjectDetailPage'
 import { CounterPage } from '../pages/CounterPage'
 import { PatternsPage } from '../pages/PatternsPage'
 import { YarnPage } from '../pages/YarnPage'
+import { YarnFormPage } from '../pages/YarnFormPage'
+import { YarnDetailPage } from '../pages/YarnDetailPage'
 import { StatsPage } from '../pages/StatsPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { StyleguidePage } from '../pages/StyleguidePage'
@@ -38,4 +40,7 @@ export const router = createHashRouter([
   { path: '/projets/:projectId/modifier', element: <ProjectFormPage /> },
   { path: '/projets/:projectId/compteur', element: <CounterPage /> },
   { path: '/compteur', element: <CounterPage /> },
+  { path: '/laine/nouveau', element: <YarnFormPage /> },
+  { path: '/laine/:yarnId', element: <YarnDetailPage /> },
+  { path: '/laine/:yarnId/modifier', element: <YarnFormPage /> },
 ])

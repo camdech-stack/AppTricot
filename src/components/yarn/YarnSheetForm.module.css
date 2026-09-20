@@ -1,0 +1,93 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-bottom: var(--space-16);
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.input,
+.select,
+.textarea {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-12) var(--space-16);
+  font-size: var(--text-md);
+  background: var(--color-surface);
+  min-height: var(--tap-min);
+}
+
+.quantityRow {
+  display: flex;
+  gap: var(--space-8);
+}
+
+.quantityRow .input {
+  flex: 1;
+}
+
+.quantityRow .select {
+  flex: none;
+  width: 110px;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+}
+
+.actions > * {
+  flex: 1;
+}
+
+.searchInput {
+  width: 100%;
+  margin-bottom: var(--space-12);
+}
+
+.pickerList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  max-height: 260px;
+  overflow-y: auto;
+  margin-bottom: var(--space-16);
+}
+
+.pickerItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-12);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  text-align: left;
+}
+
+.pickerItem[aria-pressed='true'] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.pickerItemName {
+  font-weight: 600;
+}
+
+.pickerItemMeta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.error {
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+  margin-bottom: var(--space-12);
+}

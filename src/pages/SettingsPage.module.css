@@ -28,7 +28,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-16);
+  flex-wrap: wrap;
+  gap: var(--space-8) var(--space-16);
   padding: var(--space-12) var(--space-16);
 }
 

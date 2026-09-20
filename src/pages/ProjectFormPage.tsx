@@ -51,6 +51,7 @@ export function ProjectFormPage() {
   const [saving, setSaving] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [keepYarnUsage, setKeepYarnUsage] = useState(true)
 
   const existingCoverUrl = useCoverImageUrl(projectId)
   const [previewUrl, setPreviewUrl] = useState<string>()
@@ -155,7 +156,7 @@ export function ProjectFormPage() {
     if (!projectId || deleting) return
     setDeleting(true)
     try {
-      await deleteProject(projectId)
+      await deleteProject(projectId, keepYarnUsage)
       navigate('/projets')
     } finally {
       setDeleting(false)
@@ -308,7 +309,12 @@ export function ProjectFormPage() {
         danger
         onConfirm={() => void handleDelete()}
         onCancel={() => setDeleteConfirmOpen(false)}
-      />
+      >
+        <label className={styles.keepYarnOption}>
+          <input type="checkbox" checked={keepYarnUsage} onChange={(event) => setKeepYarnUsage(event.target.checked)} />
+          Conserver la laine consommée dans le stock
+        </label>
+      </ConfirmDialog>
     </div>
   )
 }

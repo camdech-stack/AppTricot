@@ -112,3 +112,11 @@
   font-size: var(--text-sm);
   color: var(--color-danger);
 }
+
+.keepYarnOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--text-sm);
+  margin-top: var(--space-12);
+}

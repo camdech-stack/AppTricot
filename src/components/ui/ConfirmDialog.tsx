@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Sheet } from './Sheet'
 import { Button } from './Button'
 import styles from './ConfirmDialog.module.css'
@@ -10,6 +11,9 @@ interface ConfirmDialogProps {
   danger?: boolean
   onConfirm: () => void
   onCancel: () => void
+  // Extra content (e.g. a checkbox) rendered between the message and the
+  // action buttons — see the "keep consumed yarn" option on project delete.
+  children?: ReactNode
 }
 
 export function ConfirmDialog({
@@ -20,10 +24,12 @@ export function ConfirmDialog({
   danger = false,
   onConfirm,
   onCancel,
+  children,
 }: ConfirmDialogProps) {
   return (
     <Sheet open={open} onClose={onCancel} title={title}>
       <p className={styles.message}>{message}</p>
+      {children}
       <div className={styles.actions}>
         <Button variant="ghost" onClick={onCancel}>
           Annuler

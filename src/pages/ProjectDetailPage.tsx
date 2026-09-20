@@ -8,6 +8,7 @@ import { FloatingTabBar } from '../components/layout/FloatingTabBar'
 import { Button, IconButton, Pill, ProgressRing, StatTile, WaveDivider } from '../components/ui'
 import { TimeCard } from '../components/sessions/TimeCard'
 import { SessionHistorySheet } from '../components/sessions/SessionHistorySheet'
+import { ProjectYarnCard } from '../components/yarn/ProjectYarnCard'
 import { CRAFT_LABELS, STATUS_LABELS, STATUS_PILL_COLORS } from '../components/projects/statusMeta'
 import { projectColorVar, projectColorSoftVar, projectGradient } from '../components/projects/colorMeta'
 import { useProject } from '../hooks/useProject'
@@ -208,11 +209,9 @@ export function ProjectDetailPage() {
               onOpenHistory={() => setSessionHistoryOpen(true)}
             />
 
+            <ProjectYarnCard projectId={projectId} />
+
             <div className={styles.comingSoonGrid}>
-              <div className={styles.comingSoonCard}>
-                Laine
-                <span>Bientôt</span>
-              </div>
               <div className={styles.comingSoonCard}>
                 Patron
                 <span>Bientôt</span>

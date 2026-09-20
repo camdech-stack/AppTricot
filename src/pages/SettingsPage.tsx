@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import styles from './SettingsPage.module.css'
 import { useSettings } from '../hooks/useSettings'
-import { isStoragePersisted, requestPersistentStorage, updateSettings, type LengthUnit } from '../data'
+import { isStoragePersisted, requestPersistentStorage, updateSettings, type LengthUnit, type YarnQuantityUnit } from '../data'
 
 // TEMPORARY: diagnosing a bottom safe-area rendering bug on a real iPhone,
 // which can't be reproduced or measured from this dev environment. Remove
@@ -62,6 +62,12 @@ const LENGTH_OPTIONS: { value: LengthUnit; label: string }[] = [
   { value: 'yd', label: 'Yards' },
 ]
 
+const YARN_QUANTITY_OPTIONS: { value: YarnQuantityUnit; label: string }[] = [
+  { value: 'skein', label: 'Pelotes' },
+  { value: 'weight', label: 'Poids' },
+  { value: 'length', label: 'Longueur' },
+]
+
 export function SettingsPage() {
   const settings = useSettings()
   const [persisted, setPersisted] = useState<boolean | null>(null)
@@ -101,6 +107,21 @@ export function SettingsPage() {
           <div className={styles.row}>
             <span className={styles.rowLabel}>Poids</span>
             <span className={styles.rowValue}>Grammes (g)</span>
+          </div>
+          <div className={styles.row}>
+            <span className={styles.rowLabel}>Quantités de laine</span>
+            <div className={styles.segmented} role="group" aria-label="Unité d'affichage de la laine">
+              {YARN_QUANTITY_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={settings?.yarnQuantityUnit === option.value}
+                  onClick={() => updateSettings({ yarnQuantityUnit: option.value })}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>

@@ -1,0 +1,180 @@
+.hero {
+  color: var(--color-on-primary);
+  padding: calc(var(--safe-top) + var(--space-16)) var(--space-20) var(--space-20);
+}
+
+.heroFallback {
+  background: var(--gradient-hero);
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.heroIconButton {
+  color: inherit;
+}
+
+.heroIconButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.editButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: var(--tap-min);
+  padding: var(--space-8) var(--space-16);
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-weight: 600;
+}
+
+.name {
+  margin: var(--space-12) 0 var(--space-4);
+  font-size: var(--text-2xl);
+}
+
+.subtitle {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.body {
+  padding: 0 var(--space-20) calc(var(--safe-bottom) + var(--floating-bar-space));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.metaPill {
+  padding: var(--space-4) var(--space-12);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.quantitiesCard {
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  padding: var(--space-16);
+  box-shadow: var(--shadow-sm);
+}
+
+.quantityGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-16);
+  margin-bottom: var(--space-16);
+}
+
+.quantityItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quantityLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.quantityValue {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--text-lg);
+}
+
+.shortcutButton {
+  min-height: var(--tap-min);
+  padding: var(--space-12) var(--space-16);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-weight: 600;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.emptyText {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.linkedList,
+.usageList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.linkedItem {
+  display: block;
+  padding: var(--space-12);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: inherit;
+}
+
+.linkedItemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+  font-weight: 600;
+}
+
+.linkedItemQty {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.usageRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-12);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+}
+
+.usageAmount {
+  font-weight: 600;
+}
+
+.usageMeta {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
