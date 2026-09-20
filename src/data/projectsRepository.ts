@@ -109,17 +109,34 @@ export async function updateProject(id: string, patch: ProjectUpdateInput): Prom
   return updated
 }
 
-export async function deleteProject(id: string): Promise<void> {
-  await db.transaction('rw', db.projects, db.counters, db.counterEvents, db.coverImages, db.sessions, async (tx) => {
-    const counters = await getCounters(id)
-    const counterIds = counters.map((counter) => counter.id)
-    if (counterIds.length > 0) {
-      await db.counterEvents.where('counterId').anyOf(counterIds).delete()
-      await db.counters.bulkDelete(counterIds)
-    }
-    await db.coverImages.delete(id)
-    // Standalone-counter sessions (projectId null) are never touched here.
-    await deleteProjectSessions(id, tx)
-    await db.projects.delete(id)
-  })
+// keepYarnUsage (default true): when true, the project's logged yarn
+// consumption is reassigned to projectId null so the yarn stays deducted
+// from stock; when false, those usage entries are deleted and the yarn is
+// returned to stock. Either way the project's projectYarns links (planned
+// quantities) are always deleted — they're meaningless without the project.
+export async function deleteProject(id: string, keepYarnUsage = true): Promise<void> {
+  await db.transaction(
+    'rw',
+    [db.projects, db.counters, db.counterEvents, db.coverImages, db.sessions, db.projectYarns, db.yarnUsages],
+    async (tx) => {
+      const counters = await getCounters(id)
+      const counterIds = counters.map((counter) => counter.id)
+      if (counterIds.length > 0) {
+        await db.counterEvents.where('counterId').anyOf(counterIds).delete()
+        await db.counters.bulkDelete(counterIds)
+      }
+      await db.coverImages.delete(id)
+      // Standalone-counter sessions (projectId null) are never touched here.
+      await deleteProjectSessions(id, tx)
+
+      await db.projectYarns.where('projectId').equals(id).delete()
+      if (keepYarnUsage) {
+        await db.yarnUsages.where('projectId').equals(id).modify({ projectId: null, updatedAt: nowIso() })
+      } else {
+        await db.yarnUsages.where('projectId').equals(id).delete()
+      }
+
+      await db.projects.delete(id)
+    },
+  )
 }

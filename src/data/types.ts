@@ -10,10 +10,15 @@ export interface BaseEntity {
 export type LengthUnit = 'm' | 'yd'
 export type WeightUnit = 'g'
 
+// How yarn quantities display across the app: 'skein' (pelotes), 'weight'
+// (grams) or 'length' (meters/yards, sub-choice from `lengthUnit`).
+export type YarnQuantityUnit = 'skein' | 'weight' | 'length'
+
 export interface AppSettingsRecord extends BaseEntity {
   lengthUnit: LengthUnit
   weightUnit: WeightUnit
   trackingEnabled: boolean
+  yarnQuantityUnit: YarnQuantityUnit
 }
 
 export type ProjectCraft = 'knitting' | 'crochet'
@@ -97,4 +102,101 @@ export interface SessionRecord extends BaseEntity {
   source: SessionSource
   origin: SessionOrigin
   endReason: SessionEndReason | null
+}
+
+export type YarnColorFamily =
+  | 'rouge'
+  | 'rose'
+  | 'orange'
+  | 'jaune'
+  | 'vert'
+  | 'bleu'
+  | 'violet'
+  | 'marron'
+  | 'gris'
+  | 'noir'
+  | 'blanc'
+  | 'multicolore'
+
+export type YarnWeightCategory =
+  | 'dentelle'
+  | 'chaussettes'
+  | 'sport'
+  | 'dk'
+  | 'worsted'
+  | 'aran'
+  | 'bulky'
+  | 'super_bulky'
+  | 'autre'
+
+// Where a yarn entry came from. 'manual' today; 'ravelry' is unused until
+// step 3b wires up the catalog search — see CLAUDE.md.
+export type YarnCatalogSource = 'manual' | 'ravelry'
+
+export interface YarnRecord extends BaseEntity {
+  name: string
+  brand: string
+  line: string
+  colorName: string
+  colorRef: string
+  colorFamily: YarnColorFamily | null
+  weightCategory: YarnWeightCategory | null
+  fiber: string
+  // Skein count, decimals allowed (e.g. 2.5).
+  skeinCount: number
+  metersPerSkein: number | null
+  gramsPerSkein: number | null
+  dyeLot: string
+  notes: string
+  price: number | null
+  purchasedAt: string | null
+  ravelryYarnId: string | null
+  catalogSource: YarnCatalogSource
+}
+
+// A draft used to prefill the yarn form — typed today so step 3b's Ravelry
+// search can hand one to the same form without changing its shape.
+export type YarnDraft = Partial<
+  Pick<
+    YarnRecord,
+    | 'name'
+    | 'brand'
+    | 'line'
+    | 'colorName'
+    | 'colorRef'
+    | 'colorFamily'
+    | 'weightCategory'
+    | 'fiber'
+    | 'metersPerSkein'
+    | 'gramsPerSkein'
+    | 'ravelryYarnId'
+    | 'catalogSource'
+  >
+>
+
+export interface YarnImageRecord extends BaseEntity {
+  yarnId: string
+  blob: Blob
+}
+
+export type YarnQuantityUnitValue = 'g' | 'm' | 'skein'
+
+// One link between a project and a yarn: how much of that yarn the project
+// plans to use. At most one per (projectId, yarnId) pair.
+export interface ProjectYarnRecord extends BaseEntity {
+  projectId: string
+  yarnId: string
+  plannedValue: number
+  plannedUnit: YarnQuantityUnitValue
+}
+
+// A logged consumption entry — the source of truth for how much of a yarn
+// has been used. projectId null = consumption not tied to any project.
+export interface YarnUsageRecord extends BaseEntity {
+  yarnId: string
+  projectId: string | null
+  value: number
+  unit: YarnQuantityUnitValue
+  usedAt: string
+  note: string
 }

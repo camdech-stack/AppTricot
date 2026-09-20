@@ -1,6 +1,6 @@
 import { liveQuery } from 'dexie'
 import { db } from './db'
-import type { AppSettingsRecord, LengthUnit } from './types'
+import type { AppSettingsRecord, LengthUnit, YarnQuantityUnit } from './types'
 
 const SETTINGS_ID = 'app-settings'
 
@@ -10,6 +10,7 @@ function defaultSettings(now: string): AppSettingsRecord {
     lengthUnit: 'm',
     weightUnit: 'g',
     trackingEnabled: true,
+    yarnQuantityUnit: 'weight',
     createdAt: now,
     updatedAt: now,
   }
@@ -34,7 +35,7 @@ export async function getSettings(): Promise<AppSettingsRecord> {
 }
 
 export async function updateSettings(
-  patch: Partial<Pick<AppSettingsRecord, 'lengthUnit' | 'trackingEnabled'>>,
+  patch: Partial<Pick<AppSettingsRecord, 'lengthUnit' | 'trackingEnabled' | 'yarnQuantityUnit'>>,
 ): Promise<AppSettingsRecord> {
   const current = await getSettings()
   const updated: AppSettingsRecord = {
@@ -50,4 +51,4 @@ export function watchSettings() {
   return liveQuery(() => db.settings.get(SETTINGS_ID))
 }
 
-export type { AppSettingsRecord, LengthUnit }
+export type { AppSettingsRecord, LengthUnit, YarnQuantityUnit }

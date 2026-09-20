@@ -5,7 +5,11 @@ import type {
   CounterRecord,
   CoverImageRecord,
   ProjectRecord,
+  ProjectYarnRecord,
   SessionRecord,
+  YarnImageRecord,
+  YarnRecord,
+  YarnUsageRecord,
 } from './types'
 
 // Schema migration convention:
@@ -23,6 +27,10 @@ class AppDatabase extends Dexie {
   counterEvents!: EntityTable<CounterEventRecord, 'id'>
   coverImages!: EntityTable<CoverImageRecord, 'id'>
   sessions!: EntityTable<SessionRecord, 'id'>
+  yarns!: EntityTable<YarnRecord, 'id'>
+  yarnImages!: EntityTable<YarnImageRecord, 'id'>
+  projectYarns!: EntityTable<ProjectYarnRecord, 'id'>
+  yarnUsages!: EntityTable<YarnUsageRecord, 'id'>
 
   constructor() {
     super('mon-carnet-de-tricot')
@@ -126,6 +134,33 @@ class AppDatabase extends Dexie {
           .toCollection()
           .modify((settings: Record<string, unknown>) => {
             settings.trackingEnabled = true
+          })
+      })
+
+    // Step 3a: yarn stock. Adds `yarns`, `yarnImages`, `projectYarns` (one
+    // link per project/yarn pair) and `yarnUsages` (the consumption log),
+    // plus `yarnQuantityUnit` on settings (not indexed, so its schema string
+    // is unchanged). No network calls anywhere here — catalogSource is
+    // always 'manual' until step 3b wires up Ravelry search.
+    this.version(7)
+      .stores({
+        settings: 'id',
+        projects: 'id, status, lastActivityAt',
+        counters: 'id, projectId, [projectId+position]',
+        counterEvents: 'id, counterId, [counterId+createdAt]',
+        coverImages: 'id, projectId',
+        sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+        yarns: 'id, name',
+        yarnImages: 'id, yarnId',
+        projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+        yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table('settings')
+          .toCollection()
+          .modify((settings: Record<string, unknown>) => {
+            settings.yarnQuantityUnit = 'weight'
           })
       })
   }
