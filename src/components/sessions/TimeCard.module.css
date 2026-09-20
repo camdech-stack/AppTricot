@@ -1,0 +1,102 @@
+.card {
+  --time-card-accent: var(--color-primary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  flex-wrap: wrap;
+}
+
+.title {
+  font-weight: 700;
+  font-size: var(--text-lg);
+}
+
+.historyButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--tap-min);
+  padding: 0 var(--space-8);
+  border: none;
+  background: transparent;
+  color: var(--time-card-accent);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.segmented button {
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  padding: var(--space-4) var(--space-12);
+  font-size: var(--text-xs);
+  min-height: var(--tap-min);
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--color-border);
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--time-card-accent);
+  color: var(--color-on-primary);
+  font-weight: 600;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-12);
+}
+
+.histogram {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-4);
+  height: 96px;
+  overflow-x: auto;
+  padding-top: var(--space-8);
+}
+
+.bar {
+  flex: 1 0 20px;
+  min-width: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+}
+
+.barFill {
+  width: 100%;
+  max-width: 24px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--time-card-accent);
+  transition: height var(--transition-base);
+}
+
+.barLabel {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}

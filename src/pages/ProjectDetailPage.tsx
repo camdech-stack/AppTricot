@@ -1,25 +1,34 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, CalendarDays, CheckCircle2, Clock, ListOrdered, Pencil, Timer } from 'lucide-react'
 import styles from './ProjectDetailPage.module.css'
 import layoutStyles from '../components/layout/AppLayout.module.css'
 import { FloatingTabBar } from '../components/layout/FloatingTabBar'
 import { Button, IconButton, Pill, ProgressRing, StatTile, WaveDivider } from '../components/ui'
+import { TimeCard } from '../components/sessions/TimeCard'
+import { SessionHistorySheet } from '../components/sessions/SessionHistorySheet'
 import { CRAFT_LABELS, STATUS_LABELS, STATUS_PILL_COLORS } from '../components/projects/statusMeta'
 import { projectColorVar, projectColorSoftVar, projectGradient } from '../components/projects/colorMeta'
 import { useProject } from '../hooks/useProject'
 import { useCounters } from '../hooks/useCounters'
 import { useCoverImageUrl } from '../hooks/useCoverImageUrl'
 import { useRelativeTime } from '../hooks/useRelativeTime'
+import { useNow } from '../hooks/useNow'
 import { formatDateFr } from '../utils/formatDate'
+import { formatDuration } from '../utils/formatDuration'
 import { daysSince, daysUntil } from '../utils/dateDiff'
-import { computeProjectProgress, todayDateString, updateProject } from '../data'
+import {
+  computeProjectProgress,
+  computeProjectTimeStats,
+  getLiveSessionId,
+  getOpenSession,
+  getSessionsForTarget,
+  todayDateString,
+  updateProject,
+} from '../data'
 
 const NOTES_SAVE_DELAY_MS = 600
-
-// Placeholder until real time tracking lands (step 2): same fixed value for
-// every project, just so the stats layout can be seen fully populated.
-const FAKE_TIME_TRACKED_PLACEHOLDER = '3 h 45'
 
 export function ProjectDetailPage() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -29,9 +38,17 @@ export function ProjectDetailPage() {
   const coverUrl = useCoverImageUrl(projectId)
   const lastActivity = useRelativeTime(project?.lastActivityAt)
 
+  const sessionTarget = { projectId: projectId ?? '' }
+  const sessions = useLiveQuery(() => getSessionsForTarget(sessionTarget), [sessionTarget.projectId])
+  const openSession = useLiveQuery(() => getOpenSession(), [])
+  const now = useNow(60_000)
+  const timeStats = computeProjectTimeStats(sessions ?? [], now, getLiveSessionId())
+  const isTimeRunning = Boolean(openSession && openSession.projectId === sessionTarget.projectId)
+
   const [notes, setNotes] = useState('')
   const notesTimeoutRef = useRef<number | undefined>(undefined)
   const loadedNotesForProject = useRef<string | undefined>(undefined)
+  const [sessionHistoryOpen, setSessionHistoryOpen] = useState(false)
 
   useEffect(() => {
     if (project && loadedNotesForProject.current !== project.id) {
@@ -114,6 +131,12 @@ export function ProjectDetailPage() {
             <div className={styles.pills}>
               <Pill color={STATUS_PILL_COLORS[project.status]}>{STATUS_LABELS[project.status]}</Pill>
               <Pill color="blue">{CRAFT_LABELS[project.craft]}</Pill>
+              {timeStats.totalMs > 0 && (
+                <Pill color="gold">
+                  {isTimeRunning && <span className={styles.runningDot} aria-hidden="true" />}
+                  {formatDuration(timeStats.totalMs)}
+                </Pill>
+              )}
             </div>
             {(startedLabel || endLabel) && (
               <div className={styles.dates}>
@@ -147,7 +170,7 @@ export function ProjectDetailPage() {
                 />
                 <StatTile
                   icon={<Timer size={20} strokeWidth={1.75} />}
-                  value={FAKE_TIME_TRACKED_PLACEHOLDER}
+                  value={formatDuration(timeStats.totalMs)}
                   label="Temps travaillé"
                   color="blue"
                 />
@@ -179,6 +202,12 @@ export function ProjectDetailPage() {
               />
             </div>
 
+            <TimeCard
+              target={sessionTarget}
+              accentColor={projectColorVar(project.colorKey)}
+              onOpenHistory={() => setSessionHistoryOpen(true)}
+            />
+
             <div className={styles.comingSoonGrid}>
               <div className={styles.comingSoonCard}>
                 Laine
@@ -209,6 +238,10 @@ export function ProjectDetailPage() {
           </div>
         </div>
       </div>
+
+      {sessionHistoryOpen && (
+        <SessionHistorySheet target={sessionTarget} onClose={() => setSessionHistoryOpen(false)} />
+      )}
     </div>
   )
 }

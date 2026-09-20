@@ -1,4 +1,4 @@
-import { History, Pencil, SlidersHorizontal, Target, Trash2 } from 'lucide-react'
+import { Clock, History, Pencil, SlidersHorizontal, Target, Trash2 } from 'lucide-react'
 import styles from './CounterMenuSheet.module.css'
 import { Sheet } from '../ui'
 
@@ -10,6 +10,9 @@ interface CounterMenuSheetProps {
   onSetGoal: () => void
   onSetValue: () => void
   onShowHistory: () => void
+  // Only the standalone counter's menu exposes its own session history
+  // (a project's lives on its "Temps" card instead) — see CLAUDE.md.
+  onShowSessionHistory?: () => void
   onDelete: () => void
 }
 
@@ -21,6 +24,7 @@ export function CounterMenuSheet({
   onSetGoal,
   onSetValue,
   onShowHistory,
+  onShowSessionHistory,
   onDelete,
 }: CounterMenuSheetProps) {
   function handle(action: () => void) {
@@ -47,6 +51,12 @@ export function CounterMenuSheet({
           <History size={20} strokeWidth={1.75} />
           Historique
         </button>
+        {onShowSessionHistory && (
+          <button type="button" className={styles.item} onClick={() => handle(onShowSessionHistory)}>
+            <Clock size={20} strokeWidth={1.75} />
+            Historique des sessions
+          </button>
+        )}
         {!isMain && (
           <button type="button" className={styles.itemDanger} onClick={() => handle(onDelete)}>
             <Trash2 size={20} strokeWidth={1.75} />
