@@ -76,20 +76,28 @@ compter des répétitions ;
 compter des mailles ;
 compter n'importe quelle quantité.
 
-5. Suivi du temps
+5. Suivi du temps (implémenté à l'étape 2 — voir CLAUDE.md, section "Suivi du temps", pour le détail technique)
 
-L'application doit mesurer automatiquement le temps consacré à chaque projet.
+L'application mesure automatiquement le temps consacré à chaque projet, via des sessions.
 
 Fonctionnement :
-détection de la session active ;
-sauvegarde automatique.
+une session démarre automatiquement au premier appui qui modifie un compteur (projet ou compteur autonome), et plus tard au démarrage d'un guide de patron (étape 5b) ;
+une seule session ouverte à la fois dans toute l'application : passer à une autre cible (autre projet, ou projet vs compteur autonome) clôt la session en cours et en ouvre une nouvelle, sans jamais compter le même instant deux fois ;
+la session s'arrête quand l'application quitte le premier plan, ou par un arrêt manuel (bouton de chrono) ;
+après un arrêt manuel, seul un nouvel appui sur le bouton relance le chrono — les appuis sur les compteurs de la même cible ne le redémarrent pas tant que l'application reste au premier plan ;
+aucune durée n'est calculée avec un chronomètre en mémoire : tout est déduit d'horodatages enregistrés en base, avec une sauvegarde de secours (« heartbeat ») permettant de récupérer une session si l'application est interrompue sans prévenir (perte maximale de quelques secondes) ;
+le suivi peut être désactivé dans les réglages ; les sessions déjà enregistrées restent alors intactes.
 
-Chaque session doit conserver :
-date ;
+Chaque session conserve :
 heure de début ;
-heure de fin ;
-durée ;
-projet concerné.
+heure de fin (le cas échéant) ;
+durée (déduite des deux horodatages) ;
+projet concerné, ou compteur autonome.
+
+Le temps passé sur le compteur autonome n'est jamais compté dans le temps d'un projet, mais entre dans les statistiques globales de temps de tricot.
+
+L'historique des sessions est consultable et modifiable : ajout d'une session manuelle, modification du début/de la fin, suppression — sans jamais permettre à deux sessions (tous projets et compteur autonome confondus) de se chevaucher.
+
 Statistiques de temps
 
 Pour chaque projet :
@@ -97,10 +105,11 @@ temps total travaillé ;
 nombre de sessions ;
 durée moyenne d'une session ;
 dernière session ;
-temps travaillé par période.
+temps travaillé par période (jour/semaine/mois).
 
 Pour l'ensemble de l'application :
-temps total de tricot ;
+temps total de tricot (compteur autonome inclus) ;
+répartition entre temps des projets et temps du compteur autonome ;
 temps par jour ;
 temps par semaine ;
 temps par mois ;
