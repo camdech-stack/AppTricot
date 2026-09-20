@@ -106,6 +106,29 @@ export function SettingsPage() {
       </section>
 
       <section className={styles.section}>
+        <div className={styles.sectionTitle}>Suivi du temps</div>
+        <div className={styles.card}>
+          <div className={styles.row}>
+            <span className={styles.rowLabel}>Suivi automatique</span>
+            <button
+              type="button"
+              className={styles.toggle}
+              role="switch"
+              aria-checked={settings?.trackingEnabled ?? true}
+              aria-label="Activer le suivi du temps"
+              onClick={() => updateSettings({ trackingEnabled: !(settings?.trackingEnabled ?? true) })}
+            >
+              <span className={styles.toggleThumb} />
+            </button>
+          </div>
+          <p className={styles.helperText}>
+            Le chrono démarre automatiquement au premier appui sur un compteur, et s'arrête quand l'application est
+            quittée ou quand vous l'arrêtez vous-même.
+          </p>
+        </div>
+      </section>
+
+      <section className={styles.section}>
         <div className={styles.sectionTitle}>Stockage</div>
         <div className={styles.card}>
           <div className={styles.row}>
