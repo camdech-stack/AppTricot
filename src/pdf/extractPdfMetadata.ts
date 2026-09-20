@@ -29,7 +29,12 @@ const COVER_QUALITY = 0.8
 export async function extractPdfMetadata(data: ArrayBuffer): Promise<PdfMetadata> {
   const pdfjs = await getPdfjs()
 
-  const loadingTask = pdfjs.getDocument({ data, standardFontDataUrl: STANDARD_FONT_DATA_URL })
+  // pdf.js transfers (detaches) an ArrayBuffer passed as `data` to its
+  // worker thread — callers of this function (import, replace-file) reuse
+  // their own buffer afterward to hash it and store it as the pattern's
+  // file, so pdf.js must only ever get a throwaway copy, never the
+  // original.
+  const loadingTask = pdfjs.getDocument({ data: data.slice(0), standardFontDataUrl: STANDARD_FONT_DATA_URL })
 
   let doc: PDFDocumentProxy
   try {
