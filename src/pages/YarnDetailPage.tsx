@@ -10,6 +10,7 @@ import { AdjustStockSheet } from '../components/yarn/AdjustStockSheet'
 import { LogUsageSheet } from '../components/yarn/LogUsageSheet'
 import { EditUsageSheet } from '../components/yarn/EditUsageSheet'
 import { COLOR_FAMILY_LABELS, WEIGHT_CATEGORY_LABELS } from '../components/yarn/yarnMeta'
+import { RavelryCatalogPill } from '../ravelry'
 import { useYarnStockContext } from '../hooks/useYarnStockContext'
 import { useYarnImageUrl } from '../hooks/useYarnImageUrl'
 import { useYarnUsages } from '../hooks/useYarnUsages'
@@ -70,6 +71,8 @@ export function YarnDetailPage() {
               {yarn.colorFamily && <span className={styles.metaPill}>{COLOR_FAMILY_LABELS[yarn.colorFamily]}</span>}
               {yarn.dyeLot && <span className={styles.metaPill}>Lot {yarn.dyeLot}</span>}
             </div>
+
+            {yarn.ravelryPermalink && <RavelryCatalogPill permalink={yarn.ravelryPermalink} />}
 
             <YarnStockBar yarn={yarn} stock={stock} displayUnit={displayUnit} lengthUnit={lengthUnit} />
 

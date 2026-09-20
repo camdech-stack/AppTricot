@@ -81,3 +81,9 @@
   font-size: var(--text-sm);
   color: var(--color-danger);
 }
+
+.helperText {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+}

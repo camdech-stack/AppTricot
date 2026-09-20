@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { Copy, Trash2 } from 'lucide-react'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Copy, Search, Trash2 } from 'lucide-react'
 import styles from './YarnFormPage.module.css'
 import { Button, ConfirmDialog, PageHeader } from '../components/ui'
 import { COLOR_FAMILY_LABELS, COLOR_FAMILY_OPTIONS, WEIGHT_CATEGORY_LABELS, WEIGHT_CATEGORY_OPTIONS } from '../components/yarn/yarnMeta'
@@ -13,6 +13,7 @@ import {
   setYarnImage,
   toDuplicateDraft,
   updateYarn,
+  type YarnCatalogSource,
   type YarnColorFamily,
   type YarnDraft,
   type YarnRecord,
@@ -20,6 +21,15 @@ import {
 } from '../data'
 import { useYarnImageUrl } from '../hooks/useYarnImageUrl'
 import { useSettings } from '../hooks/useSettings'
+import {
+  computeRemainingCatalogFields,
+  RavelryPrefilledPill,
+  RavelrySearchSheet,
+  YARN_CATALOG_FIELD_KEYS,
+  type CatalogFieldSnapshot,
+  type RavelrySearchSelection,
+  type YarnCatalogFieldKey,
+} from '../ravelry'
 
 function numberOrEmpty(value: number | null): string {
   return value === null ? '' : String(value)
@@ -77,6 +87,19 @@ export function YarnFormPage() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
+  // Ravelry catalog search (step 3b) — see CLAUDE.md "Modèle de données
+  // (étape 3b)". catalogBaseline/catalogFieldKeys hold what still needs
+  // comparing at save time: fields the user hasn't touched since the
+  // catalog last filled them in stay in catalogFields, everything else
+  // drops out.
+  const [catalogSource, setCatalogSource] = useState<YarnCatalogSource>(draft?.catalogSource ?? 'manual')
+  const [ravelryYarnId, setRavelryYarnId] = useState<string | null>(draft?.ravelryYarnId ?? null)
+  const [ravelryPermalink, setRavelryPermalink] = useState<string | null>(draft?.ravelryPermalink ?? null)
+  const [catalogFetchedAt, setCatalogFetchedAt] = useState<string | null>(null)
+  const [catalogBaseline, setCatalogBaseline] = useState<CatalogFieldSnapshot | null>(null)
+  const [catalogFieldKeys, setCatalogFieldKeys] = useState<YarnCatalogFieldKey[]>([])
+  const [searchSheetOpen, setSearchSheetOpen] = useState(false)
+
   const existingPhotoUrl = useYarnImageUrl(yarnId)
   const [previewUrl, setPreviewUrl] = useState<string>()
 
@@ -108,6 +131,21 @@ export function YarnFormPage() {
         setNotes(yarn.notes)
         setPrice(numberOrEmpty(yarn.price))
         setPurchasedAt(yarn.purchasedAt ?? '')
+        setCatalogSource(yarn.catalogSource)
+        setRavelryYarnId(yarn.ravelryYarnId)
+        setRavelryPermalink(yarn.ravelryPermalink)
+        setCatalogFetchedAt(yarn.catalogFetchedAt)
+        if (yarn.catalogSource === 'ravelry' && yarn.catalogFields.length > 0) {
+          const keys = yarn.catalogFields.filter((field): field is YarnCatalogFieldKey =>
+            (YARN_CATALOG_FIELD_KEYS as string[]).includes(field),
+          )
+          const snapshot: CatalogFieldSnapshot = {}
+          for (const key of keys) {
+            snapshot[key] = yarn[key]
+          }
+          setCatalogBaseline(snapshot)
+          setCatalogFieldKeys(keys)
+        }
         setLoaded(true)
       })
       .catch((error: unknown) => {
@@ -146,6 +184,28 @@ export function YarnFormPage() {
     }
   }
 
+  function handleCatalogSelect(selection: RavelrySearchSelection) {
+    const { draft: picked, catalogFields, fetchedAt } = selection
+    if (picked.name !== undefined) setName(picked.name)
+    if (picked.brand !== undefined) setBrand(picked.brand)
+    if (picked.line !== undefined) setLine(picked.line)
+    if (picked.weightCategory !== undefined) setWeightCategory(picked.weightCategory ?? '')
+    if (picked.fiber !== undefined) setFiber(picked.fiber)
+    if (picked.metersPerSkein !== undefined) {
+      setMetersPerSkeinInput(
+        numberOrEmpty(picked.metersPerSkein ? (lengthUnit === 'yd' ? metersToYards(picked.metersPerSkein) : picked.metersPerSkein) : null),
+      )
+    }
+    if (picked.gramsPerSkein !== undefined) setGramsPerSkein(numberOrEmpty(picked.gramsPerSkein ?? null))
+    setCatalogSource('ravelry')
+    setRavelryYarnId(picked.ravelryYarnId ?? null)
+    setRavelryPermalink(picked.ravelryPermalink ?? null)
+    setCatalogFetchedAt(fetchedAt)
+    setCatalogBaseline(catalogFields)
+    setCatalogFieldKeys(Object.keys(catalogFields) as YarnCatalogFieldKey[])
+    setSearchSheetOpen(false)
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!name.trim() || saving) return
@@ -154,7 +214,7 @@ export function YarnFormPage() {
       const metersPerSkeinValue = parseOptionalNumber(metersPerSkeinInput)
       const metersPerSkein = metersPerSkeinValue === null ? null : lengthUnit === 'yd' ? yardsToMeters(metersPerSkeinValue) : metersPerSkeinValue
 
-      const input = {
+      const baseInput = {
         name: name.trim(),
         brand,
         line,
@@ -170,6 +230,17 @@ export function YarnFormPage() {
         notes,
         price: parseOptionalNumber(price),
         purchasedAt: purchasedAt || null,
+      }
+
+      const catalogFields = catalogBaseline ? computeRemainingCatalogFields(catalogFieldKeys, catalogBaseline, baseInput) : []
+
+      const input = {
+        ...baseInput,
+        catalogSource,
+        ravelryYarnId,
+        ravelryPermalink,
+        catalogFields,
+        catalogFetchedAt,
       }
 
       const yarn: YarnRecord = yarnId ? await updateYarn(yarnId, input) : await createYarn(input)
@@ -210,6 +281,23 @@ export function YarnFormPage() {
       <PageHeader title={isEditing ? 'Modifier le fil' : 'Nouveau fil'} onBack={() => navigate(-1)} />
       <div className={styles.scrollArea}>
         <form className={styles.form} onSubmit={(event) => void handleSubmit(event)}>
+          {settings?.ravelryEnabled && settings.ravelryUsername && settings.ravelryPassword ? (
+            <Button
+              type="button"
+              variant="secondary"
+              icon={<Search size={18} strokeWidth={1.75} />}
+              onClick={() => setSearchSheetOpen(true)}
+            >
+              Rechercher dans le catalogue
+            </Button>
+          ) : (
+            <p className={styles.helperText}>
+              <Link to="/reglages">Active le catalogue Ravelry dans les Réglages</Link> pour préremplir un fil depuis
+              une recherche.
+            </p>
+          )}
+          {catalogSource === 'ravelry' && <RavelryPrefilledPill />}
+
           <div className={styles.section}>
             <span className={styles.sectionTitle}>Identité</span>
             <label className={styles.field}>
@@ -390,6 +478,13 @@ export function YarnFormPage() {
         danger
         onConfirm={() => void handleDelete()}
         onCancel={() => setDeleteConfirmOpen(false)}
+      />
+
+      <RavelrySearchSheet
+        open={searchSheetOpen}
+        onClose={() => setSearchSheetOpen(false)}
+        onSelect={handleCatalogSelect}
+        lengthUnit={lengthUnit}
       />
     </div>
   )
