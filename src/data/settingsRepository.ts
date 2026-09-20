@@ -11,6 +11,9 @@ function defaultSettings(now: string): AppSettingsRecord {
     weightUnit: 'g',
     trackingEnabled: true,
     yarnQuantityUnit: 'weight',
+    ravelryEnabled: false,
+    ravelryUsername: null,
+    ravelryPassword: null,
     createdAt: now,
     updatedAt: now,
   }
@@ -35,7 +38,12 @@ export async function getSettings(): Promise<AppSettingsRecord> {
 }
 
 export async function updateSettings(
-  patch: Partial<Pick<AppSettingsRecord, 'lengthUnit' | 'trackingEnabled' | 'yarnQuantityUnit'>>,
+  patch: Partial<
+    Pick<
+      AppSettingsRecord,
+      'lengthUnit' | 'trackingEnabled' | 'yarnQuantityUnit' | 'ravelryEnabled' | 'ravelryUsername' | 'ravelryPassword'
+    >
+  >,
 ): Promise<AppSettingsRecord> {
   const current = await getSettings()
   const updated: AppSettingsRecord = {

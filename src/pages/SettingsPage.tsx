@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import styles from './SettingsPage.module.css'
 import { useSettings } from '../hooks/useSettings'
 import { isStoragePersisted, requestPersistentStorage, updateSettings, type LengthUnit, type YarnQuantityUnit } from '../data'
+import { RavelrySettingsSection } from '../ravelry'
 
 // TEMPORARY: diagnosing a bottom safe-area rendering bug on a real iPhone,
 // which can't be reproduced or measured from this dev environment. Remove
@@ -148,6 +149,8 @@ export function SettingsPage() {
           </p>
         </div>
       </section>
+
+      <RavelrySettingsSection />
 
       <section className={styles.section}>
         <div className={styles.sectionTitle}>Stockage</div>

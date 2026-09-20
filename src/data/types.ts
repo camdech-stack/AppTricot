@@ -19,6 +19,12 @@ export interface AppSettingsRecord extends BaseEntity {
   weightUnit: WeightUnit
   trackingEnabled: boolean
   yarnQuantityUnit: YarnQuantityUnit
+  // Ravelry catalog search (step 3b) — secrets, read-only credentials the
+  // user creates on Ravelry's own site. Never logged, never put in a URL,
+  // and must stay excluded from any future export/backup (step 7).
+  ravelryEnabled: boolean
+  ravelryUsername: string | null
+  ravelryPassword: string | null
 }
 
 export type ProjectCraft = 'knitting' | 'crochet'
@@ -152,6 +158,14 @@ export interface YarnRecord extends BaseEntity {
   purchasedAt: string | null
   ravelryYarnId: string | null
   catalogSource: YarnCatalogSource
+  // Full URL to the yarn's Ravelry page, shown as an external link on the
+  // yarn detail page. Null for manual entries.
+  ravelryPermalink: string | null
+  // Names of the fields whose value still matches what the catalog search
+  // filled in — see CLAUDE.md "Modèle de données (étape 3b)". Empty by
+  // default; only ever non-empty for catalogSource === 'ravelry'.
+  catalogFields: string[]
+  catalogFetchedAt: string | null
 }
 
 // A draft used to prefill the yarn form — typed today so step 3b's Ravelry
@@ -170,6 +184,7 @@ export type YarnDraft = Partial<
     | 'metersPerSkein'
     | 'gramsPerSkein'
     | 'ravelryYarnId'
+    | 'ravelryPermalink'
     | 'catalogSource'
   >
 >

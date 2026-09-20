@@ -29,6 +29,9 @@ export interface NewYarnInput {
   purchasedAt?: string | null
   ravelryYarnId?: string | null
   catalogSource?: YarnRecord['catalogSource']
+  ravelryPermalink?: string | null
+  catalogFields?: string[]
+  catalogFetchedAt?: string | null
 }
 
 export type YarnUpdateInput = Partial<NewYarnInput>
@@ -53,6 +56,9 @@ function withDefaults(input: NewYarnInput, id: string, now: string): YarnRecord 
     purchasedAt: input.purchasedAt ?? null,
     ravelryYarnId: input.ravelryYarnId ?? null,
     catalogSource: input.catalogSource ?? 'manual',
+    ravelryPermalink: input.ravelryPermalink ?? null,
+    catalogFields: input.catalogFields ?? [],
+    catalogFetchedAt: input.catalogFetchedAt ?? null,
     createdAt: now,
     updatedAt: now,
   }

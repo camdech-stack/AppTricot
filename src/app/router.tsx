@@ -12,6 +12,7 @@ import { YarnDetailPage } from '../pages/YarnDetailPage'
 import { StatsPage } from '../pages/StatsPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { StyleguidePage } from '../pages/StyleguidePage'
+import { RavelryDiagnosticPage } from '../ravelry'
 
 // GitHub Pages only serves the app's own index.html, so client-side routes
 // can't rely on server rewrites for deep links: HashRouter keeps every
@@ -43,4 +44,7 @@ export const router = createHashRouter([
   { path: '/laine/nouveau', element: <YarnFormPage /> },
   { path: '/laine/:yarnId', element: <YarnDetailPage /> },
   { path: '/laine/:yarnId/modifier', element: <YarnFormPage /> },
+  // Hidden diagnostic screen for Ravelry catalog search (step 3b), never
+  // linked from the app nav — see CLAUDE.md.
+  { path: '/diagnostic-ravelry', element: <RavelryDiagnosticPage /> },
 ])

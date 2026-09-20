@@ -191,3 +191,101 @@ describe('schema migration to v7', () => {
     expect(await db.yarnUsages.count()).toBe(0)
   })
 })
+
+describe('schema migration to v8', () => {
+  it('backfills the Ravelry fields on existing yarns and settings without losing data', async () => {
+    // Simulate a step-3a install already on schema v7, with a manually
+    // entered yarn (fictitious data) predating the Ravelry fields.
+    const legacy = new Dexie(DB_NAME)
+    legacy.version(1).stores({ settings: 'id' })
+    legacy.version(2).stores({ settings: 'id' })
+    legacy.version(3).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+    })
+    legacy.version(4).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+    })
+    legacy.version(5).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+    })
+    legacy.version(6).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+    })
+    legacy.version(7).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+      yarns: 'id, name',
+      yarnImages: 'id, yarnId',
+      projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+      yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+    })
+    await legacy.open()
+    await legacy.table('settings').put({
+      id: 'app-settings',
+      lengthUnit: 'yd',
+      weightUnit: 'g',
+      trackingEnabled: true,
+      yarnQuantityUnit: 'weight',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    })
+    await legacy.table('yarns').put({
+      id: 'yarn-fictif-1',
+      name: 'Fil fictif',
+      brand: 'Marque fictive',
+      line: '',
+      colorName: '',
+      colorRef: '',
+      colorFamily: null,
+      weightCategory: null,
+      fiber: '',
+      skeinCount: 3,
+      metersPerSkein: null,
+      gramsPerSkein: null,
+      dyeLot: '',
+      notes: '',
+      price: null,
+      purchasedAt: null,
+      ravelryYarnId: null,
+      catalogSource: 'manual',
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    })
+    legacy.close()
+
+    await db.open()
+
+    const settings = await db.settings.get('app-settings')
+    expect(settings?.lengthUnit).toBe('yd')
+    expect(settings?.ravelryEnabled).toBe(false)
+    expect(settings?.ravelryUsername).toBeNull()
+    expect(settings?.ravelryPassword).toBeNull()
+
+    const yarn = await db.yarns.get('yarn-fictif-1')
+    expect(yarn?.name).toBe('Fil fictif')
+    expect(yarn?.ravelryPermalink).toBeNull()
+    expect(yarn?.catalogFields).toEqual([])
+    expect(yarn?.catalogFetchedAt).toBeNull()
+  })
+})

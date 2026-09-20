@@ -163,6 +163,43 @@ class AppDatabase extends Dexie {
             settings.yarnQuantityUnit = 'weight'
           })
       })
+
+    // Step 3b: Ravelry catalog search. Adds `ravelryPermalink`,
+    // `catalogFields` and `catalogFetchedAt` on yarns, plus `ravelryEnabled`/
+    // `ravelryUsername`/`ravelryPassword` on settings — none indexed, so the
+    // schema string is unchanged. See CLAUDE.md for the full field list and
+    // the license rules around these credentials.
+    this.version(8)
+      .stores({
+        settings: 'id',
+        projects: 'id, status, lastActivityAt',
+        counters: 'id, projectId, [projectId+position]',
+        counterEvents: 'id, counterId, [counterId+createdAt]',
+        coverImages: 'id, projectId',
+        sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+        yarns: 'id, name',
+        yarnImages: 'id, yarnId',
+        projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+        yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table('yarns')
+          .toCollection()
+          .modify((yarn: Record<string, unknown>) => {
+            yarn.ravelryPermalink = null
+            yarn.catalogFields = []
+            yarn.catalogFetchedAt = null
+          })
+        await tx
+          .table('settings')
+          .toCollection()
+          .modify((settings: Record<string, unknown>) => {
+            settings.ravelryEnabled = false
+            settings.ravelryUsername = null
+            settings.ravelryPassword = null
+          })
+      })
   }
 }
 
