@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, Link } from 'react-router-dom'
 import { ArrowLeft, BookOpen, Image, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import styles from './PatternDetailPage.module.css'
 import layoutStyles from '../components/layout/AppLayout.module.css'
@@ -33,6 +33,11 @@ const META_SAVE_DELAY_MS = 600
 export function PatternDetailPage() {
   const { patternId } = useParams<{ patternId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
+  // Set by PdfViewerCore's edit icon when opened from a project's reading
+  // view, so "back" returns there instead of always landing on the library
+  // list — see CLAUDE.md "Décisions d'interface (étape 4)".
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo ?? '/patrons'
   const pattern = usePattern(patternId)
   const coverUrl = usePatternCoverUrl(patternId)
   const context = usePatternLibraryContext()
@@ -150,7 +155,7 @@ export function PatternDetailPage() {
         <div className={layoutStyles.content}>
           <div className={styles.hero}>
             <div className={styles.topBar}>
-              <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" className={styles.heroIconButton} onClick={() => navigate('/patrons')} />
+              <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" className={styles.heroIconButton} onClick={() => navigate(returnTo)} />
             </div>
             <div className={coverUrl ? styles.cover : `${styles.cover} ${styles.coverFallback}`} style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}>
               {!coverUrl && <BookOpen size={48} strokeWidth={1.5} />}

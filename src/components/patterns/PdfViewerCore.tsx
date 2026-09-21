@@ -3,14 +3,12 @@ import { Link } from 'react-router-dom'
 import {
   AlertTriangle,
   ArrowLeft,
-  BookOpen,
   ChevronLeft,
   ChevronRight,
   Maximize,
   Minus,
+  Pencil,
   Plus,
-  Search,
-  X,
 } from 'lucide-react'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import styles from './PdfViewerCore.module.css'
@@ -34,11 +32,6 @@ interface PdfViewerCoreProps {
   onBack?: () => void
 }
 
-interface SearchMatch {
-  page: number
-  count: number
-}
-
 type LoadState = 'loading' | 'ready' | 'error'
 
 export function PdfViewerCore({ patternId, projectId, patternName, onBack }: PdfViewerCoreProps) {
@@ -48,7 +41,6 @@ export function PdfViewerCore({ patternId, projectId, patternName, onBack }: Pdf
   const docRef = useRef<PDFDocumentProxy | null>(null)
   const loadingTaskRef = useRef<{ destroy: () => Promise<void> } | null>(null)
   const renderTaskRef = useRef<{ cancel: () => void } | null>(null)
-  const textCacheRef = useRef<Map<number, string>>(new Map())
   const restoredRef = useRef(false)
 
   const [loadState, setLoadState] = useState<LoadState>('loading')
@@ -60,10 +52,6 @@ export function PdfViewerCore({ patternId, projectId, patternName, onBack }: Pdf
   const [chromeVisible, setChromeVisible] = useState(true)
   const [pageInputOpen, setPageInputOpen] = useState(false)
   const [pageInputValue, setPageInputValue] = useState('')
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<SearchMatch[]>([])
-  const [searching, setSearching] = useState(false)
 
   const saveTimeoutRef = useRef<number | undefined>(undefined)
   const panRef = useRef(pan)
@@ -382,48 +370,6 @@ export function PdfViewerCore({ patternId, projectId, patternName, onBack }: Pdf
     setChromeVisible((visible) => !visible)
   }
 
-  // --- Search ---------------------------------------------------------------
-  async function ensureTextCache(): Promise<void> {
-    const doc = docRef.current
-    if (!doc) return
-    if (textCacheRef.current.size === doc.numPages) return
-    for (let pageNumber = 1; pageNumber <= doc.numPages; pageNumber += 1) {
-      if (textCacheRef.current.has(pageNumber)) continue
-      const pdfPage = await doc.getPage(pageNumber)
-      const content = await pdfPage.getTextContent()
-      const text = content.items.map((item) => ('str' in item ? item.str : '')).join(' ')
-      textCacheRef.current.set(pageNumber, text)
-    }
-  }
-
-  async function handleSearch(query: string) {
-    setSearchQuery(query)
-    if (!query.trim()) {
-      setSearchResults([])
-      return
-    }
-    setSearching(true)
-    try {
-      await ensureTextCache()
-      const needle = query.trim().toLowerCase()
-      const results: SearchMatch[] = []
-      for (const [pageNumber, text] of textCacheRef.current.entries()) {
-        const lower = text.toLowerCase()
-        let count = 0
-        let index = lower.indexOf(needle)
-        while (index !== -1) {
-          count += 1
-          index = lower.indexOf(needle, index + needle.length)
-        }
-        if (count > 0) results.push({ page: pageNumber, count })
-      }
-      results.sort((a, b) => a.page - b.page)
-      setSearchResults(results)
-    } finally {
-      setSearching(false)
-    }
-  }
-
   // --- Toolbar handlers -------------------------------------------------
   function goToPage(next: number) {
     setPage(clampPage(next, pageCount))
@@ -444,6 +390,11 @@ export function PdfViewerCore({ patternId, projectId, patternName, onBack }: Pdf
 
   const displayedPatternName = useMemo(() => patternName || 'Patron', [patternName])
 
+  // Passed to the pattern detail page so its own back button can return
+  // here (with the project's reading position) instead of always landing
+  // on the library list — see CLAUDE.md "Décisions d'interface (étape 4)".
+  const returnToState = { returnTo: `/patrons/${patternId}/lire${projectId ? `?projet=${projectId}` : ''}` }
+
   return (
     <div className={styles.wrap}>
       {chromeVisible && (
@@ -454,11 +405,8 @@ export function PdfViewerCore({ patternId, projectId, patternName, onBack }: Pdf
             </button>
           )}
           <span className={styles.title}>{displayedPatternName}</span>
-          <button type="button" className={styles.iconAction} aria-label="Rechercher dans le texte" onClick={() => setSearchOpen(true)}>
-            <Search size={20} strokeWidth={1.75} />
-          </button>
-          <Link to={`/patrons/${patternId}`} className={styles.iconAction} aria-label="Fiche du patron">
-            <BookOpen size={20} strokeWidth={1.75} />
+          <Link to={`/patrons/${patternId}`} state={returnToState} className={styles.iconAction} aria-label="Modifier le patron">
+            <Pencil size={20} strokeWidth={1.75} />
           </Link>
         </div>
       )}
@@ -478,7 +426,7 @@ export function PdfViewerCore({ patternId, projectId, patternName, onBack }: Pdf
             <AlertTriangle size={32} strokeWidth={1.5} />
             <p>{errorMessage}</p>
             {!errorReasonIsPassword && (
-              <Link to={`/patrons/${patternId}`} className={styles.errorLink}>
+              <Link to={`/patrons/${patternId}`} state={returnToState} className={styles.errorLink}>
                 Remplacer le fichier
               </Link>
             )}
@@ -544,44 +492,6 @@ export function PdfViewerCore({ patternId, projectId, patternName, onBack }: Pdf
             Aller
           </button>
         </form>
-      </Sheet>
-
-      <Sheet open={searchOpen} onClose={() => setSearchOpen(false)} title="Rechercher dans le texte">
-        <div className={styles.searchField}>
-          <input
-            className={styles.searchInput}
-            type="search"
-            placeholder="Rechercher…"
-            value={searchQuery}
-            onChange={(event) => void handleSearch(event.target.value)}
-            autoFocus
-          />
-          {searchQuery && (
-            <button type="button" className={styles.searchClear} onClick={() => void handleSearch('')} aria-label="Effacer">
-              <X size={16} strokeWidth={2} />
-            </button>
-          )}
-        </div>
-        {searching && <p className={styles.status}>Recherche…</p>}
-        {!searching && searchQuery && searchResults.length === 0 && <p className={styles.status}>Aucun résultat.</p>}
-        <div className={styles.searchResults}>
-          {searchResults.map((match) => (
-            <button
-              key={match.page}
-              type="button"
-              className={styles.searchResultRow}
-              onClick={() => {
-                goToPage(match.page)
-                setSearchOpen(false)
-              }}
-            >
-              <span>Page {match.page}</span>
-              <span className={styles.searchResultCount}>
-                {match.count} occurrence{match.count > 1 ? 's' : ''}
-              </span>
-            </button>
-          ))}
-        </div>
       </Sheet>
     </div>
   )
