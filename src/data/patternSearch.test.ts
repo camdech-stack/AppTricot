@@ -9,6 +9,7 @@ function makePattern(overrides: Partial<PatternRecord>): PatternRecord {
     craft: 'knitting',
     tags: [],
     source: '',
+    materials: '',
     notes: '',
     pageCount: 10,
     sizeBytes: 1000,

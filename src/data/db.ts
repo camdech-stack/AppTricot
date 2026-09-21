@@ -245,6 +245,36 @@ class AppDatabase extends Dexie {
             project.lastWorkTab = null
           })
       })
+
+    // Adds `materials` (free text, one detected item per line) to
+    // patterns — its own dedicated, always-editable field rather than text
+    // folded into notes. Not indexed, so the schema string is unchanged.
+    this.version(10)
+      .stores({
+        settings: 'id',
+        projects: 'id, status, lastActivityAt',
+        counters: 'id, projectId, [projectId+position]',
+        counterEvents: 'id, counterId, [counterId+createdAt]',
+        coverImages: 'id, projectId',
+        sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+        yarns: 'id, name',
+        yarnImages: 'id, yarnId',
+        projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+        yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+        patterns: 'id, name, *tags, fileHash, createdAt, lastOpenedAt',
+        patternFiles: 'id, patternId',
+        patternCovers: 'id, patternId',
+        projectPatterns: 'id, projectId, patternId, [projectId+patternId]',
+        patternViewStates: 'id, patternId, projectId',
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table('patterns')
+          .toCollection()
+          .modify((pattern: Record<string, unknown>) => {
+            pattern.materials = ''
+          })
+      })
   }
 }
 

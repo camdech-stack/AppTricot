@@ -38,14 +38,6 @@ interface ProcessedFile {
 
 type Step = 'pick' | 'processing' | 'single-form' | 'multi-result'
 
-// Prefixes the auto-detected needle/hook lines so it's obvious in Notes
-// that they came from a heuristic scan, not something the user typed —
-// see CLAUDE.md "Extraction heuristique".
-function formatMaterialsHint(materialsHint: string[]): string {
-  if (materialsHint.length === 0) return ''
-  return ['Matériel détecté dans le PDF :', ...materialsHint.map((line) => `- ${line}`)].join('\n')
-}
-
 async function processFile(file: File): Promise<ProcessedFile> {
   const bytes = await file.arrayBuffer()
   const signatureError = validatePdfSignature(bytes)
@@ -82,6 +74,7 @@ export function ImportPatternSheet({ open, onClose, onImported, allTags }: Impor
   const [craft, setCraft] = useState<ProjectCraft | ''>('')
   const [tags, setTags] = useState<string[]>([])
   const [source, setSource] = useState('')
+  const [materials, setMaterials] = useState('')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -93,6 +86,7 @@ export function ImportPatternSheet({ open, onClose, onImported, allTags }: Impor
     setCraft('')
     setTags([])
     setSource('')
+    setMaterials('')
     setNotes('')
   }
 
@@ -119,7 +113,7 @@ export function ImportPatternSheet({ open, onClose, onImported, allTags }: Impor
       if (only.status === 'ready' && only.metadata) {
         setName(only.metadata.title ?? defaultPatternName(only.file.name))
         setSource(only.metadata.creator ?? '')
-        setNotes(formatMaterialsHint(only.metadata.materialsHint))
+        setMaterials(only.metadata.materialsHint.join('\n'))
         setStep('single-form')
         return
       }
@@ -142,7 +136,7 @@ export function ImportPatternSheet({ open, onClose, onImported, allTags }: Impor
           name: entry.metadata.title ?? defaultPatternName(entry.file.name),
           craft: null,
           source: entry.metadata.creator ?? '',
-          notes: formatMaterialsHint(entry.metadata.materialsHint),
+          materials: entry.metadata.materialsHint.join('\n'),
           fileName: entry.file.name,
           fileHash: entry.hash,
           pageCount: entry.metadata.pageCount,
@@ -173,6 +167,7 @@ export function ImportPatternSheet({ open, onClose, onImported, allTags }: Impor
         craft: craft || null,
         tags,
         source,
+        materials,
         notes,
         fileName: only.file.name,
         fileHash: only.hash,
@@ -204,7 +199,7 @@ export function ImportPatternSheet({ open, onClose, onImported, allTags }: Impor
       const metadata = await extractPdfMetadata(only.bytes)
       setName(metadata.title ?? defaultPatternName(only.file.name))
       setSource(metadata.creator ?? '')
-      setNotes(formatMaterialsHint(metadata.materialsHint))
+      setMaterials(metadata.materialsHint.join('\n'))
       setProcessed([{ ...only, status: 'ready', metadata }])
     } catch (error) {
       const message = error instanceof PdfReadError ? error.message : 'Échec de la lecture du PDF.'
@@ -280,6 +275,16 @@ export function ImportPatternSheet({ open, onClose, onImported, allTags }: Impor
               <span className={styles.label}>Tags</span>
               <TagEditor tags={tags} onChange={setTags} allTags={allTags} />
             </div>
+            <label className={styles.field}>
+              <span className={styles.label}>Matériel</span>
+              <textarea
+                className={styles.textarea}
+                value={materials}
+                onChange={(event) => setMaterials(event.target.value)}
+                rows={3}
+                placeholder="Aiguilles, crochet, marqueurs…"
+              />
+            </label>
             <label className={styles.field}>
               <span className={styles.label}>Notes</span>
               <textarea className={styles.textarea} value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />

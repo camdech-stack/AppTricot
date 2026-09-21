@@ -17,6 +17,7 @@ export interface NewPatternInput {
   craft: ProjectCraft | null
   tags?: string[]
   source?: string
+  materials?: string
   notes?: string
   fileName: string
   fileHash: string
@@ -52,6 +53,7 @@ export async function importPattern(input: NewPatternInput): Promise<PatternReco
       craft: input.craft,
       tags: normalizeTags(input.tags ?? []),
       source: input.source ?? '',
+      materials: input.materials ?? '',
       notes: input.notes ?? '',
       pageCount: input.pageCount,
       sizeBytes: input.sizeBytes,
@@ -75,6 +77,7 @@ export interface PatternMetaUpdateInput {
   craft?: ProjectCraft | null
   tags?: string[]
   source?: string
+  materials?: string
   notes?: string
 }
 

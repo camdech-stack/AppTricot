@@ -232,6 +232,10 @@ export interface PatternRecord extends BaseEntity {
   // src/data/tagUtils.ts. Indexed multiEntry for tag search/filters.
   tags: string[]
   source: string
+  // Free text, one item per line — prefilled by the heuristic materials
+  // scan at import (see src/pdf/patternTextHeuristics.ts) but always its
+  // own editable field, never folded into notes.
+  materials: string
   notes: string
   pageCount: number
   sizeBytes: number

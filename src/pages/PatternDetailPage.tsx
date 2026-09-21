@@ -45,6 +45,7 @@ export function PatternDetailPage() {
   const [name, setName] = useState('')
   const [craft, setCraft] = useState<ProjectCraft | ''>('')
   const [source, setSource] = useState('')
+  const [materials, setMaterials] = useState('')
   const [notes, setNotes] = useState('')
   const loadedForId = useRef<string | undefined>(undefined)
   const saveTimeoutRef = useRef<number | undefined>(undefined)
@@ -62,6 +63,7 @@ export function PatternDetailPage() {
       setName(pattern.name)
       setCraft(pattern.craft ?? '')
       setSource(pattern.source)
+      setMaterials(pattern.materials)
       setNotes(pattern.notes)
       loadedForId.current = pattern.id
     }
@@ -69,7 +71,13 @@ export function PatternDetailPage() {
 
   useEffect(() => () => window.clearTimeout(saveTimeoutRef.current), [])
 
-  function scheduleMetaSave(next: { name?: string; craft?: ProjectCraft | ''; source?: string; notes?: string }) {
+  function scheduleMetaSave(next: {
+    name?: string
+    craft?: ProjectCraft | ''
+    source?: string
+    materials?: string
+    notes?: string
+  }) {
     if (!patternId) return
     window.clearTimeout(saveTimeoutRef.current)
     saveTimeoutRef.current = window.setTimeout(() => {
@@ -77,6 +85,7 @@ export function PatternDetailPage() {
         name: (next.name ?? name).trim() || pattern?.name,
         craft: (next.craft ?? craft) || null,
         source: next.source ?? source,
+        materials: next.materials ?? materials,
         notes: next.notes ?? notes,
       })
     }, META_SAVE_DELAY_MS)
@@ -218,6 +227,19 @@ export function PatternDetailPage() {
                     scheduleMetaSave({ source: event.target.value })
                   }}
                   placeholder="Créatrice, site…"
+                />
+              </label>
+              <label className={styles.field}>
+                <span className={styles.label}>Matériel</span>
+                <textarea
+                  className={styles.textarea}
+                  rows={3}
+                  value={materials}
+                  onChange={(event) => {
+                    setMaterials(event.target.value)
+                    scheduleMetaSave({ materials: event.target.value })
+                  }}
+                  placeholder="Aiguilles, crochet, marqueurs…"
                 />
               </label>
               <div className={styles.field}>
