@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { findMaterialLines, groupTextIntoLines, guessCreatorFromLines, guessTitleFromLines, isMaterialLine, type PdfTextFragment } from './patternTextHeuristics'
 
-function fragment(str: string, height: number, hasEOL = false): PdfTextFragment {
-  return { str, height, hasEOL }
+function fragment(str: string, height: number, y: number, hasEOL = false): PdfTextFragment {
+  return { str, height, hasEOL, y }
 }
 
 describe('groupTextIntoLines', () => {
-  it('joins fragments up to hasEOL into a single line, keeping the tallest height', () => {
-    const items = [fragment('Pull ', 24), fragment('torsadé', 28, true), fragment('par Marie', 10, true)]
+  it('joins same-line fragments (by y-position) up to hasEOL, keeping the tallest height', () => {
+    const items = [fragment('Pull ', 24, 100), fragment('torsadé', 28, 100, true), fragment('par Marie', 10, 40, true)]
     const lines = groupTextIntoLines(items)
     expect(lines).toEqual([
       { text: 'Pull torsadé', maxHeight: 28 },
@@ -15,13 +15,23 @@ describe('groupTextIntoLines', () => {
     ])
   })
 
+  it('splits lines purely by a y-jump, even when hasEOL is never set (independently placed text boxes)', () => {
+    const items = [fragment('BONNET RAYÉ', 32, 200), fragment('par Camille Petit', 10, 150), fragment('Taille : unique', 10, 100)]
+    const lines = groupTextIntoLines(items)
+    expect(lines).toEqual([
+      { text: 'BONNET RAYÉ', maxHeight: 32 },
+      { text: 'par Camille Petit', maxHeight: 10 },
+      { text: 'Taille : unique', maxHeight: 10 },
+    ])
+  })
+
   it('flushes a trailing line even without a final hasEOL', () => {
-    const items = [fragment('Sans point final', 12)]
+    const items = [fragment('Sans point final', 12, 100)]
     expect(groupTextIntoLines(items)).toEqual([{ text: 'Sans point final', maxHeight: 12 }])
   })
 
   it('drops blank lines', () => {
-    const items = [fragment('   ', 12, true), fragment('Titre', 20, true)]
+    const items = [fragment('   ', 12, 100, true), fragment('Titre', 20, 60, true)]
     expect(groupTextIntoLines(items)).toEqual([{ text: 'Titre', maxHeight: 20 }])
   })
 })

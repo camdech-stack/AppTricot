@@ -38,23 +38,34 @@ export class PdfReadError extends Error {
 const COVER_MAX_SIDE = 600
 const COVER_QUALITY = 0.8
 
-// How many pages (from the start) to scan for a materials list — patterns
-// put it early, and scanning text content (no rendering) is cheap, but an
-// unbounded scan would be wasteful on a very long PDF.
-const MATERIALS_SCAN_PAGE_LIMIT = 5
+// How many pages (from the start) to scan for title/creator/materials —
+// patterns put all three early (a graphic cover is often followed by a
+// text info page), and scanning text content (no rendering) is cheap, but
+// an unbounded scan would be wasteful on a very long PDF.
+const TEXT_SCAN_PAGE_LIMIT = 5
 
-function isTextFragment(item: unknown): item is PdfTextFragment {
-  return typeof item === 'object' && item !== null && 'str' in item
+interface RawTextLike {
+  str?: unknown
+  height?: unknown
+  hasEOL?: unknown
+  transform?: unknown
+}
+
+// pdf.js's own TextItem type isn't re-exported from its public entry point
+// (see patternTextHeuristics.ts) — this reads the fields we need off the
+// untyped `getTextContent()` result and skips anything that isn't a real
+// text fragment (TextMarkedContent, or a shape that doesn't match).
+function toTextFragment(item: unknown): PdfTextFragment | null {
+  const raw = item as RawTextLike
+  if (typeof raw.str !== 'string' || typeof raw.height !== 'number') return null
+  if (!Array.isArray(raw.transform) || typeof raw.transform[5] !== 'number') return null
+  return { str: raw.str, height: raw.height, hasEOL: raw.hasEOL === true, y: raw.transform[5] }
 }
 
 async function getPageLines(page: PDFPageProxy): Promise<TextLine[]> {
   const content = await page.getTextContent().catch(() => null)
   if (!content) return []
-  // pdf.js's own TextItem type isn't re-exported from its public entry
-  // point (see patternTextHeuristics.ts) — `isTextFragment` already checks
-  // this filters out TextMarkedContent entries at runtime, TS just can't
-  // express that narrowing across an unrelated local type.
-  const fragments = content.items.filter((item) => isTextFragment(item)) as PdfTextFragment[]
+  const fragments = content.items.map(toTextFragment).filter((item): item is PdfTextFragment => item !== null)
   return groupTextIntoLines(fragments)
 }
 
@@ -87,30 +98,37 @@ export async function extractPdfMetadata(data: ArrayBuffer): Promise<PdfMetadata
   try {
     const pageCount = doc.numPages
     const firstPage = await doc.getPage(1)
-    const firstPageLines = await getPageLines(firstPage)
+
+    // Scanned once, shared by the title/creator lookahead and the
+    // materials collection below — a cover page is often a full graphic
+    // with no real title text, so the title/creator search keeps checking
+    // subsequent pages until it finds something plausible.
+    const scannedPages: TextLine[][] = [await getPageLines(firstPage)]
+    const lastPage = Math.min(pageCount, TEXT_SCAN_PAGE_LIMIT)
+    for (let pageNumber = 2; pageNumber <= lastPage; pageNumber += 1) {
+      scannedPages.push(await getPageLines(await doc.getPage(pageNumber)))
+    }
 
     const metadata = await doc.getMetadata().catch(() => null)
     const info = metadata?.info as { Title?: string; Author?: string } | undefined
 
-    const title = guessTitleFromLines(firstPageLines) ?? (info?.Title?.trim() || null)
-    const creator = guessCreatorFromLines(firstPageLines) ?? (info?.Author?.trim() || null)
-    const materialsHint = await collectMaterialsHint(doc, firstPageLines, pageCount)
+    let title: string | null = null
+    let creator: string | null = null
+    for (const lines of scannedPages) {
+      title ??= guessTitleFromLines(lines)
+      creator ??= guessCreatorFromLines(lines)
+      if (title && creator) break
+    }
+    title ??= info?.Title?.trim() || null
+    creator ??= info?.Author?.trim() || null
+
+    const materialsHint = findMaterialLines(scannedPages.flat())
     const coverBlob = await renderCover(firstPage)
 
     return { pageCount, title, creator, materialsHint, coverBlob }
   } finally {
     await loadingTask.destroy()
   }
-}
-
-async function collectMaterialsHint(doc: PDFDocumentProxy, firstPageLines: TextLine[], pageCount: number): Promise<string[]> {
-  const lines = [...firstPageLines]
-  const lastPage = Math.min(pageCount, MATERIALS_SCAN_PAGE_LIMIT)
-  for (let pageNumber = 2; pageNumber <= lastPage; pageNumber += 1) {
-    const page = await doc.getPage(pageNumber)
-    lines.push(...(await getPageLines(page)))
-  }
-  return findMaterialLines(lines)
 }
 
 async function renderCover(page: PDFPageProxy): Promise<Blob> {
