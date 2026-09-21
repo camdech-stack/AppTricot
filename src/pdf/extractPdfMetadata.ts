@@ -1,9 +1,24 @@
-import type { PDFDocumentProxy } from 'pdfjs-dist'
+import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist'
 import { getPdfjs, STANDARD_FONT_DATA_URL } from './pdfjs'
+import { cropToCoverImage } from './extractCoverImage'
+import {
+  findMaterialLines,
+  groupTextIntoLines,
+  guessCreatorFromLines,
+  guessTitleFromLines,
+  type PdfTextFragment,
+  type TextLine,
+} from './patternTextHeuristics'
 
 export interface PdfMetadata {
   pageCount: number
   title: string | null
+  creator: string | null
+  // Lines that look like a needle/hook size ("aiguilles circulaires 4 mm,
+  // 80 cm", "US 6 (4mm) circular needles") — collected as-is, not parsed
+  // into structured data, so the user always sees exactly what the PDF
+  // says (see CLAUDE.md "Extraction heuristique").
+  materialsHint: string[]
   coverBlob: Blob
 }
 
@@ -23,9 +38,32 @@ export class PdfReadError extends Error {
 const COVER_MAX_SIDE = 600
 const COVER_QUALITY = 0.8
 
-// Reads page count + title from a PDF's metadata and renders its first page
-// as the auto cover. Used both at import time and when replacing a file's
-// version — see CLAUDE.md "Remplacer une version".
+// How many pages (from the start) to scan for a materials list — patterns
+// put it early, and scanning text content (no rendering) is cheap, but an
+// unbounded scan would be wasteful on a very long PDF.
+const MATERIALS_SCAN_PAGE_LIMIT = 5
+
+function isTextFragment(item: unknown): item is PdfTextFragment {
+  return typeof item === 'object' && item !== null && 'str' in item
+}
+
+async function getPageLines(page: PDFPageProxy): Promise<TextLine[]> {
+  const content = await page.getTextContent().catch(() => null)
+  if (!content) return []
+  // pdf.js's own TextItem type isn't re-exported from its public entry
+  // point (see patternTextHeuristics.ts) — `isTextFragment` already checks
+  // this filters out TextMarkedContent entries at runtime, TS just can't
+  // express that narrowing across an unrelated local type.
+  const fragments = content.items.filter((item) => isTextFragment(item)) as PdfTextFragment[]
+  return groupTextIntoLines(fragments)
+}
+
+// Reads page count, title, designer/creator, a materials hint and renders
+// the auto cover. Used both at import time and when replacing a file's
+// version — see CLAUDE.md "Remplacer une version". Title/creator/materials
+// are heuristics (typography + a bilingual FR/EN phrase list), not an AI
+// read of the pattern — see CLAUDE.md "Extraction heuristique" for why and
+// its limits.
 export async function extractPdfMetadata(data: ArrayBuffer): Promise<PdfMetadata> {
   const pdfjs = await getPdfjs()
 
@@ -48,19 +86,34 @@ export async function extractPdfMetadata(data: ArrayBuffer): Promise<PdfMetadata
 
   try {
     const pageCount = doc.numPages
-    const metadata = await doc.getMetadata().catch(() => null)
-    const rawTitle = (metadata?.info as { Title?: string } | undefined)?.Title
-    const title = rawTitle?.trim() || null
-    const coverBlob = await renderCover(doc)
+    const firstPage = await doc.getPage(1)
+    const firstPageLines = await getPageLines(firstPage)
 
-    return { pageCount, title, coverBlob }
+    const metadata = await doc.getMetadata().catch(() => null)
+    const info = metadata?.info as { Title?: string; Author?: string } | undefined
+
+    const title = guessTitleFromLines(firstPageLines) ?? (info?.Title?.trim() || null)
+    const creator = guessCreatorFromLines(firstPageLines) ?? (info?.Author?.trim() || null)
+    const materialsHint = await collectMaterialsHint(doc, firstPageLines, pageCount)
+    const coverBlob = await renderCover(firstPage)
+
+    return { pageCount, title, creator, materialsHint, coverBlob }
   } finally {
     await loadingTask.destroy()
   }
 }
 
-async function renderCover(doc: PDFDocumentProxy): Promise<Blob> {
-  const page = await doc.getPage(1)
+async function collectMaterialsHint(doc: PDFDocumentProxy, firstPageLines: TextLine[], pageCount: number): Promise<string[]> {
+  const lines = [...firstPageLines]
+  const lastPage = Math.min(pageCount, MATERIALS_SCAN_PAGE_LIMIT)
+  for (let pageNumber = 2; pageNumber <= lastPage; pageNumber += 1) {
+    const page = await doc.getPage(pageNumber)
+    lines.push(...(await getPageLines(page)))
+  }
+  return findMaterialLines(lines)
+}
+
+async function renderCover(page: PDFPageProxy): Promise<Blob> {
   const baseViewport = page.getViewport({ scale: 1 })
   const scale = Math.min(1, COVER_MAX_SIDE / Math.max(baseViewport.width, baseViewport.height))
   const viewport = page.getViewport({ scale })
@@ -72,6 +125,12 @@ async function renderCover(doc: PDFDocumentProxy): Promise<Blob> {
   if (!context) throw new Error('Contexte canvas 2D indisponible')
 
   await page.render({ canvas, canvasContext: context, viewport }).promise
+
+  // Prefer the largest embedded photo over the full page when one is
+  // clearly the cover — falls back to the full-page render whenever no
+  // image is found or the detected region looks implausible.
+  const cropped = await cropToCoverImage(page, viewport.transform, canvas)
+  if (cropped) return cropped
 
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(

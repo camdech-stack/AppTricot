@@ -38,6 +38,14 @@ interface ProcessedFile {
 
 type Step = 'pick' | 'processing' | 'single-form' | 'multi-result'
 
+// Prefixes the auto-detected needle/hook lines so it's obvious in Notes
+// that they came from a heuristic scan, not something the user typed —
+// see CLAUDE.md "Extraction heuristique".
+function formatMaterialsHint(materialsHint: string[]): string {
+  if (materialsHint.length === 0) return ''
+  return ['Matériel détecté dans le PDF :', ...materialsHint.map((line) => `- ${line}`)].join('\n')
+}
+
 async function processFile(file: File): Promise<ProcessedFile> {
   const bytes = await file.arrayBuffer()
   const signatureError = validatePdfSignature(bytes)
@@ -110,6 +118,8 @@ export function ImportPatternSheet({ open, onClose, onImported, allTags }: Impor
       }
       if (only.status === 'ready' && only.metadata) {
         setName(only.metadata.title ?? defaultPatternName(only.file.name))
+        setSource(only.metadata.creator ?? '')
+        setNotes(formatMaterialsHint(only.metadata.materialsHint))
         setStep('single-form')
         return
       }
@@ -131,6 +141,8 @@ export function ImportPatternSheet({ open, onClose, onImported, allTags }: Impor
         await importPattern({
           name: entry.metadata.title ?? defaultPatternName(entry.file.name),
           craft: null,
+          source: entry.metadata.creator ?? '',
+          notes: formatMaterialsHint(entry.metadata.materialsHint),
           fileName: entry.file.name,
           fileHash: entry.hash,
           pageCount: entry.metadata.pageCount,
@@ -191,6 +203,8 @@ export function ImportPatternSheet({ open, onClose, onImported, allTags }: Impor
     try {
       const metadata = await extractPdfMetadata(only.bytes)
       setName(metadata.title ?? defaultPatternName(only.file.name))
+      setSource(metadata.creator ?? '')
+      setNotes(formatMaterialsHint(metadata.materialsHint))
       setProcessed([{ ...only, status: 'ready', metadata }])
     } catch (error) {
       const message = error instanceof PdfReadError ? error.message : 'Échec de la lecture du PDF.'
