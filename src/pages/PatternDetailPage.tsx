@@ -4,10 +4,10 @@ import { ArrowLeft, BookOpen, Image, Plus, RefreshCw, Trash2 } from 'lucide-reac
 import styles from './PatternDetailPage.module.css'
 import layoutStyles from '../components/layout/AppLayout.module.css'
 import { FloatingTabBar } from '../components/layout/FloatingTabBar'
-import { Button, ConfirmDialog, IconButton, WaveDivider } from '../components/ui'
+import { Button, ConfirmDialog, IconButton, Pill, WaveDivider } from '../components/ui'
 import { TagEditor } from '../components/patterns/TagEditor'
 import { AssociateProjectSheet } from '../components/patterns/AssociateProjectSheet'
-import { CRAFT_LABELS } from '../components/projects/statusMeta'
+import { CRAFT_LABELS, STATUS_LABELS, STATUS_PILL_COLORS } from '../components/projects/statusMeta'
 import { usePattern } from '../hooks/usePattern'
 import { usePatternCoverUrl } from '../hooks/usePatternCoverUrl'
 import { usePatternLibraryContext } from '../hooks/usePatternLibraryContext'
@@ -276,7 +276,10 @@ export function PatternDetailPage() {
                 <div className={styles.linkedList}>
                   {linkedProjects.map(({ link, project }) => (
                     <div key={link.id} className={styles.linkedItem}>
-                      <Link to={`/projets/${project.id}`}>{project.name}</Link>
+                      <Link to={`/projets/${project.id}`} className={styles.linkedItemName}>
+                        <span>{project.name}</span>
+                        <Pill color={STATUS_PILL_COLORS[project.status]}>{STATUS_LABELS[project.status]}</Pill>
+                      </Link>
                       <button type="button" className={styles.unlinkButton} onClick={() => void unlinkPatternFromProject(link.id)}>
                         Retirer
                       </button>
