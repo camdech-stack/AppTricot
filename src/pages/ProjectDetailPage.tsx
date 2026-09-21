@@ -10,6 +10,7 @@ import { TimeCard } from '../components/sessions/TimeCard'
 import { SessionHistorySheet } from '../components/sessions/SessionHistorySheet'
 import { ProjectYarnCard } from '../components/yarn/ProjectYarnCard'
 import { ProjectPatternCard } from '../components/projects/ProjectPatternCard'
+import { ProjectGuideCard } from '../components/projects/ProjectGuideCard'
 import { CRAFT_LABELS, STATUS_LABELS, STATUS_PILL_COLORS } from '../components/projects/statusMeta'
 import { projectColorVar, projectColorSoftVar, projectGradient } from '../components/projects/colorMeta'
 import { useProject } from '../hooks/useProject'
@@ -217,10 +218,7 @@ export function ProjectDetailPage() {
 
             <ProjectPatternCard projectId={projectId} />
 
-            <div className={styles.comingSoonCard}>
-              Guide de patron
-              <span>Bientôt</span>
-            </div>
+            <ProjectGuideCard projectId={projectId} />
 
             <Button
               size="lg"

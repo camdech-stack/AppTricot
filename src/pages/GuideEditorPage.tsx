@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, ChevronsDownUp, ChevronsUpDown, MoreHorizontal, Plus, Redo2, Undo2 } from 'lucide-react'
 import styles from './GuideEditorPage.module.css'
 import { IconButton, Button } from '../components/ui'
+import { PdfViewerCore } from '../components/patterns/PdfViewerCore'
 import { PieceCard } from '../components/guides/editor/PieceCard'
 import { SortableList } from '../components/guides/editor/SortableList'
 import { NodeMenuSheet } from '../components/guides/editor/NodeMenuSheet'
@@ -171,6 +172,11 @@ interface GuideEditorInnerProps {
 
 function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerProps) {
   const navigate = useNavigate()
+  const location = useLocation()
+  // Set by the caller (project card, pattern page, guide list) so "back"
+  // returns exactly where the editor was opened from — see CLAUDE.md
+  // "Route de retour cohérente".
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo ?? '/patrons'
   const libraryContext = useGuideLibraryContext()
 
   const { content, setContent, undo, redo, canUndo, canRedo } = useGuideHistory(initialContent)
@@ -183,6 +189,11 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
   const [guideMenuOpen, setGuideMenuOpen] = useState(false)
   const [guideMetaOpen, setGuideMetaOpen] = useState(false)
   const [deleteToast, setDeleteToast] = useState<string | null>(null)
+  // Which pane shows on a phone-width screen when the guide has a linked
+  // pattern — both panes stay mounted either way so the PDF's position and
+  // the tree's scroll/expand state survive switching (see CLAUDE.md
+  // "Volet patron dans l'éditeur").
+  const [guidePaneTab, setGuidePaneTab] = useState<'guide' | 'pattern'>('guide')
   const toastTimeoutRef = useRef<number | undefined>(undefined)
 
   useEffect(() => () => window.clearTimeout(toastTimeoutRef.current), [])
@@ -295,7 +306,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
 
   async function handleDeleteGuide() {
     await deleteGuide(guideId)
-    navigate('/patrons')
+    navigate(returnTo)
   }
 
   // --- Derived data for the currently open sheet/menu --------------------
@@ -329,18 +340,10 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
     libraryContext?.projectGuides.filter((link) => link.guideId === guideId).map((link) => libraryContext.projects.find((project) => project.id === link.projectId)).filter((project): project is NonNullable<typeof project> => Boolean(project)) ?? []
 
   const saveStatusLabel = autosave.status === 'saving' ? 'Enregistrement…' : autosave.status === 'error' ? 'Échec de l’enregistrement' : 'Enregistré'
+  const linkedPattern = guide.patternId ? libraryContext?.patterns.find((pattern) => pattern.id === guide.patternId) : undefined
 
-  return (
-    <div className={styles.page}>
-      <div className={styles.header}>
-        <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" onClick={() => navigate('/patrons')} />
-        <span className={styles.headerTitle}>{guide.name}</span>
-        <span className={autosave.status === 'error' ? styles.saveStatusError : styles.saveStatus}>{saveStatusLabel}</span>
-        <IconButton icon={<Undo2 strokeWidth={1.75} />} label="Annuler" disabled={!canUndo} onClick={undo} />
-        <IconButton icon={<Redo2 strokeWidth={1.75} />} label="Rétablir" disabled={!canRedo} onClick={redo} />
-        <IconButton icon={<MoreHorizontal strokeWidth={1.75} />} label="Menu du guide" onClick={() => setGuideMenuOpen(true)} />
-      </div>
-
+  const guidePaneContent = (
+    <>
       <div className={styles.toolbar}>
         <button type="button" className={styles.toolbarButton} onClick={() => setExpanded(new Set(collectAllExpandableIds(content)))}>
           <ChevronsUpDown size={16} strokeWidth={1.75} />
@@ -367,6 +370,56 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           Ajouter une pièce
         </Button>
       </div>
+    </>
+  )
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.header}>
+        <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" onClick={() => navigate(returnTo)} />
+        <span className={styles.headerTitle}>{guide.name}</span>
+        <span className={autosave.status === 'error' ? styles.saveStatusError : styles.saveStatus}>{saveStatusLabel}</span>
+        <IconButton icon={<Undo2 strokeWidth={1.75} />} label="Annuler" disabled={!canUndo} onClick={undo} />
+        <IconButton icon={<Redo2 strokeWidth={1.75} />} label="Rétablir" disabled={!canRedo} onClick={redo} />
+        <IconButton icon={<MoreHorizontal strokeWidth={1.75} />} label="Menu du guide" onClick={() => setGuideMenuOpen(true)} />
+      </div>
+
+      {linkedPattern ? (
+        <>
+          <div className={styles.patternTabBar} role="tablist" aria-label="Guide ou patron">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={guidePaneTab === 'guide'}
+              className={guidePaneTab === 'guide' ? styles.patternTabActive : styles.patternTab}
+              onClick={() => setGuidePaneTab('guide')}
+            >
+              Guide
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={guidePaneTab === 'pattern'}
+              className={guidePaneTab === 'pattern' ? styles.patternTabActive : styles.patternTab}
+              onClick={() => setGuidePaneTab('pattern')}
+            >
+              Patron
+            </button>
+          </div>
+          <div className={styles.panes}>
+            <div className={guidePaneTab === 'guide' ? styles.paneVisible : styles.paneHidden} data-pane="guide">
+              {guidePaneContent}
+            </div>
+            <div className={guidePaneTab === 'pattern' ? styles.paneVisible : styles.paneHidden} data-pane="pattern">
+              <div className={styles.patternPaneHost}>
+                <PdfViewerCore patternId={linkedPattern.id} projectId={null} patternName={linkedPattern.name} />
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        guidePaneContent
+      )}
 
       {deleteToast && (
         <div className={styles.toast}>

@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams, Link } from 'react-router-dom'
-import { ArrowLeft, BookOpen, Image, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { ArrowLeft, BookOpen, NotebookPen, Image, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import styles from './PatternDetailPage.module.css'
 import layoutStyles from '../components/layout/AppLayout.module.css'
 import { FloatingTabBar } from '../components/layout/FloatingTabBar'
 import { Button, ConfirmDialog, IconButton, Pill, WaveDivider } from '../components/ui'
 import { TagEditor } from '../components/patterns/TagEditor'
 import { AssociateProjectSheet } from '../components/patterns/AssociateProjectSheet'
+import { CreateGuideSheet } from '../components/guides/CreateGuideSheet'
 import { CRAFT_LABELS, STATUS_LABELS, STATUS_PILL_COLORS } from '../components/projects/statusMeta'
 import { usePattern } from '../hooks/usePattern'
 import { usePatternCoverUrl } from '../hooks/usePatternCoverUrl'
 import { usePatternLibraryContext } from '../hooks/usePatternLibraryContext'
+import { useGuideLibraryContext } from '../hooks/useGuideLibraryContext'
 import { extractPdfMetadata, PdfReadError } from '../pdf/extractPdfMetadata'
 import { formatFileSize } from '../utils/formatFileSize'
 import {
@@ -41,6 +43,7 @@ export function PatternDetailPage() {
   const pattern = usePattern(patternId)
   const coverUrl = usePatternCoverUrl(patternId)
   const context = usePatternLibraryContext()
+  const guideContext = useGuideLibraryContext()
 
   const [name, setName] = useState('')
   const [craft, setCraft] = useState<ProjectCraft | ''>('')
@@ -51,6 +54,7 @@ export function PatternDetailPage() {
   const saveTimeoutRef = useRef<number | undefined>(undefined)
 
   const [associateOpen, setAssociateOpen] = useState(false)
+  const [createGuideOpen, setCreateGuideOpen] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [replaceError, setReplaceError] = useState<string>()
   const [replacing, setReplacing] = useState(false)
@@ -156,6 +160,7 @@ export function PatternDetailPage() {
     .filter((entry): entry is { link: ProjectPatternRecord; project: ProjectRecord } => entry !== null)
   const candidateProjects = context.projects.filter((project) => !links.some((link) => link.projectId === project.id))
   const allTags = Array.from(new Set(context.patterns.flatMap((candidate) => candidate.tags))).sort((a, b) => a.localeCompare(b))
+  const linkedGuides = (guideContext?.guides ?? []).filter((guide) => guide.patternId === patternId)
 
   return (
     <div className={layoutStyles.shell}>
@@ -311,6 +316,26 @@ export function PatternDetailPage() {
               )}
             </div>
 
+            <div className={styles.section}>
+              <div className={styles.sectionHeader}>
+                <h2>Guides</h2>
+                <IconButton icon={<NotebookPen strokeWidth={1.75} />} label="Créer un guide pour ce patron" onClick={() => setCreateGuideOpen(true)} />
+              </div>
+              {linkedGuides.length === 0 ? (
+                <p className={styles.emptyText}>Aucun guide pour ce patron.</p>
+              ) : (
+                <div className={styles.linkedList}>
+                  {linkedGuides.map((guide) => (
+                    <div key={guide.id} className={styles.linkedItem}>
+                      <Link to={`/guides/${guide.id}`} state={{ returnTo: `/patrons/${patternId}` }} className={styles.linkedItemName}>
+                        <span>{guide.name}</span>
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <Button variant="ghost" className={styles.deleteButton} icon={<Trash2 size={18} strokeWidth={1.75} />} onClick={() => setDeleteConfirmOpen(true)}>
               Supprimer le patron
             </Button>
@@ -319,6 +344,18 @@ export function PatternDetailPage() {
       </div>
 
       <AssociateProjectSheet open={associateOpen} onClose={() => setAssociateOpen(false)} patternId={patternId} candidates={candidateProjects} />
+
+      <CreateGuideSheet
+        open={createGuideOpen}
+        onClose={() => setCreateGuideOpen(false)}
+        onCreated={(guide) => {
+          setCreateGuideOpen(false)
+          navigate(`/guides/${guide.id}`, { state: { returnTo: `/patrons/${patternId}` } })
+        }}
+        patterns={context.patterns}
+        defaultCraft={pattern.craft}
+        defaultPatternId={patternId}
+      />
 
       <ConfirmDialog
         open={deleteConfirmOpen}

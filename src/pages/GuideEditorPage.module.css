@@ -63,6 +63,84 @@
     calc(var(--safe-left) + var(--space-16));
 }
 
+/* Guide/patron switch, only rendered when the guide has a linked pattern
+   (see CLAUDE.md "Volet patron dans l'éditeur") — same pill/split
+   convention as ProjectWorkPage's Patron/Compteur tabs. */
+.patternTabBar {
+  display: flex;
+  gap: var(--space-8);
+  padding: var(--space-12) calc(var(--safe-right) + var(--space-16)) 0 calc(var(--safe-left) + var(--space-16));
+}
+
+.patternTab,
+.patternTabActive {
+  flex: 1;
+  min-height: var(--tap-min);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.patternTabActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.panes {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.paneVisible {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.paneHidden {
+  display: none;
+}
+
+.patternPaneHost {
+  flex: 1;
+  min-height: 0;
+}
+
+@media (min-width: 1024px) and (orientation: landscape) {
+  .patternTabBar {
+    display: none;
+  }
+
+  .panes {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .paneVisible,
+  .paneHidden {
+    display: flex !important;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .paneVisible[data-pane='guide'],
+  .paneHidden[data-pane='guide'] {
+    flex: 0 0 55%;
+    border-right: 1px solid var(--color-border);
+  }
+
+  .paneVisible[data-pane='pattern'],
+  .paneHidden[data-pane='pattern'] {
+    flex: 0 0 45%;
+  }
+}
+
 .pieceList {
   display: flex;
   flex-direction: column;

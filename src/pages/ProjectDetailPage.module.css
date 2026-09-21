@@ -144,27 +144,6 @@
   outline: none;
 }
 
-.comingSoonCard {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-4);
-  min-height: var(--tap-min);
-  padding: var(--space-16) var(--space-8);
-  background: var(--color-surface-alt);
-  border-radius: var(--radius-md);
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-  text-align: center;
-}
-
-.comingSoonCard span {
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
 .continueButton {
   width: 100%;
 }

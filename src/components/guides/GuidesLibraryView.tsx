@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Search } from 'lucide-react'
 import styles from './GuidesLibraryView.module.css'
@@ -6,40 +6,7 @@ import { GuideCard } from './GuideCard'
 import { CreateGuideSheet } from './CreateGuideSheet'
 import { Button } from '../ui'
 import { useGuideLibraryContext } from '../../hooks/useGuideLibraryContext'
-import { getGuideContent, type GuideContent, type GuideRecord } from '../../data'
-
-// A stable reference for "no guides yet" — a fresh `[]` literal on every
-// render (e.g. `context?.guides ?? []` while context is still loading)
-// would retrigger the effect below every render, which resolves
-// immediately and re-renders again: an infinite loop that never lets
-// the underlying liveQuery settle.
-const NO_GUIDES: GuideRecord[] = []
-
-// Guide contents live in their own table (see CLAUDE.md "Modèle de données
-// étape 5a") so the list only loads them for computing card stats, once,
-// rather than through the main library liveQuery. `guides` comes straight
-// from useLiveQuery, which keeps a stable reference between renders until
-// the underlying data actually changes, so this only re-fetches then.
-function useGuideContents(guides: GuideRecord[]): Record<string, GuideContent> {
-  const [contents, setContents] = useState<Record<string, GuideContent>>({})
-
-  useEffect(() => {
-    let cancelled = false
-    void Promise.all(guides.map(async (guide) => [guide.id, await getGuideContent(guide.id)] as const)).then((entries) => {
-      if (cancelled) return
-      const next: Record<string, GuideContent> = {}
-      for (const [id, content] of entries) {
-        if (content) next[id] = content
-      }
-      setContents(next)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [guides])
-
-  return contents
-}
+import { useGuideContents } from '../../hooks/useGuideContents'
 
 export function GuidesLibraryView() {
   const navigate = useNavigate()
@@ -47,7 +14,7 @@ export function GuidesLibraryView() {
   const [query, setQuery] = useState('')
   const [createOpen, setCreateOpen] = useState(false)
 
-  const contents = useGuideContents(context?.guides ?? NO_GUIDES)
+  const contents = useGuideContents(context?.guides)
 
   if (context === undefined) {
     return <div className={styles.view} />
