@@ -4,10 +4,13 @@ import type {
   CounterEventRecord,
   CounterRecord,
   CoverImageRecord,
+  GuideContentRecord,
+  GuideRecord,
   PatternCoverRecord,
   PatternFileRecord,
   PatternRecord,
   PatternViewStateRecord,
+  ProjectGuideRecord,
   ProjectPatternRecord,
   ProjectRecord,
   ProjectYarnRecord,
@@ -41,6 +44,9 @@ class AppDatabase extends Dexie {
   patternCovers!: EntityTable<PatternCoverRecord, 'id'>
   projectPatterns!: EntityTable<ProjectPatternRecord, 'id'>
   patternViewStates!: EntityTable<PatternViewStateRecord, 'id'>
+  guides!: EntityTable<GuideRecord, 'id'>
+  guideContents!: EntityTable<GuideContentRecord, 'id'>
+  projectGuides!: EntityTable<ProjectGuideRecord, 'id'>
 
   constructor() {
     super('mon-carnet-de-tricot')
@@ -275,6 +281,32 @@ class AppDatabase extends Dexie {
             pattern.materials = ''
           })
       })
+
+    // Step 5a: pattern guides. Adds `guides` (metadata), `guideContents`
+    // (the tree itself, in its own table so lists stay fast — see
+    // CLAUDE.md "Modèle de données (étape 5a)") and `projectGuides` (one
+    // link per project/guide pair, a guide can be reused across several
+    // projects). All three are brand new tables, nothing to backfill.
+    this.version(11).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+      yarns: 'id, name',
+      yarnImages: 'id, yarnId',
+      projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+      yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+      patterns: 'id, name, *tags, fileHash, createdAt, lastOpenedAt',
+      patternFiles: 'id, patternId',
+      patternCovers: 'id, patternId',
+      projectPatterns: 'id, projectId, patternId, [projectId+patternId]',
+      patternViewStates: 'id, patternId, projectId',
+      guides: 'id, patternId, createdAt',
+      guideContents: 'id, guideId',
+      projectGuides: 'id, projectId, guideId, [projectId+guideId]',
+    })
   }
 }
 

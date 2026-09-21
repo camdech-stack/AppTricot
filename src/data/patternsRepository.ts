@@ -180,15 +180,22 @@ export async function touchPatternOpened(id: string): Promise<void> {
 }
 
 // Deletes the file, cover, every project link and every reading position —
-// see CLAUDE.md "Supprimer un patron".
+// see CLAUDE.md "Supprimer un patron". Guides that referenced this pattern
+// are kept (their patternId just goes back to null), never deleted — a
+// guide is a reusable model independent of any one pattern file.
 export async function deletePattern(id: string): Promise<void> {
-  await db.transaction('rw', db.patterns, db.patternFiles, db.patternCovers, db.projectPatterns, db.patternViewStates, async () => {
-    await db.patternFiles.delete(id)
-    await db.patternCovers.delete(id)
-    await db.projectPatterns.where('patternId').equals(id).delete()
-    await db.patternViewStates.where('patternId').equals(id).delete()
-    await db.patterns.delete(id)
-  })
+  await db.transaction(
+    'rw',
+    [db.patterns, db.patternFiles, db.patternCovers, db.projectPatterns, db.patternViewStates, db.guides],
+    async () => {
+      await db.patternFiles.delete(id)
+      await db.patternCovers.delete(id)
+      await db.projectPatterns.where('patternId').equals(id).delete()
+      await db.patternViewStates.where('patternId').equals(id).delete()
+      await db.guides.where('patternId').equals(id).modify({ patternId: null, updatedAt: nowIso() })
+      await db.patterns.delete(id)
+    },
+  )
 }
 
 export async function getProjectPatterns(projectId: string): Promise<ProjectPatternRecord[]> {

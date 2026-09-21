@@ -129,6 +129,7 @@ export async function deleteProject(id: string, keepYarnUsage = true): Promise<v
       db.yarnUsages,
       db.projectPatterns,
       db.patternViewStates,
+      db.projectGuides,
     ],
     async (tx) => {
       const counters = await getCounters(id)
@@ -152,6 +153,10 @@ export async function deleteProject(id: string, keepYarnUsage = true): Promise<v
       // links and reading position (see CLAUDE.md "Suppression et laine").
       await db.projectPatterns.where('projectId').equals(id).delete()
       await db.patternViewStates.where('projectId').equals(id).delete()
+
+      // Same logic as patterns: the guide itself is never deleted here,
+      // only this project's link to it.
+      await db.projectGuides.where('projectId').equals(id).delete()
 
       await db.projects.delete(id)
     },

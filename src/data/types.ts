@@ -1,3 +1,5 @@
+import type { GuideContent } from './guideModel'
+
 // Shared shape for every persisted entity: a stable UUID plus audit timestamps.
 // Every future table (projects, counters, yarns, patterns, ...) should build
 // on this so migrations and exports stay consistent across the app.
@@ -290,4 +292,36 @@ export interface PatternViewStateRecord extends BaseEntity {
   zoom: number
   offsetX: number
   offsetY: number
+}
+
+// Step 5a: pattern guides. A guide is a reusable model (like a pattern) —
+// it can be linked to several projects, and its progress will be stored
+// per (project, guide, node id) at step 5b, in a separate table, NEVER
+// inside the guide's own content tree (see src/data/guideModel.ts).
+export interface GuideRecord extends BaseEntity {
+  name: string
+  craft: ProjectCraft | null
+  patternId: string | null
+  // Free text (e.g. "M"), purely informational — no sizing logic reads it.
+  sizeLabel: string | null
+  notes: string
+  lastEditedNodeId: string | null
+}
+
+// The guide's content tree, in its own table (like patternFiles/coverImages)
+// so listing guides never has to load a potentially large tree — id doubles
+// as guideId, same 1:1 convention as coverImages/patternCovers.
+export interface GuideContentRecord extends BaseEntity {
+  guideId: string
+  schemaVersion: 1
+  content: GuideContent
+}
+
+// Many-to-many: a project can link several guides, and a guide can be
+// linked to several projects. At most one link per (projectId, guideId)
+// pair — same convention as ProjectPatternRecord.
+export interface ProjectGuideRecord extends BaseEntity {
+  projectId: string
+  guideId: string
+  position: number
 }
