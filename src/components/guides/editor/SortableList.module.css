@@ -1,0 +1,15 @@
+.handle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  min-height: var(--tap-min);
+  color: var(--color-text-muted);
+  touch-action: none;
+  cursor: grab;
+}
+
+.handle:active {
+  cursor: grabbing;
+}

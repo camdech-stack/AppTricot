@@ -1,0 +1,66 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--tap-min);
+}
+
+.chevron,
+.chevronExpanded {
+  flex: none;
+  width: 32px;
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  transition: transform var(--transition-fast);
+}
+
+.chevronExpanded {
+  transform: rotate(90deg);
+}
+
+.chevronSpacer {
+  flex: none;
+  width: 32px;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: var(--space-8) var(--space-4);
+  text-align: left;
+}
+
+.title {
+  font-weight: 600;
+  font-size: var(--text-md);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.menuButton {
+  flex: none;
+  width: var(--tap-min);
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}

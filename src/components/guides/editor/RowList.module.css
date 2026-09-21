@@ -1,0 +1,76 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--tap-min);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.rowMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-4);
+  text-align: left;
+}
+
+.rowNumber {
+  flex: none;
+  min-width: 20px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.rowSidePill {
+  flex: none;
+  font-size: 10px;
+  padding: 2px var(--space-8);
+}
+
+.rowText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+}
+
+.rowStitches {
+  flex: none;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.menuButton {
+  flex: none;
+  width: var(--tap-min);
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.rowActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  padding: var(--space-8) 0;
+}
+
+.rowAction {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--tap-min);
+  padding: 0 var(--space-12);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}

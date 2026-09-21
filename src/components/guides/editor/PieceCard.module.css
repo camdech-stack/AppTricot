@@ -1,0 +1,54 @@
+.card {
+  padding: var(--space-8) var(--space-12);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+}
+
+.operationRow {
+  display: flex;
+}
+
+.operationButton {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: var(--tap-min);
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  text-align: left;
+}
+
+.operationLabel {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+}
+
+.operationSummary {
+  font-size: var(--text-sm);
+}
+
+.addOperationButton,
+.addSectionButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--tap-min);
+  padding: 0 var(--space-12);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  width: fit-content;
+}

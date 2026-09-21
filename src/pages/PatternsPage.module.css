@@ -30,6 +30,32 @@
   color: var(--color-text-muted);
 }
 
+.viewSwitch {
+  display: flex;
+  gap: var(--space-4);
+  margin-top: var(--space-16);
+  padding: var(--space-4);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-pill);
+  width: fit-content;
+}
+
+.viewTab,
+.viewTabActive {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-20);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.viewTabActive {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+}
+
 .searchRow {
   display: flex;
   gap: var(--space-8);
