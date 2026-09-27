@@ -469,7 +469,7 @@ export function addSection(content: GuideContent, pieceId: string, input: AddSec
 }
 
 export interface AddBlockInput {
-  text?: string
+  instructions?: string
   times?: number
   length?: number
   unit?: MeasureUnit
@@ -483,7 +483,7 @@ function createEmptyBlock(type: BlockType, input: AddBlockInput): Block {
     case 'rows':
       return { id, type, rows: [] }
     case 'text':
-      return { id, type, text: input.text ?? '' }
+      return { id, type, instructions: input.instructions ?? '' }
     case 'repeat':
       return { id, type, times: input.times ?? 1, blocks: [] }
     case 'measure':
@@ -516,7 +516,7 @@ export function addBlock(content: GuideContent, parentId: string, type: BlockTyp
 export interface AddRowInput {
   number?: number | null
   side?: RowSide | null
-  text?: string
+  instructions?: string
   stitchesAfter?: number | null
 }
 
@@ -525,7 +525,7 @@ export function addRow(content: GuideContent, blockId: string, input: AddRowInpu
     id: createId(),
     number: input.number ?? null,
     side: input.side ?? null,
-    text: input.text ?? '',
+    instructions: input.instructions ?? '',
     stitchesAfter: input.stitchesAfter ?? null,
   }
   const next = transformNode(content, blockId, (node) => {
@@ -569,7 +569,7 @@ export function setOperation(content: GuideContent, pieceId: string, slot: 'cast
 export interface ParsedRow {
   number: number | null
   side: RowSide | null
-  text: string
+  instructions: string
 }
 
 const ROW_NUMBER_PREFIX_PATTERNS: RegExp[] = [
@@ -623,7 +623,7 @@ export function parsePastedRows(text: string, startingNumber = 1): ParsedRow[] {
 
     const resolvedNumber = number ?? nextNumber
     nextNumber = resolvedNumber + 1
-    return { number: resolvedNumber, side, text: remaining }
+    return { number: resolvedNumber, side, instructions: remaining }
   })
 }
 
@@ -685,7 +685,7 @@ export function validateGuideContent(input: unknown): string[] {
     if (row.number !== null && typeof row.number !== 'number') errors.push(`${path} : numéro de rang invalide.`)
     if (row.side !== null && row.side !== 'rs' && row.side !== 'ws') errors.push(`${path} : côté de rang invalide.`)
     if (method === 'round' && row.side !== null && row.side !== undefined) errors.push(`${path} : une section "en rond" ne doit pas avoir de rangs avec un côté.`)
-    if (typeof row.text !== 'string') errors.push(`${path} : texte de rang invalide.`)
+    if (typeof row.instructions !== 'string') errors.push(`${path} : texte de rang invalide.`)
     if (row.stitchesAfter !== null && typeof row.stitchesAfter !== 'number') errors.push(`${path} : nombre de mailles après le rang invalide.`)
   }
 
@@ -709,7 +709,7 @@ export function validateGuideContent(input: unknown): string[] {
           else block.rows.forEach((row, rowIndex) => checkRow(row, `${blockPath}.rows[${rowIndex}]`, method))
           break
         case 'text':
-          if (typeof block.text !== 'string') errors.push(`${blockPath}.text : doit être un texte.`)
+          if (typeof block.instructions !== 'string') errors.push(`${blockPath}.instructions : doit être un texte.`)
           break
         case 'repeat':
           if (!Number.isInteger(block.times) || (block.times as number) < 1) errors.push(`${blockPath}.times : doit être un entier supérieur ou égal à 1.`)
@@ -803,7 +803,7 @@ export function normalizeGuideContent(input: unknown): GuideContent {
       id: normalizeId(row.id),
       number: typeof row.number === 'number' ? row.number : null,
       side: method === 'round' ? null : side,
-      text: typeof row.text === 'string' ? row.text : '',
+      instructions: typeof row.instructions === 'string' ? row.instructions : '',
       stitchesAfter: typeof row.stitchesAfter === 'number' ? row.stitchesAfter : null,
     }
   }
@@ -820,7 +820,7 @@ export function normalizeGuideContent(input: unknown): GuideContent {
         const rows = Array.isArray(block.rows) ? block.rows.map((row) => normalizeRow(row, method)) : []
         result.push({ id, type: 'rows', rows })
       } else if (block.type === 'text') {
-        result.push({ id, type: 'text', text: typeof block.text === 'string' ? block.text : '' })
+        result.push({ id, type: 'text', instructions: typeof block.instructions === 'string' ? block.instructions : '' })
       } else if (block.type === 'repeat') {
         result.push({
           id,

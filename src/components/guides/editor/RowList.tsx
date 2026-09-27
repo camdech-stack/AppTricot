@@ -55,7 +55,7 @@ function RowItem({ row, controller }: RowItemProps) {
             {row.side === 'rs' ? 'END' : 'ENV'}
           </Pill>
         )}
-        <span className={styles.rowText}>{row.text || '(rang vide)'}</span>
+        <span className={styles.rowText}>{row.instructions || '(rang vide)'}</span>
         {row.stitchesAfter != null && <span className={styles.rowStitches}>{row.stitchesAfter} m</span>}
       </button>
       <button type="button" className={styles.menuButton} aria-label="Options du rang" onClick={() => controller.onOpenMenu(row.id)}>

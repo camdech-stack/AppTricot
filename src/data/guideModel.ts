@@ -39,7 +39,7 @@ export interface Row {
   id: string
   number: number | null
   side: RowSide | null
-  text: string
+  instructions: string
   stitchesAfter: number | null
 }
 
@@ -59,7 +59,7 @@ export interface RepeatBlock {
 export interface TextBlock {
   id: string
   type: 'text'
-  text: string
+  instructions: string
 }
 
 export type MeasureUnit = 'cm' | 'in'

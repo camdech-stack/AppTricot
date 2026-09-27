@@ -42,7 +42,7 @@ function blockSubtitle(block: Block): string | undefined {
       return `${count} rang${count > 1 ? 's' : ''}`
     }
     case 'text':
-      return block.text || undefined
+      return block.instructions || undefined
   }
 }
 

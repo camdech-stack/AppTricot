@@ -491,7 +491,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
       )}
 
       {textBlock && sheet?.kind === 'text' && (
-        <TextBlockSheet open onClose={() => setSheet(null)} initialText={textBlock.text} onSave={(text) => applyChange(updateNode(content, sheet.id, { text }), sheet.id)} />
+        <TextBlockSheet open onClose={() => setSheet(null)} initialText={textBlock.instructions} onSave={(text) => applyChange(updateNode(content, sheet.id, { instructions: text }), sheet.id)} />
       )}
 
       {repeatBlock && sheet?.kind === 'repeat' && (
@@ -541,7 +541,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           showSide={findOwningSectionMethod(content, sheet.blockId) === 'flat'}
           initialNumber={editingRow.number}
           initialSide={editingRow.side}
-          initialText={editingRow.text}
+          initialInstructions={editingRow.instructions}
           initialStitchesAfter={editingRow.stitchesAfter}
           onSave={(input) => applyChange(updateNode(content, sheet.id, { ...input }), sheet.id)}
         />

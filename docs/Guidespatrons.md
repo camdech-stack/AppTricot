@@ -115,7 +115,7 @@ Un rang appartient toujours à un bloc `rows`. Il porte :
 - `number` — un numéro entier, ou `null` si le patron n'en donne pas ;
 - `side` — `rs` (endroit) ou `ws` (envers), toujours `null` dans une
   section en rond ;
-- `text` — l'instruction du rang ;
+- `instructions` — le texte du rang ;
 - `stitchesAfter` — le nombre de mailles restantes après ce rang, optionnel.
 
 `parsePastedRows` (utilisé par « Coller plusieurs rangs » dans l'éditeur)
@@ -155,8 +155,8 @@ tel quel (export/import à l'étape 7, génération par IA à l'étape 9) :
                   "id": "block-2",
                   "type": "rows",
                   "rows": [
-                    { "id": "row-1", "number": 1, "side": "rs", "text": "*2 m end, 2 m env*, rép.", "stitchesAfter": null },
-                    { "id": "row-2", "number": 2, "side": "ws", "text": "tricoter les mailles comme elles se présentent", "stitchesAfter": null }
+                    { "id": "row-1", "number": 1, "side": "rs", "instructions": "*2 m end, 2 m env*, rép.", "stitchesAfter": null },
+                    { "id": "row-2", "number": 2, "side": "ws", "instructions": "tricoter les mailles comme elles se présentent", "stitchesAfter": null }
                   ]
                 }
               ]
@@ -168,7 +168,7 @@ tel quel (export/import à l'étape 7, génération par IA à l'étape 9) :
               "unit": "cm",
               "from": "le montage",
               "blocks": [
-                { "id": "block-4", "type": "text", "text": "Continuer en jersey endroit." }
+                { "id": "block-4", "type": "text", "instructions": "Continuer en jersey endroit." }
               ]
             }
           ]

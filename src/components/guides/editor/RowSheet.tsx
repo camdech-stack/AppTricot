@@ -6,7 +6,7 @@ import type { RowSide } from '../../../data'
 export interface RowFormInput {
   number: number | null
   side: RowSide | null
-  text: string
+  instructions: string
   stitchesAfter: number | null
 }
 
@@ -21,7 +21,7 @@ interface RowSheetProps {
   showSide: boolean
   initialNumber: number | null
   initialSide: RowSide | null
-  initialText?: string
+  initialInstructions?: string
   initialStitchesAfter?: number | null
   onSave: (input: RowFormInput) => void
 }
@@ -32,17 +32,17 @@ function nextSide(side: RowSide | null): RowSide | null {
   return null
 }
 
-export function RowSheet({ open, onClose, mode, showSide, initialNumber, initialSide, initialText, initialStitchesAfter, onSave }: RowSheetProps) {
+export function RowSheet({ open, onClose, mode, showSide, initialNumber, initialSide, initialInstructions, initialStitchesAfter, onSave }: RowSheetProps) {
   const [number, setNumber] = useState(initialNumber != null ? String(initialNumber) : '')
   const [side, setSide] = useState<RowSide | null>(initialSide)
-  const [text, setText] = useState(initialText ?? '')
+  const [instructions, setInstructions] = useState(initialInstructions ?? '')
   const [stitchesAfter, setStitchesAfter] = useState(initialStitchesAfter != null ? String(initialStitchesAfter) : '')
 
   useEffect(() => {
     if (!open) return
     setNumber(initialNumber != null ? String(initialNumber) : '')
     setSide(initialSide)
-    setText(initialText ?? '')
+    setInstructions(initialInstructions ?? '')
     setStitchesAfter(initialStitchesAfter != null ? String(initialStitchesAfter) : '')
     // Deliberately only reacts to `open`: once open, "ajouter le suivant"
     // manages number/side/text itself below, without fighting the parent's
@@ -53,7 +53,7 @@ export function RowSheet({ open, onClose, mode, showSide, initialNumber, initial
     return {
       number: number.trim() === '' ? null : Number.parseInt(number, 10),
       side: showSide ? side : null,
-      text,
+      instructions,
       stitchesAfter: stitchesAfter.trim() === '' ? null : Number.parseInt(stitchesAfter, 10),
     }
   }
@@ -68,7 +68,7 @@ export function RowSheet({ open, onClose, mode, showSide, initialNumber, initial
     onSave(saved)
     setNumber(saved.number != null ? String(saved.number + 1) : '')
     setSide(showSide ? nextSide(saved.side) : null)
-    setText('')
+    setInstructions('')
     setStitchesAfter('')
   }
 
@@ -102,7 +102,7 @@ export function RowSheet({ open, onClose, mode, showSide, initialNumber, initial
         </div>
         <label className={styles.field}>
           <span className={styles.label}>Texte du rang</span>
-          <textarea className={styles.textarea} value={text} onChange={(event) => setText(event.target.value)} rows={3} placeholder="*2 m end, 2 m env* rép." />
+          <textarea className={styles.textarea} value={instructions} onChange={(event) => setInstructions(event.target.value)} rows={3} placeholder="*2 m end, 2 m env* rép." />
         </label>
         <label className={styles.field}>
           <span className={styles.label}>Mailles après ce rang (optionnel)</span>
