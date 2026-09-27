@@ -27,6 +27,7 @@ export function PieceCard({ piece, controller }: PieceCardProps) {
         onToggleExpand={() => controller.toggleExpanded(piece.id)}
         onEdit={() => controller.onEdit(piece.id)}
         onOpenMenu={() => controller.onOpenMenu(piece.id)}
+        accentColor="var(--color-guide-piece)"
       />
 
       {expanded && (

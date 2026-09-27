@@ -14,14 +14,21 @@ interface TreeNodeHeaderProps {
   onEdit?: () => void
   onOpenMenu: () => void
   depth: number
+  // One color per node category (piece, section, each block type) — never
+  // by nesting depth. Purely decorative (a left border), so it's exempt
+  // from the "gold/sage never for small text" contrast rule.
+  accentColor?: string
 }
 
 const INDENT_PX = 14
 const MAX_INDENT_LEVEL = 4
 
-export function TreeNodeHeader({ title, subtitle, expandable, expanded, onToggleExpand, onEdit, onOpenMenu, depth }: TreeNodeHeaderProps) {
+export function TreeNodeHeader({ title, subtitle, expandable, expanded, onToggleExpand, onEdit, onOpenMenu, depth, accentColor }: TreeNodeHeaderProps) {
   return (
-    <div className={styles.header} style={{ paddingLeft: Math.min(depth, MAX_INDENT_LEVEL) * INDENT_PX }}>
+    <div
+      className={styles.header}
+      style={{ paddingLeft: Math.min(depth, MAX_INDENT_LEVEL) * INDENT_PX, borderLeftColor: accentColor }}
+    >
       <DragHandle />
       {expandable ? (
         <button type="button" className={expanded ? styles.chevronExpanded : styles.chevron} aria-label={expanded ? 'Replier' : 'Déplier'} onClick={onToggleExpand}>

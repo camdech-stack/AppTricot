@@ -30,6 +30,7 @@ export function SectionCard({ section, depth, controller }: SectionCardProps) {
         onToggleExpand={() => controller.toggleExpanded(section.id)}
         onEdit={() => controller.onEdit(section.id)}
         onOpenMenu={() => controller.onOpenMenu(section.id)}
+        accentColor="var(--color-guide-section)"
       />
 
       {expanded && (

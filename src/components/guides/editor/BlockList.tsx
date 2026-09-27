@@ -1,9 +1,9 @@
-import { Plus } from 'lucide-react'
+import { CornerDownRight } from 'lucide-react'
 import styles from './BlockList.module.css'
 import { SortableList } from './SortableList'
 import { RowList } from './RowList'
 import { TreeNodeHeader } from './TreeNodeHeader'
-import { blockTypeLabel, summarizeMeasureBlock, summarizeRepeatBlock, summarizeStitchCountBlock } from './blockTypeMeta'
+import { blockTypeLabel, blockTypeMeta, summarizeMeasureBlock, summarizeRepeatBlock, summarizeStitchCountBlock } from './blockTypeMeta'
 import { countRowsInBlocks, isContainerBlock, type Block } from '../../../data'
 import type { EditorController } from './editorController'
 
@@ -62,6 +62,7 @@ function BlockCard({ block, depth, controller }: BlockCardProps) {
         onToggleExpand={() => controller.toggleExpanded(block.id)}
         onEdit={editable ? () => controller.onEdit(block.id) : undefined}
         onOpenMenu={() => controller.onOpenMenu(block.id)}
+        accentColor={blockTypeMeta(block.type).colorVar}
       />
 
       {expanded && block.type === 'rows' && <RowList rows={block.rows} blockId={block.id} depth={depth + 1} controller={controller} />}
@@ -75,8 +76,8 @@ function BlockCard({ block, depth, controller }: BlockCardProps) {
             style={{ marginLeft: Math.min(depth + 1, 4) * 14 }}
             onClick={() => controller.onAddBlock(block.id)}
           >
-            <Plus size={16} strokeWidth={1.75} />
-            Ajouter un bloc
+            <CornerDownRight size={16} strokeWidth={1.75} />
+            Ajouter un bloc imbriqué
           </button>
         </div>
       )}
