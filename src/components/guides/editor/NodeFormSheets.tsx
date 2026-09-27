@@ -4,10 +4,11 @@
 // stitch_count). A rows block's own rows are edited in RowsScreen.tsx, and
 // pasting several rows at once has its own sheet (PasteRowsSheet.tsx).
 import { useEffect, useState } from 'react'
+import { Flag, Play } from 'lucide-react'
 import styles from './FormSheet.module.css'
 import { FullScreenPanel, type LinkedPatternRef } from './FullScreenPanel'
 import { Button } from '../../ui'
-import { JOIN_MODE_LABELS, OPERATION_KIND_LABELS } from './operationMeta'
+import { JOIN_MODE_LABELS, OPERATION_KIND_LABELS, summarizeOperation } from './operationMeta'
 import { PIECE_TYPE_OPTIONS, SECTION_TYPE_OPTIONS } from './nodeCategoryMeta'
 import {
   CAST_ON_OPERATION_KINDS,
@@ -41,14 +42,35 @@ interface PieceSheetProps {
   initialCustomCategory: string
   initialNotes: string
   onSave: (input: { name: string; category: PieceType | null; customCategory: string; notes: string }) => void
+  castOn: Operation | null
+  finish: Operation | null
+  onSaveOperation: (slot: 'castOn' | 'finish', input: SetOperationInput) => void
+  onRemoveOperation: (slot: 'castOn' | 'finish') => void
   linkedPattern?: LinkedPatternRef | null
 }
 
-export function PieceSheet({ open, onClose, initialName, initialCategory, initialCustomCategory, initialNotes, onSave, linkedPattern }: PieceSheetProps) {
+export function PieceSheet({
+  open,
+  onClose,
+  initialName,
+  initialCategory,
+  initialCustomCategory,
+  initialNotes,
+  onSave,
+  castOn,
+  finish,
+  onSaveOperation,
+  onRemoveOperation,
+  linkedPattern,
+}: PieceSheetProps) {
   const [name, setName] = useState(initialName)
   const [category, setCategory] = useState<PieceType | null>(initialCategory)
   const [customCategory, setCustomCategory] = useState(initialCustomCategory)
   const [notes, setNotes] = useState(initialNotes)
+  // Montage/finition open on top of this panel (like the PDF quick-access
+  // button) rather than replacing it, so closing one returns here — see
+  // CLAUDE.md "Panneaux d'édition plein écran".
+  const [operationSlot, setOperationSlot] = useState<'castOn' | 'finish' | null>(null)
 
   useEffect(() => {
     if (open) {
@@ -58,6 +80,8 @@ export function PieceSheet({ open, onClose, initialName, initialCategory, initia
       setNotes(initialNotes)
     }
   }, [open, initialName, initialCategory, initialCustomCategory, initialNotes])
+
+  const activeOperation = operationSlot === 'castOn' ? castOn : operationSlot === 'finish' ? finish : null
 
   return (
     <FullScreenPanel open={open} onClose={onClose} title="Pièce" linkedPattern={linkedPattern}>
@@ -97,6 +121,19 @@ export function PieceSheet({ open, onClose, initialName, initialCategory, initia
             />
           )}
         </div>
+        <div className={styles.field}>
+          <span className={styles.label}>Montage et finition</span>
+          <div className={styles.operationsRow}>
+            <button type="button" className={castOn ? styles.operationButton : styles.operationButtonEmpty} onClick={() => setOperationSlot('castOn')}>
+              <Play size={14} strokeWidth={1.75} />
+              {castOn ? summarizeOperation(castOn) : 'Ajouter un montage'}
+            </button>
+            <button type="button" className={finish ? styles.operationButton : styles.operationButtonEmpty} onClick={() => setOperationSlot('finish')}>
+              <Flag size={14} strokeWidth={1.75} />
+              {finish ? summarizeOperation(finish) : 'Ajouter une finition'}
+            </button>
+          </div>
+        </div>
         <label className={styles.field}>
           <span className={styles.label}>Notes</span>
           <textarea className={styles.textarea} value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
@@ -105,6 +142,17 @@ export function PieceSheet({ open, onClose, initialName, initialCategory, initia
           Enregistrer
         </Button>
       </form>
+
+      <OperationSheet
+        open={operationSlot !== null}
+        onClose={() => setOperationSlot(null)}
+        slot={operationSlot ?? 'castOn'}
+        initial={activeOperation}
+        onSave={(input) => {
+          if (operationSlot) onSaveOperation(operationSlot, input)
+        }}
+        onRemove={operationSlot && activeOperation ? () => onRemoveOperation(operationSlot) : undefined}
+      />
     </FullScreenPanel>
   )
 }

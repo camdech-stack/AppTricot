@@ -1,10 +1,9 @@
-import { Flag, Play, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import styles from './PieceCard.module.css'
 import { Card } from '../../ui'
 import { SortableList } from './SortableList'
 import { SectionCard } from './SectionCard'
 import { TreeNodeHeader } from './TreeNodeHeader'
-import { summarizeOperation } from './operationMeta'
 import type { EditorController } from './editorController'
 import type { Piece } from '../../../data'
 
@@ -32,46 +31,12 @@ export function PieceCard({ piece, controller }: PieceCardProps) {
 
       {expanded && (
         <div className={styles.body}>
-          <div className={styles.operationRow}>
-            {piece.castOn ? (
-              <button type="button" className={styles.operationButton} onClick={() => controller.onEdit(piece.castOn!.id)}>
-                <span className={styles.operationLabelRow}>
-                  <Play size={14} strokeWidth={1.75} />
-                  <span className={styles.operationLabel}>Montage</span>
-                </span>
-                <span className={styles.operationSummary}>{summarizeOperation(piece.castOn)}</span>
-              </button>
-            ) : (
-              <button type="button" className={styles.addOperationButton} onClick={() => controller.onAddOperation(piece.id, 'castOn')}>
-                <Plus size={16} strokeWidth={1.75} />
-                Ajouter un montage
-              </button>
-            )}
-          </div>
-
           {piece.sections.length > 0 && <SectionCardList piece={piece} controller={controller} />}
 
           <button type="button" className={styles.addSectionButton} onClick={() => controller.onAddSection(piece.id)}>
             <Plus size={16} strokeWidth={1.75} />
             Ajouter une section
           </button>
-
-          <div className={styles.operationRow}>
-            {piece.finish ? (
-              <button type="button" className={styles.operationButton} onClick={() => controller.onEdit(piece.finish!.id)}>
-                <span className={styles.operationLabelRow}>
-                  <Flag size={14} strokeWidth={1.75} />
-                  <span className={styles.operationLabel}>Finition</span>
-                </span>
-                <span className={styles.operationSummary}>{summarizeOperation(piece.finish)}</span>
-              </button>
-            ) : (
-              <button type="button" className={styles.addOperationButton} onClick={() => controller.onAddOperation(piece.id, 'finish')}>
-                <Plus size={16} strokeWidth={1.75} />
-                Ajouter une finition
-              </button>
-            )}
-          </div>
         </div>
       )}
     </Card>

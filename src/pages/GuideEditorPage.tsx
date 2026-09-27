@@ -12,7 +12,7 @@ import { GuideMetaSheet } from '../components/guides/editor/GuideMetaSheet'
 import { BlockTypePickerSheet } from '../components/guides/editor/BlockTypePickerSheet'
 import { PasteRowsSheet } from '../components/guides/editor/PasteRowsSheet'
 import { RowsScreen } from '../components/guides/editor/RowsScreen'
-import { PieceSheet, OperationSheet, SectionSheet, TextBlockSheet, RepeatSheet, MeasureSheet, StitchCountSheet } from '../components/guides/editor/NodeFormSheets'
+import { PieceSheet, SectionSheet, TextBlockSheet, RepeatSheet, MeasureSheet, StitchCountSheet } from '../components/guides/editor/NodeFormSheets'
 import { blockTypeLabel } from '../components/guides/editor/blockTypeMeta'
 import { useGuideHistory } from '../components/guides/editor/useGuideHistory'
 import { useGuideAutosave } from '../components/guides/editor/useGuideAutosave'
@@ -50,7 +50,6 @@ import {
 
 type SheetState =
   | { kind: 'piece'; id: string }
-  | { kind: 'operation'; pieceId: string; slot: 'castOn' | 'finish' }
   | { kind: 'section'; id: string }
   | { kind: 'pickBlockType'; parentId: string }
   | { kind: 'text'; id: string }
@@ -75,14 +74,6 @@ function findOwningSectionMethod(content: GuideContent, blockId: string): Sectio
     for (const section of piece.sections) {
       if (blockExistsIn(section.blocks, blockId)) return section.method
     }
-  }
-  return undefined
-}
-
-function findOperationOwner(content: GuideContent, operationId: string): { pieceId: string; slot: 'castOn' | 'finish' } | undefined {
-  for (const piece of content.pieces) {
-    if (piece.castOn && piece.castOn.id === operationId) return { pieceId: piece.id, slot: 'castOn' }
-    if (piece.finish && piece.finish.id === operationId) return { pieceId: piece.id, slot: 'finish' }
   }
   return undefined
 }
@@ -234,11 +225,6 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
       setSheet({ kind: 'piece', id })
       return
     }
-    if (found.kind === 'operation') {
-      const owner = findOperationOwner(content, id)
-      if (owner) setSheet({ kind: 'operation', pieceId: owner.pieceId, slot: owner.slot })
-      return
-    }
     if (found.kind === 'section') {
       setSheet({ kind: 'section', id })
       return
@@ -278,7 +264,6 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
     toggleExpanded,
     onEdit: handleEdit,
     onOpenMenu: (id) => setMenuId(id),
-    onAddOperation: (pieceId, slot) => setSheet({ kind: 'operation', pieceId, slot }),
     onAddSection: (pieceId) => {
       const result = addSection(content, pieceId)
       applyChange(result.content, result.id)
@@ -320,7 +305,6 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
   // --- Derived data for the currently open sheet/menu --------------------
 
   const piece = sheet?.kind === 'piece' ? (findNode(content, sheet.id)?.node as Piece | undefined) : undefined
-  const operationPiece = sheet?.kind === 'operation' ? content.pieces.find((candidate) => candidate.id === sheet.pieceId) : undefined
   const section = sheet?.kind === 'section' ? (findNode(content, sheet.id)?.node as Section | undefined) : undefined
   const textBlock = sheet?.kind === 'text' ? (findNode(content, sheet.id)?.node as Extract<Block, { type: 'text' }> | undefined) : undefined
   const repeatBlock = sheet?.kind === 'repeat' ? (findNode(content, sheet.id)?.node as Extract<Block, { type: 'repeat' }> | undefined) : undefined
@@ -444,32 +428,16 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           initialCustomCategory={piece.customCategory}
           initialNotes={piece.notes}
           onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
-          linkedPattern={linkedPattern}
-        />
-      )}
-
-      {sheet?.kind === 'operation' && (
-        <OperationSheet
-          open
-          onClose={() => setSheet(null)}
-          slot={sheet.slot}
-          initial={(sheet.slot === 'castOn' ? operationPiece?.castOn : operationPiece?.finish) ?? null}
-          linkedPattern={linkedPattern}
-          onSave={(input) => {
-            if (!operationPiece) return
-            const next = setOperation(content, operationPiece.id, sheet.slot, input)
-            const updatedPiece = next.pieces.find((candidate) => candidate.id === operationPiece.id)
-            const operationId = (sheet.slot === 'castOn' ? updatedPiece?.castOn : updatedPiece?.finish)?.id ?? null
+          castOn={piece.castOn}
+          finish={piece.finish}
+          onSaveOperation={(slot, input) => {
+            const next = setOperation(content, piece.id, slot, input)
+            const updatedPiece = next.pieces.find((candidate) => candidate.id === piece.id)
+            const operationId = (slot === 'castOn' ? updatedPiece?.castOn : updatedPiece?.finish)?.id ?? null
             applyChange(next, operationId)
           }}
-          onRemove={
-            (sheet.slot === 'castOn' ? operationPiece?.castOn : operationPiece?.finish)
-              ? () => {
-                  if (!operationPiece) return
-                  applyChange(setOperation(content, operationPiece.id, sheet.slot, null), null)
-                }
-              : undefined
-          }
+          onRemoveOperation={(slot) => applyChange(setOperation(content, piece.id, slot, null), null)}
+          linkedPattern={linkedPattern}
         />
       )}
 
