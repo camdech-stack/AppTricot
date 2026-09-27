@@ -31,7 +31,6 @@ export function BlockTypePickerSheet({ open, onClose, allowedTypes, onSelect }: 
           >
             <span className={styles.itemLabel}>{meta.label}</span>
             <span className={styles.itemDescription}>{meta.description}</span>
-            <span className={styles.itemExample}>{meta.example}</span>
           </button>
         ))}
         {allowedTypes.length === 0 && <p className={styles.empty}>Profondeur maximale atteinte : impossible d'ajouter un bloc ici.</p>}

@@ -1,5 +1,5 @@
-// Labels, short descriptions and examples for each block type — shown in
-// the block-type picker sheet and reused for the block cards' summary line.
+// Labels and short descriptions for each block type — shown in the
+// block-type picker sheet and reused for the block cards' summary line.
 // Written from scratch, not copied from any other app's wording.
 import type { BlockType, MeasureBlock, RepeatBlock, StitchCountBlock } from '../../../data'
 
@@ -7,7 +7,6 @@ export interface BlockTypeMeta {
   type: BlockType
   label: string
   description: string
-  example: string
   // Une couleur par type de bloc, jamais par profondeur d'imbrication — voir
   // les tokens --color-guide-* dans tokens.css.
   colorVar: string
@@ -19,7 +18,6 @@ export const BLOCK_TYPE_META: BlockTypeMeta[] = [
     type: 'rows',
     label: 'Rangs',
     description: 'Une suite de rangs numérotés, à tricoter dans l’ordre.',
-    example: 'Ex. Rang 1 : *2 m end, 2 m env* — Rang 2 : tout à l’envers',
     colorVar: 'var(--color-guide-rows)',
     colorSoftVar: 'var(--color-guide-rows-soft)',
   },
@@ -27,7 +25,6 @@ export const BLOCK_TYPE_META: BlockTypeMeta[] = [
     type: 'repeat',
     label: 'Répétition',
     description: 'Répète un groupe de blocs un nombre de fois donné.',
-    example: 'Ex. répéter les rangs 1 et 2, 10 fois',
     colorVar: 'var(--color-guide-repeat)',
     colorSoftVar: 'var(--color-guide-repeat-soft)',
   },
@@ -35,7 +32,6 @@ export const BLOCK_TYPE_META: BlockTypeMeta[] = [
     type: 'text',
     label: 'Texte libre',
     description: 'Une instruction ou une remarque qui ne se découpe pas en rangs.',
-    example: 'Ex. « Placer les mailles des manches en attente sur un fil auxiliaire. »',
     colorVar: 'var(--color-guide-text)',
     colorSoftVar: 'var(--color-guide-text-soft)',
   },
@@ -43,7 +39,6 @@ export const BLOCK_TYPE_META: BlockTypeMeta[] = [
     type: 'measure',
     label: 'Jusqu’à une longueur',
     description: 'Répète le contenu jusqu’à atteindre une longueur mesurée depuis un repère.',
-    example: 'Ex. jusqu’à 14 cm depuis le montage',
     colorVar: 'var(--color-guide-measure)',
     colorSoftVar: 'var(--color-guide-measure-soft)',
   },
@@ -51,7 +46,6 @@ export const BLOCK_TYPE_META: BlockTypeMeta[] = [
     type: 'stitch_count',
     label: 'Jusqu’à un nombre de mailles',
     description: 'Répète le contenu jusqu’à atteindre un nombre de mailles précis.',
-    example: 'Ex. jusqu’à 45 mailles',
     colorVar: 'var(--color-guide-stitch-count)',
     colorSoftVar: 'var(--color-guide-stitch-count-soft)',
   },
