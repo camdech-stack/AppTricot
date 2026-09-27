@@ -442,6 +442,8 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           open
           onClose={() => setSheet(null)}
           initialName={piece.name}
+          initialCategory={piece.category}
+          initialCustomCategory={piece.customCategory}
           initialNotes={piece.notes}
           onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
         />
@@ -476,6 +478,8 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           open
           onClose={() => setSheet(null)}
           initialName={section.name}
+          initialCategory={section.category}
+          initialCustomCategory={section.customCategory}
           initialMethod={section.method}
           onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
         />
@@ -505,6 +509,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           initialLength={measureBlock.length}
           initialUnit={measureBlock.unit}
           initialFrom={measureBlock.from}
+          initialInstructions={measureBlock.instructions}
           onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
         />
       )}
@@ -514,7 +519,8 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           open
           onClose={() => setSheet(null)}
           initialTarget={stitchCountBlock.target}
-          onSave={(target) => applyChange(updateNode(content, sheet.id, { target }), sheet.id)}
+          initialInstructions={stitchCountBlock.instructions}
+          onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
         />
       )}
 

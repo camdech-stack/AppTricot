@@ -70,3 +70,27 @@
   border-color: var(--color-primary);
   color: var(--color-primary-strong);
 }
+
+.pillGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.pill,
+.pillActive {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-16);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.pillActive {
+  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  color: var(--color-primary-strong);
+}
