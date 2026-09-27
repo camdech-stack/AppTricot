@@ -27,10 +27,11 @@ guide n'appartient **pas** à un seul projet : c'est un modèle réutilisable,
 associable à plusieurs projets (`projectGuides`, un lien par couple
 projet/guide) et éventuellement à un patron PDF (`guides.patternId`,
 nullable). La progression de lecture — où en est-on dans le guide pour un
-projet donné — n'est **jamais** stockée dans l'arbre lui-même : l'étape 5b
-l'ajoutera dans une table séparée, indexée par (projet, guide, id de
-nœud), pour que le même guide serve de modèle à plusieurs tricots en
-parallèle sans qu'ils se marchent dessus.
+projet donné — n'est **jamais** stockée dans l'arbre lui-même : depuis
+l'étape 5b, elle vit dans une table séparée (`guideProgress`, un
+enregistrement par couple projet/guide), pour que le même guide serve de
+modèle à plusieurs tricots en parallèle sans qu'ils se marchent dessus —
+voir §9.
 
 ## 2. Identifiants stables
 
@@ -215,3 +216,182 @@ CLAUDE.md « Confidentialité »).
   sortie d'un modèle d'IA avant qu'elle n'entre dans l'arbre.
 - `migrateGuideContent(content)` est le point d'entrée pour une future
   version de schéma — identité pour la v1 actuelle.
+
+## 9. Suivi et progression
+
+Depuis l'étape 5b, l'application peut suivre un guide pas à pas dans un
+projet donné et se souvenir exactement où on en est. Cette section décrit
+ce modèle — le code de référence vit dans `src/data/guideProgress.ts`
+(moteur de parcours pur et testé) et `src/data/guideProgressRepository.ts`
+(couche transactionnelle Dexie construite dessus).
+
+### 9.1 Principe
+
+Un guide (§1-8) reste un modèle immuable pendant qu'on le suit : le
+suivre ne modifie jamais `guideContents`. La progression est un objet
+séparé, **un par couple (projet, guide)** — le même guide suivi dans deux
+projets différents (deux pulls tricotés avec le même patron) a chacun sa
+propre position, sans interférence.
+
+Les pièces d'un guide se tricotent **toujours dans l'ordre du tableau
+`pieces`, jamais en parallèle ni hors ordre** : on ne peut pas commencer
+la manche avant d'avoir fini le dos. La seule exception est la relecture :
+une fois une pièce marquée « faite », on peut y revenir consulter ou
+corriger un rang sans la rouvrir ni perturber la pièce réellement active.
+
+### 9.2 La table `guideProgress`
+
+Un enregistrement `GuideProgressRecord` (schéma Dexie v12) contient :
+
+- `projectId`, `guideId` — la clé du couple (index composé
+  `[projectId+guideId]`) ;
+- `activePieceId` — la pièce en cours, ou `null` si aucune n'a encore été
+  choisie (avant le premier « Commencer ») ou si le guide est entièrement
+  terminé ;
+- `pieces` — un objet `{ [pieceId]: PieceProgress }`, une entrée par
+  pièce déjà touchée (une pièce jamais commencée n'a simplement pas
+  d'entrée) ;
+- `linkedCounterId` — l'id d'un compteur du projet à incrémenter/
+  décrémenter en miroir de chaque rang validé/annulé, ou `null` (voir
+  §9.6) ;
+- `startedAt`, `lastAdvancedAt`, `completedAt` (nullable, posé quand
+  toutes les pièces sont faites).
+
+Un `PieceProgress` contient :
+
+- `status` — `todo` (jamais commencée), `in_progress` ou `done` ;
+- `cursor` — la position exacte dans la pièce (voir §9.3), ou `null` tant
+  qu'elle n'a pas démarré ;
+- `history` — jusqu'à 100 positions précédentes (la plus récente en
+  dernier), pour que « Précédent » retrouve la position exacte d'où l'on
+  vient plutôt que de la recalculer ;
+- `stepsDone` — le nombre de pas franchis, recalculé entièrement à chaque
+  action (jamais accumulé), ce qui le garde juste quel que soit le chemin
+  emprunté pour y arriver (un pas normal, un saut via le plan, plusieurs
+  passages d'une répétition d'un coup...).
+
+### 9.3 La position (`Cursor`)
+
+Un curseur pointe une position précise **à l'intérieur d'une seule
+pièce** — il ne traverse jamais une frontière de pièce, changer de pièce
+veut dire charger/créer l'entrée `PieceProgress` de cette autre pièce.
+
+Le parcours d'une pièce suit toujours le même ordre : son montage (s'il y
+en a un), puis les blocs de chacune de ses sections dans l'ordre, puis sa
+finition (s'il y en a une). À l'intérieur, un bloc `rows` déroule ses
+rangs un par un, un bloc `text` est un seul pas, un bloc `repeat(N fois)`
+boucle automatiquement sur ses N passages, et un bloc `measure`/
+`stitch_count` ne boucle **jamais** tout seul : la fin de chaque passage
+de son contenu ouvre systématiquement un point de contrôle qui demande
+« Longueur/nombre de mailles atteint ? » (voir §9.4). Un bloc vide, ou un
+bloc `rows` sans aucun rang, ne représente aucun pas à franchir.
+
+Le curseur lui-même a quatre champs :
+
+- `nodeId` — l'id du rang, du bloc texte, de l'opération de montage/
+  finition, ou du bloc mesure/nombre de mailles concerné ;
+- `step` — laquelle de ces cinq natures de position `nodeId` représente
+  (`operation`, `row`, `text`, `single` = un bloc mesure/nombre de
+  mailles sans enfant à dérouler, ou `checkpoint` = ce même type de bloc
+  mais à son point de contrôle) ;
+- `blockId` — pour un rang seulement, l'id de son bloc `rows` (sert à
+  retomber sur un autre rang du même bloc si le rang exact a été
+  supprimé, voir §9.5) ;
+- `passages` — combien de fois chaque répétition/mesure/comptage de
+  mailles ancêtre de cette position a déjà été parcouru, reconstruit
+  entièrement à chaque calcul (jamais recopié tel quel, pour ne jamais
+  garder une entrée qui ne correspond plus à rien).
+
+### 9.4 Avancer, reculer, sauter
+
+- **Avancer** (« Rang suivant » / « J'ai fini » / « Continuer », selon la
+  nature du pas courant) déroule le pas normal suivant. À l'intérieur
+  d'une répétition, ça enchaîne automatiquement sur le passage suivant
+  tant qu'il en reste, puis continue après elle une fois épuisée. En
+  sortant d'un bloc mesure/nombre de mailles, ça ouvre son point de
+  contrôle plutôt que d'avancer tout seul.
+- **Le point de contrôle** d'un bloc mesure/nombre de mailles offre trois
+  réponses : « Oui, continuer » (sort du bloc et avance après lui),
+  « Pas encore, refaire un passage » (redémarre son contenu pour un
+  passage de plus) et « Terminer ce bloc maintenant » (sort tout de suite,
+  quel que soit l'avancement du passage en cours — utile pour un bloc
+  qu'on a en fait déjà dépassé en tricotant). Ce dernier choix est aussi
+  proposé directement depuis n'importe quel pas *à l'intérieur* d'un tel
+  bloc, pas seulement à son point de contrôle.
+- **Reculer** (« Précédent ») retrouve d'abord la position exacte
+  précédente dans l'historique quand il y en a une. Sans historique, il
+  la recalcule structurellement — ce qui n'est pas toujours possible :
+  une fois qu'on a quitté un bloc mesure/nombre de mailles, combien de
+  passages il a réellement pris n'est plus récupérable (rien ne l'a
+  enregistré) — dans ce cas précis, reculer ne bouge simplement pas
+  plutôt que de deviner un nombre arbitraire.
+- **Sauter** (« Aller ici », depuis le plan du guide) place le curseur
+  directement sur un rang/bloc choisi, sans redérouler ce qu'il y a entre
+  les deux. Chaque répétition/mesure/comptage ancêtre reprend au passage 1,
+  sauf celle qui contient directement la cible : elle garde le passage où
+  l'on était déjà si on y était, sinon 1. Sauter vers une pièce autre que
+  celle en cours n'est permis que si cette pièce est déjà entièrement
+  faite — c'est la seule façon de revoir/corriger une pièce terminée sans
+  jamais la rouvrir ni toucher au compteur lié.
+
+### 9.5 Le guide change pendant qu'on le suit
+
+Rien n'empêche de corriger une coquille, ou de supprimer le rang courant,
+pendant qu'on suit un guide (« Corriger », voir CLAUDE.md « Décisions
+d'interface (étape 5b) »). Après une telle modification, le curseur est
+réparé au mieux, dans cet ordre : (1) si le rang exact a disparu mais que
+son bloc `rows` existe encore avec au moins un autre rang, on retombe sur
+son premier rang restant ; (2) sinon, on cherche le conteneur ancêtre
+(répétition/mesure/comptage de mailles) le plus proche qui existe encore,
+et on retombe sur son premier pas ; (3) en dernier recours, on retombe
+tout au début de la pièce. Une répétition simplement raccourcie (moins de
+passages qu'avant) n'est pas traitée comme « disparue » : le passage
+enregistré est juste ramené à la dernière valeur encore valide. Il n'y a
+pas de copie de l'arbre tel qu'il était avant la modification, donc
+« le plus proche » ici veut dire « le plus proche atteignable avec ce
+qui reste », pas forcément le voisin exact d'avant.
+
+### 9.6 Compteur intégré (optionnel)
+
+Un guide suivi dans un projet peut être associé à l'un des compteurs de
+ce projet (`linkedCounterId`, menu de l'écran de suivi). Une fois
+associé, chaque rang validé ajoute +1 à ce compteur et chaque retour en
+arrière sur un rang lui retire -1 (jamais en dessous de 0) — via
+exactement la même fonction transactionnelle qu'un appui direct sur
+l'écran compteur (étape 1), pour garantir la même fiabilité en cas
+d'appuis rapides. Le rang affiché sur l'écran de suivi reste toujours
+celui du guide lui-même ; le compteur lié n'est qu'un miroir optionnel,
+pratique pour retrouver le même chiffre qu'affichait un patron papier. Un
+pas qui n'est pas un rang (texte, montage/finition, point de contrôle) ne
+touche jamais le compteur lié.
+
+### 9.7 Chrono et sessions
+
+Suivre un guide alimente le suivi du temps de l'étape 2 exactement comme
+un compteur : chaque action d'avancement (« Rang suivant », « Précédent »,
+réponse à un point de contrôle...) ouvre ou prolonge une session avec
+`origin: 'guide'` sur le projet suivi, via la même `recordActivity` qu'un
+appui de compteur. Démarrer le guide (« Commencer »/« Reprendre ») démarre
+la session ; ouvrir l'écran de suivi, ou modifier le guide depuis
+« Corriger », ne démarre jamais rien tout seul. Le bouton de chrono de
+l'écran de suivi est le même composant (`ChronoButton`) que celui de
+l'écran compteur.
+
+### 9.8 Progression du projet
+
+Depuis l'étape 5b, la progression affichée sur la fiche projet et dans la
+liste des projets (`computeProjectProgress`) privilégie les guides liés
+au projet dès que l'un d'eux a au moins un pas connu : c'est la somme
+« pas faits / pas connus » de tous les guides liés au projet qui devient
+le pourcentage affiché, plutôt que le calcul par compteur des étapes
+précédentes (qui reste le repli pour un projet sans guide utilisable).
+Un bloc mesure/nombre de mailles ne compte qu'un seul passage dans le
+total « connu », même si plus de passages sont réellement faits, pour ne
+jamais faire dépasser 100 % à un projet.
+
+`getResumeSummary`/`getProjectResumeSummary` (respectivement dans
+`guideProgress.ts` et `guideProgressRepository.ts`) donnent une
+description prête à afficher (pièce, section, rang ou libellé de bloc,
+pourcentage) de la position courante — pensées pour l'étape 6 (« reprise
+rapide » de l'accueil), déjà utilisées par la carte « Guide de patron » de
+la fiche projet.
