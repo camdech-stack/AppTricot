@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ClipboardPaste, Copy, Plus, Trash2 } from 'lucide-react'
 import styles from './RowsScreen.module.css'
-import { FullScreenPanel } from './FullScreenPanel'
+import { FullScreenPanel, type LinkedPatternRef } from './FullScreenPanel'
 import { Pill } from '../../ui'
 import { SortableList, DragHandle } from './SortableList'
 import type { Row, RowSide } from '../../../data'
@@ -26,14 +26,15 @@ interface RowsScreenProps {
   onDeleteRow: (rowId: string) => void
   onAddRow: () => void
   onPasteRows: () => void
+  linkedPattern?: LinkedPatternRef | null
 }
 
 // Full-screen "Rangs" screen (retour utilisateur) replacing the old
 // per-row popup: every row of a rows block is inline-editable on one
 // screen, with direct duplicate/delete icons — no "⋯" menu for rows.
-export function RowsScreen({ open, onClose, rows, showSide, onReorder, onChangeRow, onDuplicateRow, onDeleteRow, onAddRow, onPasteRows }: RowsScreenProps) {
+export function RowsScreen({ open, onClose, rows, showSide, onReorder, onChangeRow, onDuplicateRow, onDeleteRow, onAddRow, onPasteRows, linkedPattern }: RowsScreenProps) {
   return (
-    <FullScreenPanel open={open} onClose={onClose} title="Rangs">
+    <FullScreenPanel open={open} onClose={onClose} title="Rangs" linkedPattern={linkedPattern}>
       <div className={styles.list}>
         <SortableList
           items={rows}

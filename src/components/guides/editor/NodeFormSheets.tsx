@@ -5,7 +5,7 @@
 // pasting several rows at once has its own sheet (PasteRowsSheet.tsx).
 import { useEffect, useState } from 'react'
 import styles from './FormSheet.module.css'
-import { FullScreenPanel } from './FullScreenPanel'
+import { FullScreenPanel, type LinkedPatternRef } from './FullScreenPanel'
 import { Button } from '../../ui'
 import { JOIN_MODE_LABELS, OPERATION_KIND_LABELS } from './operationMeta'
 import { PIECE_TYPE_OPTIONS, SECTION_TYPE_OPTIONS } from './nodeCategoryMeta'
@@ -41,9 +41,10 @@ interface PieceSheetProps {
   initialCustomCategory: string
   initialNotes: string
   onSave: (input: { name: string; category: PieceType | null; customCategory: string; notes: string }) => void
+  linkedPattern?: LinkedPatternRef | null
 }
 
-export function PieceSheet({ open, onClose, initialName, initialCategory, initialCustomCategory, initialNotes, onSave }: PieceSheetProps) {
+export function PieceSheet({ open, onClose, initialName, initialCategory, initialCustomCategory, initialNotes, onSave, linkedPattern }: PieceSheetProps) {
   const [name, setName] = useState(initialName)
   const [category, setCategory] = useState<PieceType | null>(initialCategory)
   const [customCategory, setCustomCategory] = useState(initialCustomCategory)
@@ -59,7 +60,7 @@ export function PieceSheet({ open, onClose, initialName, initialCategory, initia
   }, [open, initialName, initialCategory, initialCustomCategory, initialNotes])
 
   return (
-    <FullScreenPanel open={open} onClose={onClose} title="Pièce">
+    <FullScreenPanel open={open} onClose={onClose} title="Pièce" linkedPattern={linkedPattern}>
       <form
         className={styles.form}
         onSubmit={(event) => {
@@ -117,9 +118,10 @@ interface OperationSheetProps {
   initial: Operation | null
   onSave: (input: SetOperationInput) => void
   onRemove?: () => void
+  linkedPattern?: LinkedPatternRef | null
 }
 
-export function OperationSheet({ open, onClose, slot, initial, onSave, onRemove }: OperationSheetProps) {
+export function OperationSheet({ open, onClose, slot, initial, onSave, onRemove, linkedPattern }: OperationSheetProps) {
   const allowedKinds = slot === 'castOn' ? CAST_ON_OPERATION_KINDS : FINISH_OPERATION_KINDS
   const [kind, setKind] = useState<OperationKind>(initial?.kind ?? allowedKinds[0]!)
   const [stitches, setStitches] = useState<string>(initial?.stitches != null ? String(initial.stitches) : '')
@@ -136,7 +138,7 @@ export function OperationSheet({ open, onClose, slot, initial, onSave, onRemove 
   }, [open, initial, allowedKinds])
 
   return (
-    <FullScreenPanel open={open} onClose={onClose} title={slot === 'castOn' ? 'Montage' : 'Finition'}>
+    <FullScreenPanel open={open} onClose={onClose} title={slot === 'castOn' ? 'Montage' : 'Finition'} linkedPattern={linkedPattern}>
       <form
         className={styles.form}
         onSubmit={(event) => {
@@ -207,6 +209,7 @@ interface SectionSheetProps {
   initialCustomCategory: string
   initialMethod: SectionMethod
   onSave: (input: { name: string; category: SectionType | null; customCategory: string; method: SectionMethod }) => void
+  linkedPattern?: LinkedPatternRef | null
 }
 
 export function SectionSheet({
@@ -217,6 +220,7 @@ export function SectionSheet({
   initialCustomCategory,
   initialMethod,
   onSave,
+  linkedPattern,
 }: SectionSheetProps) {
   const [name, setName] = useState(initialName)
   const [category, setCategory] = useState<SectionType | null>(initialCategory)
@@ -233,7 +237,7 @@ export function SectionSheet({
   }, [open, initialName, initialCategory, initialCustomCategory, initialMethod])
 
   return (
-    <FullScreenPanel open={open} onClose={onClose} title="Section">
+    <FullScreenPanel open={open} onClose={onClose} title="Section" linkedPattern={linkedPattern}>
       <form
         className={styles.form}
         onSubmit={(event) => {
@@ -308,9 +312,10 @@ interface TextBlockSheetProps {
   onClose: () => void
   initialText: string
   onSave: (text: string) => void
+  linkedPattern?: LinkedPatternRef | null
 }
 
-export function TextBlockSheet({ open, onClose, initialText, onSave }: TextBlockSheetProps) {
+export function TextBlockSheet({ open, onClose, initialText, onSave, linkedPattern }: TextBlockSheetProps) {
   const [text, setText] = useState(initialText)
 
   useEffect(() => {
@@ -318,7 +323,7 @@ export function TextBlockSheet({ open, onClose, initialText, onSave }: TextBlock
   }, [open, initialText])
 
   return (
-    <FullScreenPanel open={open} onClose={onClose} title="Texte libre">
+    <FullScreenPanel open={open} onClose={onClose} title="Texte libre" linkedPattern={linkedPattern}>
       <form
         className={styles.form}
         onSubmit={(event) => {
@@ -343,9 +348,10 @@ interface RepeatSheetProps {
   onClose: () => void
   initialTimes: number
   onSave: (times: number) => void
+  linkedPattern?: LinkedPatternRef | null
 }
 
-export function RepeatSheet({ open, onClose, initialTimes, onSave }: RepeatSheetProps) {
+export function RepeatSheet({ open, onClose, initialTimes, onSave, linkedPattern }: RepeatSheetProps) {
   const [times, setTimes] = useState(String(initialTimes))
 
   useEffect(() => {
@@ -356,7 +362,7 @@ export function RepeatSheet({ open, onClose, initialTimes, onSave }: RepeatSheet
   const valid = Number.isInteger(parsed) && parsed >= 1
 
   return (
-    <FullScreenPanel open={open} onClose={onClose} title="Répétition">
+    <FullScreenPanel open={open} onClose={onClose} title="Répétition" linkedPattern={linkedPattern}>
       <form
         className={styles.form}
         onSubmit={(event) => {
@@ -388,9 +394,10 @@ interface MeasureSheetProps {
   initialFrom: string
   initialInstructions: string
   onSave: (input: { length: number; unit: MeasureUnit; from: string; instructions: string }) => void
+  linkedPattern?: LinkedPatternRef | null
 }
 
-export function MeasureSheet({ open, onClose, initialLength, initialUnit, initialFrom, initialInstructions, onSave }: MeasureSheetProps) {
+export function MeasureSheet({ open, onClose, initialLength, initialUnit, initialFrom, initialInstructions, onSave, linkedPattern }: MeasureSheetProps) {
   const [length, setLength] = useState(String(initialLength))
   const [unit, setUnit] = useState<MeasureUnit>(initialUnit)
   const [from, setFrom] = useState(initialFrom)
@@ -409,7 +416,7 @@ export function MeasureSheet({ open, onClose, initialLength, initialUnit, initia
   const valid = Number.isFinite(parsed) && parsed > 0
 
   return (
-    <FullScreenPanel open={open} onClose={onClose} title="Jusqu’à une longueur">
+    <FullScreenPanel open={open} onClose={onClose} title="Jusqu’à une longueur" linkedPattern={linkedPattern}>
       <form
         className={styles.form}
         onSubmit={(event) => {
@@ -462,9 +469,10 @@ interface StitchCountSheetProps {
   initialTarget: number
   initialInstructions: string
   onSave: (input: { target: number; instructions: string }) => void
+  linkedPattern?: LinkedPatternRef | null
 }
 
-export function StitchCountSheet({ open, onClose, initialTarget, initialInstructions, onSave }: StitchCountSheetProps) {
+export function StitchCountSheet({ open, onClose, initialTarget, initialInstructions, onSave, linkedPattern }: StitchCountSheetProps) {
   const [target, setTarget] = useState(String(initialTarget))
   const [instructions, setInstructions] = useState(initialInstructions)
 
@@ -479,7 +487,7 @@ export function StitchCountSheet({ open, onClose, initialTarget, initialInstruct
   const valid = Number.isInteger(parsed) && parsed >= 0
 
   return (
-    <FullScreenPanel open={open} onClose={onClose} title="Jusqu’à un nombre de mailles">
+    <FullScreenPanel open={open} onClose={onClose} title="Jusqu’à un nombre de mailles" linkedPattern={linkedPattern}>
       <form
         className={styles.form}
         onSubmit={(event) => {

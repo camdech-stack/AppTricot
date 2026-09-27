@@ -442,6 +442,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           initialCustomCategory={piece.customCategory}
           initialNotes={piece.notes}
           onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
+          linkedPattern={linkedPattern}
         />
       )}
 
@@ -451,6 +452,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           onClose={() => setSheet(null)}
           slot={sheet.slot}
           initial={(sheet.slot === 'castOn' ? operationPiece?.castOn : operationPiece?.finish) ?? null}
+          linkedPattern={linkedPattern}
           onSave={(input) => {
             if (!operationPiece) return
             const next = setOperation(content, operationPiece.id, sheet.slot, input)
@@ -478,6 +480,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           initialCustomCategory={section.customCategory}
           initialMethod={section.method}
           onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
+          linkedPattern={linkedPattern}
         />
       )}
 
@@ -491,11 +494,23 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
       )}
 
       {textBlock && sheet?.kind === 'text' && (
-        <TextBlockSheet open onClose={() => setSheet(null)} initialText={textBlock.instructions} onSave={(text) => applyChange(updateNode(content, sheet.id, { instructions: text }), sheet.id)} />
+        <TextBlockSheet
+          open
+          onClose={() => setSheet(null)}
+          initialText={textBlock.instructions}
+          onSave={(text) => applyChange(updateNode(content, sheet.id, { instructions: text }), sheet.id)}
+          linkedPattern={linkedPattern}
+        />
       )}
 
       {repeatBlock && sheet?.kind === 'repeat' && (
-        <RepeatSheet open onClose={() => setSheet(null)} initialTimes={repeatBlock.times} onSave={(times) => applyChange(updateNode(content, sheet.id, { times }), sheet.id)} />
+        <RepeatSheet
+          open
+          onClose={() => setSheet(null)}
+          initialTimes={repeatBlock.times}
+          onSave={(times) => applyChange(updateNode(content, sheet.id, { times }), sheet.id)}
+          linkedPattern={linkedPattern}
+        />
       )}
 
       {measureBlock && sheet?.kind === 'measure' && (
@@ -507,6 +522,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           initialFrom={measureBlock.from}
           initialInstructions={measureBlock.instructions}
           onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
+          linkedPattern={linkedPattern}
         />
       )}
 
@@ -517,6 +533,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           initialTarget={stitchCountBlock.target}
           initialInstructions={stitchCountBlock.instructions}
           onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
+          linkedPattern={linkedPattern}
         />
       )}
 
@@ -534,6 +551,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           }}
           onDeleteRow={(id) => handleDeleteNode(id)}
           onAddRow={() => handleAddRowInline(sheet.id)}
+          linkedPattern={linkedPattern}
           onPasteRows={() => setPasteRowsFor(sheet.id)}
         />
       )}

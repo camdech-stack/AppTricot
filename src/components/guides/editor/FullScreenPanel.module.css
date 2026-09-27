@@ -44,6 +44,21 @@
   text-align: center;
 }
 
+.pdfButton {
+  flex: 1;
+  min-height: var(--tap-min);
+  display: flex;
+  justify-content: flex-end;
+  color: var(--color-text-muted);
+}
+
+.pdfOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background: var(--color-bg);
+}
+
 .body {
   flex: 1;
   min-height: 0;
