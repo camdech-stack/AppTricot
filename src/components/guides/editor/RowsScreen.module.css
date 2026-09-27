@@ -4,6 +4,16 @@
   gap: var(--space-16);
 }
 
+/* The actual per-row gap: SortableList renders its items into its own
+   inner div (via `className`), not into `.list` above — passing the gap
+   to `.list` instead left it with a single flex child (SortableList's
+   whole subtree) and no visible effect, so the cards touched. */
+.rowsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
 .empty {
   text-align: center;
   color: var(--color-text-muted);

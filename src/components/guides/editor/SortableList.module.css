@@ -31,10 +31,17 @@
    rows connect to the very same trunk as its section list but live outside
    that list's own DOM container, so "last child of my own parent" doesn't
    mean "last node on the trunk" — see SortableList's `connectorTerminates`
-   and ConnectorItem. */
+   and ConnectorItem.
+
+   display: flow-root (not just position: relative) so this box's own
+   height actually includes its child's trailing margin (TreeNodeHeader's
+   margin-bottom) instead of letting it collapse through — otherwise
+   `bottom: 0` stops short of that margin and the trunk visibly breaks in
+   the gap between two siblings. */
 .connectorItem,
 .connectorItemLast {
   position: relative;
+  display: flow-root;
 }
 
 .connectorItem::before,

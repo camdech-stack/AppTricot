@@ -38,6 +38,7 @@ export function RowsScreen({ open, onClose, rows, showSide, onReorder, onChangeR
         <SortableList
           items={rows}
           onReorder={onReorder}
+          className={styles.rowsList}
           renderItem={(row, index) => (
             <RowCard
               row={row}
