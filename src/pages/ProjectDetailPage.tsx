@@ -13,6 +13,7 @@ import { ProjectPatternCard } from '../components/projects/ProjectPatternCard'
 import { ProjectGuideCard } from '../components/projects/ProjectGuideCard'
 import { useProjectGuides } from '../hooks/useProjectGuides'
 import { useProjectGuideProgressInputs } from '../hooks/useProjectGuideProgressInputs'
+import { useLastUsedGuideId } from '../hooks/useLastUsedGuideId'
 import { CRAFT_LABELS, STATUS_LABELS, STATUS_PILL_COLORS } from '../components/projects/statusMeta'
 import { projectColorVar, projectColorSoftVar, projectGradient } from '../components/projects/colorMeta'
 import { useProject } from '../hooks/useProject'
@@ -44,6 +45,7 @@ export function ProjectDetailPage() {
   const patternLinks = useProjectPatterns(projectId ?? '')
   const guideLinks = useProjectGuides(projectId ?? '')
   const guideProgressInputs = useProjectGuideProgressInputs(projectId)
+  const lastUsedGuideId = useLastUsedGuideId(projectId, guideLinks)
   const coverUrl = useCoverImageUrl(projectId)
   const lastActivity = useRelativeTime(project?.lastActivityAt)
 
@@ -88,6 +90,7 @@ export function ProjectDetailPage() {
   const isDone = project.status === 'done'
   const hasPatterns = (patternLinks?.length ?? 0) > 0
   const firstGuideId = (guideLinks ?? []).slice().sort((a, b) => a.position - b.position)[0]?.guideId ?? null
+  const continueGuideId = lastUsedGuideId ?? firstGuideId ?? undefined
 
   const heroStyle: CSSProperties = coverUrl
     ? {
@@ -231,12 +234,11 @@ export function ProjectDetailPage() {
               style={{ background: projectGradient(project.colorKey) }}
               onClick={() =>
                 navigate(
-                  firstGuideId
-                    ? `/guides/${firstGuideId}`
+                  continueGuideId
+                    ? `/projets/${projectId}/guides/${continueGuideId}/suivre`
                     : hasPatterns
                       ? `/projets/${projectId}/travail`
                       : `/projets/${projectId}/compteur`,
-                  firstGuideId ? { state: { returnTo: `/projets/${projectId}` } } : undefined,
                 )
               }
             >
