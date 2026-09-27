@@ -46,8 +46,14 @@ raisons :
 
 ## 3. Pièce
 
-Une pièce a un nom, des notes libres, une opération de montage optionnelle,
-une opération de finition optionnelle, et une liste ordonnée de sections.
+Une pièce a un nom, un type optionnel (`category` — liste fermée : devant,
+dos, manche, corps, empiècement, col, capuche, poche, ceinture, ou `other`
+avec un libellé libre dans `customCategory` — en plus du nom, jamais à sa
+place), des notes libres, une opération de montage optionnelle, une
+opération de finition optionnelle, et une liste ordonnée de sections. Le
+champ est nommé `category` et non `type` pour ne jamais entrer en
+collision avec le `type` discriminant d'un bloc (voir §5) : `updateNode`
+retire toute clé `type` d'un patch, quel que soit le nœud visé.
 
 - **Montage** (`castOn`) : `cast_on` (monter les mailles), `pick_up`
   (reprendre des mailles déjà tricotées) ou `join` (joindre en rond ou
@@ -64,8 +70,11 @@ libre, et pour `join` uniquement un mode (`round` ou `new_yarn`).
 Une section a un nom (texte libre, avec des suggestions courantes dans
 l'éditeur : côtes/ourlet, corps/motif principal, façonnage de la taille,
 de l'emmanchure, des épaules, encolure — mais rien n'empêche d'en saisir
-un autre), une méthode de travail (`flat` = à plat, `round` = en rond) et
-une liste ordonnée de blocs.
+un autre), un type optionnel (`category` — liste fermée : côtes, corps,
+mise en forme, jacquard, encolure, épaules, ou `other` avec un libellé
+libre dans `customCategory`, même logique additive que pour la pièce), une
+méthode de travail (`flat` = à plat, `round` = en rond) et une liste
+ordonnée de blocs.
 
 La méthode détermine si le côté d'un rang a un sens : en rond, chaque rang
 se travaille à l'endroit et `side` reste toujours `null` ; à plat, un rang
@@ -91,9 +100,11 @@ Un bloc est une union discriminée par `type`, avec deux familles :
     rangs comptés au total ;
   - `measure` — répète son contenu jusqu'à atteindre une longueur
     (`length` + `unit`, `cm` ou `in`) mesurée depuis un repère libre
-    (`from`, ex. « le montage ») ;
+    (`from`, ex. « le montage »), avec des `instructions` libres optionnelles
+    (ex. « en augmentant régulièrement ») ;
   - `stitch_count` — répète son contenu jusqu'à atteindre un nombre de
-    mailles cible (`target`, entier ≥ 0).
+    mailles cible (`target`, entier ≥ 0), avec les mêmes `instructions`
+    libres optionnelles (ex. « en diminuant tous les 2 rangs »).
 
 L'imbrication de blocs est limitée à `MAX_BLOCK_NESTING_DEPTH` (4) niveaux
 — un bloc directement dans une section est au niveau 1, un bloc dans un
@@ -139,11 +150,15 @@ tel quel (export/import à l'étape 7, génération par IA à l'étape 9) :
     {
       "id": "piece-1",
       "name": "Dos",
+      "category": "back",
+      "customCategory": "",
       "castOn": { "id": "op-1", "kind": "cast_on", "stitches": 80, "joinMode": null, "note": "" },
       "sections": [
         {
           "id": "section-1",
           "name": "Côtes",
+          "category": "ribbing",
+          "customCategory": "",
           "method": "flat",
           "blocks": [
             {
@@ -167,6 +182,7 @@ tel quel (export/import à l'étape 7, génération par IA à l'étape 9) :
               "length": 14,
               "unit": "cm",
               "from": "le montage",
+              "instructions": "",
               "blocks": [
                 { "id": "block-4", "type": "text", "instructions": "Continuer en jersey endroit." }
               ]
