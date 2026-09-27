@@ -242,13 +242,8 @@ export function ProjectDetailPage() {
             </Button>
 
             <div className={styles.secondaryActionsRow}>
-              {hasPatterns && (
-                <Button size="md" variant="secondary" onClick={() => navigate(`/projets/${projectId}/compteur`)}>
-                  Compteur seul
-                </Button>
-              )}
-              <Button size="md" variant="secondary" disabled className={styles.guideButton}>
-                Guide de patron (bientôt)
+              <Button size="sm" variant="secondary" onClick={() => navigate(`/projets/${projectId}/compteur`)}>
+                Compteur
               </Button>
             </div>
           </div>
