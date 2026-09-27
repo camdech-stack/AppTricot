@@ -1,18 +1,28 @@
-.header {
+.headerOutline,
+.headerTint {
   display: flex;
   align-items: center;
   gap: var(--space-4);
   min-height: var(--tap-min);
-  border: 1.5px solid transparent;
   border-radius: var(--radius-sm);
+  /* More separation between siblings than a shared border-bottom gave —
+     each node is now its own visually distinct box. */
+  margin-bottom: var(--space-8);
+}
+
+.headerOutline {
+  border: 1.5px solid var(--color-border);
   background: var(--color-surface);
-  margin-bottom: var(--space-4);
+}
+
+.headerTint {
+  background: var(--color-surface-alt);
 }
 
 .chevron,
 .chevronExpanded {
   flex: none;
-  width: 32px;
+  width: 28px;
   min-height: var(--tap-min);
   display: flex;
   align-items: center;
@@ -27,7 +37,14 @@
 
 .chevronSpacer {
   flex: none;
-  width: 32px;
+  width: 28px;
+}
+
+.icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .main {
@@ -37,7 +54,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
-  padding: var(--space-8) var(--space-4);
+  padding: var(--space-8) var(--space-8);
   text-align: left;
 }
 
@@ -61,7 +78,7 @@
 
 .menuButton {
   flex: none;
-  width: var(--tap-min);
+  width: 40px;
   min-height: var(--tap-min);
   display: flex;
   align-items: center;

@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { ClipboardPaste, Copy, Plus, Trash2 } from 'lucide-react'
+import formStyles from './FormSheet.module.css'
 import styles from './RowsScreen.module.css'
 import { FullScreenPanel, type LinkedPatternRef } from './FullScreenPanel'
-import { Pill } from '../../ui'
 import { SortableList, DragHandle } from './SortableList'
 import type { Row, RowSide } from '../../../data'
 
 export interface RowPatch {
-  number: number | null
   side: RowSide | null
   instructions: string
   stitchesAfter: number | null
@@ -39,9 +38,14 @@ export function RowsScreen({ open, onClose, rows, showSide, onReorder, onChangeR
         <SortableList
           items={rows}
           onReorder={onReorder}
-          renderItem={(row) => (
+          renderItem={(row, index) => (
             <RowCard
               row={row}
+              // The displayed row number is always the row's position within
+              // its block, never a stored/editable value — see CLAUDE.md
+              // "Rangs" (étape 5a, part 2) — so it's automatically right
+              // after a drag reorder.
+              number={index + 1}
               showSide={showSide}
               onChange={(patch) => onChangeRow(row.id, patch)}
               onDuplicate={() => onDuplicateRow(row.id)}
@@ -68,26 +72,33 @@ export function RowsScreen({ open, onClose, rows, showSide, onReorder, onChangeR
 
 interface RowCardProps {
   row: Row
+  number: number
   showSide: boolean
   onChange: (patch: RowPatch) => void
   onDuplicate: () => void
   onDelete: () => void
 }
 
-function RowCard({ row, showSide, onChange, onDuplicate, onDelete }: RowCardProps) {
-  const [number, setNumber] = useState(row.number != null ? String(row.number) : '')
+// A round section is always worked from the right side by convention, so
+// its rows keep the "endroit" (rose) accent regardless of `row.side` (which
+// is always null there — see Row.side in guideModel.ts).
+function sideAccentClass(row: Row, showSide: boolean): string | undefined {
+  if (!showSide || row.side === 'rs') return styles.cardRs
+  if (row.side === 'ws') return styles.cardWs
+  return styles.cardNeutral
+}
+
+function RowCard({ row, number, showSide, onChange, onDuplicate, onDelete }: RowCardProps) {
   const [instructions, setInstructions] = useState(row.instructions)
   const [stitchesAfter, setStitchesAfter] = useState(row.stitchesAfter != null ? String(row.stitchesAfter) : '')
 
   useEffect(() => {
-    setNumber(row.number != null ? String(row.number) : '')
     setInstructions(row.instructions)
     setStitchesAfter(row.stitchesAfter != null ? String(row.stitchesAfter) : '')
-  }, [row.id, row.number, row.instructions, row.stitchesAfter])
+  }, [row.id, row.instructions, row.stitchesAfter])
 
   function commit(overrides: Partial<RowPatch> = {}) {
     onChange({
-      number: number.trim() === '' ? null : Number.parseInt(number, 10),
       side: showSide ? row.side : null,
       instructions,
       stitchesAfter: stitchesAfter.trim() === '' ? null : Number.parseInt(stitchesAfter, 10),
@@ -96,17 +107,10 @@ function RowCard({ row, showSide, onChange, onDuplicate, onDelete }: RowCardProp
   }
 
   return (
-    <div className={styles.card}>
+    <div className={[styles.card, sideAccentClass(row, showSide)].filter(Boolean).join(' ')}>
       <div className={styles.cardHeader}>
         <DragHandle />
-        <input
-          className={styles.numberInput}
-          inputMode="numeric"
-          aria-label="Numéro du rang"
-          value={number}
-          onChange={(event) => setNumber(event.target.value)}
-          onBlur={() => commit()}
-        />
+        <span className={styles.numberBadge}>{number}</span>
         {showSide && (
           <div className={styles.sideToggle}>
             <button
@@ -114,18 +118,14 @@ function RowCard({ row, showSide, onChange, onDuplicate, onDelete }: RowCardProp
               className={row.side === 'rs' ? styles.sideOptionActive : styles.sideOption}
               onClick={() => commit({ side: row.side === 'rs' ? null : 'rs' })}
             >
-              <Pill color="primary" className={styles.sidePill}>
-                END
-              </Pill>
+              END
             </button>
             <button
               type="button"
-              className={row.side === 'ws' ? styles.sideOptionActive : styles.sideOption}
+              className={row.side === 'ws' ? styles.sideOptionActiveWs : styles.sideOption}
               onClick={() => commit({ side: row.side === 'ws' ? null : 'ws' })}
             >
-              <Pill color="blue" className={styles.sidePill}>
-                ENV
-              </Pill>
+              ENV
             </button>
           </div>
         )}
@@ -138,12 +138,12 @@ function RowCard({ row, showSide, onChange, onDuplicate, onDelete }: RowCardProp
         </button>
       </div>
       <textarea
-        className={styles.textarea}
+        className={formStyles.textareaPlain}
         value={instructions}
         onChange={(event) => setInstructions(event.target.value)}
         onBlur={() => commit()}
         rows={2}
-        placeholder="*2 m end, 2 m env* rép."
+        placeholder="Instructions…"
       />
       <label className={styles.stitchesField}>
         <span>Mailles après ce rang</span>

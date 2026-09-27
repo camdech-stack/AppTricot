@@ -14,22 +14,44 @@ interface TreeNodeHeaderProps {
   onEdit?: () => void
   onOpenMenu: () => void
   depth: number
-  // One color per node category (piece, section, each block type) — never
-  // by nesting depth. Purely decorative (a full contour), so it's exempt
-  // from the "gold/sage never for small text" contrast rule.
+  // A piece/section gets a full outline in its category color ("contour
+  // complet"); a block (any type, at any nesting depth) gets a tinted fill
+  // instead ("fond teinté") — see CLAUDE.md "Style de blocs". `accentColor`
+  // is the outline/icon color, `tintColor` the fill for the 'tint' variant.
+  variant?: 'outline' | 'tint'
   accentColor?: string
+  tintColor?: string
+  icon?: ReactNode
 }
 
 const INDENT_PX = 14
 const MAX_INDENT_LEVEL = 4
 
-export function TreeNodeHeader({ title, subtitle, expandable, expanded, onToggleExpand, onEdit, onOpenMenu, depth, accentColor }: TreeNodeHeaderProps) {
+// The indent is a margin on this header's own box (not padding inside it),
+// so the box itself — its outline or its tint — actually narrows with
+// depth instead of spanning the full row width under an indented label.
+export function TreeNodeHeader({
+  title,
+  subtitle,
+  expandable,
+  expanded,
+  onToggleExpand,
+  onEdit,
+  onOpenMenu,
+  depth,
+  variant = 'outline',
+  accentColor,
+  tintColor,
+  icon,
+}: TreeNodeHeaderProps) {
+  const boxStyle =
+    variant === 'tint'
+      ? { marginLeft: Math.min(depth, MAX_INDENT_LEVEL) * INDENT_PX, background: tintColor }
+      : { marginLeft: Math.min(depth, MAX_INDENT_LEVEL) * INDENT_PX, borderColor: accentColor }
+
   return (
-    <div
-      className={styles.header}
-      style={{ paddingLeft: Math.min(depth, MAX_INDENT_LEVEL) * INDENT_PX, borderColor: accentColor }}
-    >
-      <DragHandle />
+    <div className={variant === 'tint' ? styles.headerTint : styles.headerOutline} style={boxStyle}>
+      <DragHandle color={accentColor} />
       {expandable ? (
         <button type="button" className={expanded ? styles.chevronExpanded : styles.chevron} aria-label={expanded ? 'Replier' : 'Déplier'} onClick={onToggleExpand}>
           <ChevronRight size={18} strokeWidth={2} />
@@ -37,12 +59,17 @@ export function TreeNodeHeader({ title, subtitle, expandable, expanded, onToggle
       ) : (
         <span className={styles.chevronSpacer} />
       )}
+      {icon && (
+        <span className={styles.icon} style={{ color: accentColor }}>
+          {icon}
+        </span>
+      )}
       <button type="button" className={styles.main} onClick={onEdit ?? onToggleExpand}>
         <span className={styles.title}>{title}</span>
         {subtitle && <span className={styles.subtitle}>{subtitle}</span>}
       </button>
       <button type="button" className={styles.menuButton} aria-label="Options" onClick={onOpenMenu}>
-        <MoreHorizontal size={20} strokeWidth={1.75} />
+        <MoreHorizontal size={18} strokeWidth={1.75} />
       </button>
     </div>
   )

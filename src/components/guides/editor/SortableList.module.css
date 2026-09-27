@@ -3,15 +3,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--tap-min);
+  width: 28px;
   min-height: var(--tap-min);
-  color: var(--color-text-muted);
   touch-action: none;
   cursor: grab;
 }
 
 .handle:active {
   cursor: grabbing;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-text-muted);
 }
 
 /* Organigram-style connector: a vertical trunk running through every

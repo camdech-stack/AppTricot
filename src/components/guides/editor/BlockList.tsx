@@ -13,14 +13,7 @@ interface BlockListProps {
 }
 
 export function BlockList({ blocks, depth, controller }: BlockListProps) {
-  return (
-    <SortableList
-      items={blocks}
-      onReorder={controller.reorder}
-      renderItem={(block) => <BlockCard block={block} depth={depth} controller={controller} />}
-      connectorDepth={depth}
-    />
-  )
+  return <SortableList items={blocks} onReorder={controller.reorder} renderItem={(block) => <BlockCard block={block} depth={depth} controller={controller} />} />
 }
 
 interface BlockCardProps {
@@ -51,19 +44,23 @@ function BlockCard({ block, depth, controller }: BlockCardProps) {
   // A rows block has nothing to expand into — tapping it opens the
   // full-screen Rangs screen (RowsScreen) instead, like every other block.
   const expandable = block.type !== 'text' && block.type !== 'rows'
+  const meta = blockTypeMeta(block.type)
 
   return (
-    <div className={styles.block}>
+    <div>
       <TreeNodeHeader
         depth={depth}
         title={blockTypeLabel(block.type)}
         subtitle={blockSubtitle(block)}
         expandable={expandable}
         expanded={expanded}
+        variant="tint"
+        accentColor={meta.colorVar}
+        tintColor={meta.colorSoftVar}
+        icon={<meta.icon size={18} strokeWidth={1.75} />}
         onToggleExpand={() => controller.toggleExpanded(block.id)}
         onEdit={() => controller.onEdit(block.id)}
         onOpenMenu={() => controller.onOpenMenu(block.id)}
-        accentColor={blockTypeMeta(block.type).colorVar}
       />
 
       {expanded && isContainerBlock(block) && (

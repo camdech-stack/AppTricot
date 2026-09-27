@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Plus, Rows3 } from 'lucide-react'
 import styles from './SectionCard.module.css'
 import { BlockList } from './BlockList'
 import { TreeNodeHeader } from './TreeNodeHeader'
@@ -20,13 +20,14 @@ export function SectionCard({ section, depth, controller }: SectionCardProps) {
   const expanded = controller.isExpanded(section.id)
 
   return (
-    <div className={styles.section}>
+    <div>
       <TreeNodeHeader
         depth={depth}
         title={section.name || 'Section sans nom'}
         subtitle={METHOD_LABELS[section.method]}
         expandable
         expanded={expanded}
+        icon={<Rows3 size={18} strokeWidth={1.75} />}
         onToggleExpand={() => controller.toggleExpanded(section.id)}
         onEdit={() => controller.onEdit(section.id)}
         onOpenMenu={() => controller.onOpenMenu(section.id)}

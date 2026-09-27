@@ -6,8 +6,8 @@
 
 .item {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: flex-start;
+  gap: var(--space-12);
   padding: var(--space-12);
   border: 1px solid var(--color-border);
   border-left: 4px solid var(--item-color, var(--color-border));
@@ -18,6 +18,24 @@
 
 .item:active {
   background: var(--color-surface-alt);
+}
+
+.itemIcon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-top: 2px;
+}
+
+.itemBody {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .itemLabel {

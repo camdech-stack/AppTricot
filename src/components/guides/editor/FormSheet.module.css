@@ -95,32 +95,18 @@
   color: var(--color-primary-strong);
 }
 
-.operationsRow {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-}
-
-.operationButton,
-.operationButtonEmpty {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  min-height: var(--tap-min);
-  padding: 0 var(--space-16);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-align: left;
-}
-
-.operationButton {
-  background: var(--color-surface-alt);
+/* No box around a row's instructions field — shorter, and less visual
+   weight than the surrounding number/side controls (see CLAUDE.md
+   "Rangs", étape 5a part 2). */
+.textareaPlain {
+  min-height: calc(var(--tap-min) * 1.2);
+  padding: var(--space-4) 0;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  font-size: var(--text-md);
+  font-family: var(--font-body);
   color: var(--color-text);
-}
-
-.operationButtonEmpty {
-  background: var(--color-surface);
-  color: var(--color-text-muted);
+  resize: vertical;
 }

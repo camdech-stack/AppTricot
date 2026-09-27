@@ -12,7 +12,7 @@ import { GuideMetaSheet } from '../components/guides/editor/GuideMetaSheet'
 import { BlockTypePickerSheet } from '../components/guides/editor/BlockTypePickerSheet'
 import { PasteRowsSheet } from '../components/guides/editor/PasteRowsSheet'
 import { RowsScreen } from '../components/guides/editor/RowsScreen'
-import { PieceSheet, SectionSheet, TextBlockSheet, RepeatSheet, MeasureSheet, StitchCountSheet } from '../components/guides/editor/NodeFormSheets'
+import { PieceSheet, OperationSheet, SectionSheet, TextBlockSheet, RepeatSheet, MeasureSheet, StitchCountSheet } from '../components/guides/editor/NodeFormSheets'
 import { blockTypeLabel } from '../components/guides/editor/blockTypeMeta'
 import { useGuideHistory } from '../components/guides/editor/useGuideHistory'
 import { useGuideAutosave } from '../components/guides/editor/useGuideAutosave'
@@ -50,6 +50,7 @@ import {
 
 type SheetState =
   | { kind: 'piece'; id: string }
+  | { kind: 'operation'; pieceId: string; slot: 'castOn' | 'finish' }
   | { kind: 'section'; id: string }
   | { kind: 'pickBlockType'; parentId: string }
   | { kind: 'text'; id: string }
@@ -271,6 +272,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
       setSheet({ kind: 'section', id: result.id })
     },
     onAddBlock: (parentId) => setSheet({ kind: 'pickBlockType', parentId }),
+    onEditOperation: (pieceId, slot) => setSheet({ kind: 'operation', pieceId, slot }),
     reorder: (id, targetIndex) => applyChange(moveNode(content, id, targetIndex), id),
   }
 
@@ -305,6 +307,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
   // --- Derived data for the currently open sheet/menu --------------------
 
   const piece = sheet?.kind === 'piece' ? (findNode(content, sheet.id)?.node as Piece | undefined) : undefined
+  const operationPiece = sheet?.kind === 'operation' ? content.pieces.find((candidate) => candidate.id === sheet.pieceId) : undefined
   const section = sheet?.kind === 'section' ? (findNode(content, sheet.id)?.node as Section | undefined) : undefined
   const textBlock = sheet?.kind === 'text' ? (findNode(content, sheet.id)?.node as Extract<Block, { type: 'text' }> | undefined) : undefined
   const repeatBlock = sheet?.kind === 'repeat' ? (findNode(content, sheet.id)?.node as Extract<Block, { type: 'repeat' }> | undefined) : undefined
@@ -322,16 +325,15 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
   const saveStatusLabel = autosave.status === 'saving' ? 'Enregistrement…' : autosave.status === 'error' ? 'Échec de l’enregistrement' : 'Enregistré'
   const linkedPattern = guide.patternId ? libraryContext?.patterns.find((pattern) => pattern.id === guide.patternId) : undefined
 
+  const allExpandableIds = collectAllExpandableIds(content)
+  const allExpanded = allExpandableIds.length > 0 && allExpandableIds.every((id) => expanded.has(id))
+
   const guidePaneContent = (
     <>
       <div className={styles.toolbar}>
-        <button type="button" className={styles.toolbarButton} onClick={() => setExpanded(new Set(collectAllExpandableIds(content)))}>
-          <ChevronsUpDown size={16} strokeWidth={1.75} />
-          Tout déplier
-        </button>
-        <button type="button" className={styles.toolbarButton} onClick={() => setExpanded(new Set())}>
-          <ChevronsDownUp size={16} strokeWidth={1.75} />
-          Tout plier
+        <button type="button" className={styles.toolbarButton} onClick={() => setExpanded(allExpanded ? new Set() : new Set(allExpandableIds))}>
+          {allExpanded ? <ChevronsDownUp size={16} strokeWidth={1.75} /> : <ChevronsUpDown size={16} strokeWidth={1.75} />}
+          {allExpanded ? 'Tout plier' : 'Tout déplier'}
         </button>
       </div>
 
@@ -428,15 +430,31 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           initialCustomCategory={piece.customCategory}
           initialNotes={piece.notes}
           onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
-          castOn={piece.castOn}
-          finish={piece.finish}
-          onSaveOperation={(slot, input) => {
-            const next = setOperation(content, piece.id, slot, input)
-            const updatedPiece = next.pieces.find((candidate) => candidate.id === piece.id)
-            const operationId = (slot === 'castOn' ? updatedPiece?.castOn : updatedPiece?.finish)?.id ?? null
+          linkedPattern={linkedPattern}
+        />
+      )}
+
+      {sheet?.kind === 'operation' && (
+        <OperationSheet
+          open
+          onClose={() => setSheet(null)}
+          slot={sheet.slot}
+          initial={(sheet.slot === 'castOn' ? operationPiece?.castOn : operationPiece?.finish) ?? null}
+          onSave={(input) => {
+            if (!operationPiece) return
+            const next = setOperation(content, operationPiece.id, sheet.slot, input)
+            const updatedPiece = next.pieces.find((candidate) => candidate.id === operationPiece.id)
+            const operationId = (sheet.slot === 'castOn' ? updatedPiece?.castOn : updatedPiece?.finish)?.id ?? null
             applyChange(next, operationId)
           }}
-          onRemoveOperation={(slot) => applyChange(setOperation(content, piece.id, slot, null), null)}
+          onRemove={
+            (sheet.slot === 'castOn' ? operationPiece?.castOn : operationPiece?.finish)
+              ? () => {
+                  if (!operationPiece) return
+                  applyChange(setOperation(content, operationPiece.id, sheet.slot, null), null)
+                }
+              : undefined
+          }
           linkedPattern={linkedPattern}
         />
       )}

@@ -8,7 +8,6 @@ import { createContext, useContext, type CSSProperties, type ReactNode } from 'r
 import { DndContext, PointerSensor, useSensor, useSensors, closestCenter, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { GripVertical } from 'lucide-react'
 import styles from './SortableList.module.css'
 
 interface SortableListProps<T extends { id: string }> {
@@ -80,10 +79,12 @@ function SortableItem({ id, children, connectorDepth }: { id: string; children: 
   )
 }
 
-// Renders the grip handle that starts the drag for the item it's nested
+// Renders the drag handle that starts the drag for the item it's nested
 // in — never the whole card, so ordinary page scrolling is never at risk
-// of being mistaken for a reorder.
-export function DragHandle({ label = 'Réordonner' }: { label?: string }) {
+// of being mistaken for a reorder. A single colored dot rather than a grip
+// icon (see CLAUDE.md "Style de blocs") — the surrounding tap zone stays at
+// --tap-min regardless of how small the dot itself looks.
+export function DragHandle({ label = 'Réordonner', color }: { label?: string; color?: string }) {
   const handle = useContext(SortableItemContext)
   if (!handle) return null
   return (
@@ -95,7 +96,7 @@ export function DragHandle({ label = 'Réordonner' }: { label?: string }) {
       {...handle.attributes}
       {...handle.listeners}
     >
-      <GripVertical size={18} strokeWidth={1.75} />
+      <span className={styles.dot} style={color ? { background: color } : undefined} />
     </button>
   )
 }

@@ -1,6 +1,7 @@
-// Labels and short descriptions for each block type — shown in the
+// Labels, short descriptions and an icon for each block type — shown in the
 // block-type picker sheet and reused for the block cards' summary line.
 // Written from scratch, not copied from any other app's wording.
+import { ListOrdered, Repeat, AlignLeft, Ruler, Target, type LucideIcon } from 'lucide-react'
 import type { BlockType, MeasureBlock, RepeatBlock, StitchCountBlock } from '../../../data'
 
 export interface BlockTypeMeta {
@@ -11,6 +12,7 @@ export interface BlockTypeMeta {
   // les tokens --color-guide-* dans tokens.css.
   colorVar: string
   colorSoftVar: string
+  icon: LucideIcon
 }
 
 export const BLOCK_TYPE_META: BlockTypeMeta[] = [
@@ -20,6 +22,8 @@ export const BLOCK_TYPE_META: BlockTypeMeta[] = [
     description: 'Une suite de rangs numérotés, à tricoter dans l’ordre.',
     colorVar: 'var(--color-guide-rows)',
     colorSoftVar: 'var(--color-guide-rows-soft)',
+    // Same icon as the standalone row counter (CLAUDE.md "Compteur de rangs").
+    icon: ListOrdered,
   },
   {
     type: 'repeat',
@@ -27,6 +31,7 @@ export const BLOCK_TYPE_META: BlockTypeMeta[] = [
     description: 'Répète un groupe de blocs un nombre de fois donné.',
     colorVar: 'var(--color-guide-repeat)',
     colorSoftVar: 'var(--color-guide-repeat-soft)',
+    icon: Repeat,
   },
   {
     type: 'text',
@@ -34,6 +39,7 @@ export const BLOCK_TYPE_META: BlockTypeMeta[] = [
     description: 'Une instruction ou une remarque qui ne se découpe pas en rangs.',
     colorVar: 'var(--color-guide-text)',
     colorSoftVar: 'var(--color-guide-text-soft)',
+    icon: AlignLeft,
   },
   {
     type: 'measure',
@@ -41,6 +47,7 @@ export const BLOCK_TYPE_META: BlockTypeMeta[] = [
     description: 'Répète le contenu jusqu’à atteindre une longueur mesurée depuis un repère.',
     colorVar: 'var(--color-guide-measure)',
     colorSoftVar: 'var(--color-guide-measure-soft)',
+    icon: Ruler,
   },
   {
     type: 'stitch_count',
@@ -48,6 +55,7 @@ export const BLOCK_TYPE_META: BlockTypeMeta[] = [
     description: 'Répète le contenu jusqu’à atteindre un nombre de mailles précis.',
     colorVar: 'var(--color-guide-stitch-count)',
     colorSoftVar: 'var(--color-guide-stitch-count-soft)',
+    icon: Target,
   },
 ]
 

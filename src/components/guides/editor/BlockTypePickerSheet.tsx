@@ -29,8 +29,13 @@ export function BlockTypePickerSheet({ open, onClose, allowedTypes, onSelect }: 
             style={{ '--item-color': meta.colorVar } as CSSProperties}
             onClick={() => onSelect(meta.type)}
           >
-            <span className={styles.itemLabel}>{meta.label}</span>
-            <span className={styles.itemDescription}>{meta.description}</span>
+            <span className={styles.itemIcon} style={{ color: meta.colorVar }}>
+              <meta.icon size={20} strokeWidth={1.75} />
+            </span>
+            <span className={styles.itemBody}>
+              <span className={styles.itemLabel}>{meta.label}</span>
+              <span className={styles.itemDescription}>{meta.description}</span>
+            </span>
           </button>
         ))}
         {allowedTypes.length === 0 && <p className={styles.empty}>Profondeur maximale atteinte : impossible d'ajouter un bloc ici.</p>}
