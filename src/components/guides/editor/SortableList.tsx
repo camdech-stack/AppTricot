@@ -21,9 +21,25 @@ interface SortableListProps<T extends { id: string }> {
   // to its parent's icon column, in --color-border. Omit for a top-level
   // list (pieces), which has no parent to connect to.
   connectorDepth?: number
+  // Whether this list's own last item is also the last node connected to
+  // the parent's trunk (the default): its line then stops short instead of
+  // running the trunk's full height. Set to false when something else
+  // renders after this list at the same connector depth (a piece's section
+  // list, sandwiched between the montage and finition rows — see
+  // PieceCard.tsx and ConnectorItem below) — the bug this fixes was the
+  // trunk cutting short at the last *section* while montage/finition, not
+  // part of this list, still followed it unconnected.
+  connectorTerminates?: boolean
 }
 
-export function SortableList<T extends { id: string }>({ items, onReorder, renderItem, className, connectorDepth }: SortableListProps<T>) {
+export function SortableList<T extends { id: string }>({
+  items,
+  onReorder,
+  renderItem,
+  className,
+  connectorDepth,
+  connectorTerminates = true,
+}: SortableListProps<T>) {
   // A short delay before a touch starts dragging keeps a normal scroll
   // gesture from being hijacked — only the handle itself sets
   // touch-action: none (see DragHandle below).
@@ -42,7 +58,12 @@ export function SortableList<T extends { id: string }>({ items, onReorder, rende
       <SortableContext items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
         <div className={className}>
           {items.map((item, index) => (
-            <SortableItem key={item.id} id={item.id} connectorDepth={connectorDepth}>
+            <SortableItem
+              key={item.id}
+              id={item.id}
+              connectorDepth={connectorDepth}
+              connectorLast={connectorTerminates && index === items.length - 1}
+            >
               {renderItem(item, index)}
             </SortableItem>
           ))}
@@ -60,7 +81,7 @@ interface SortableItemHandle {
 
 const SortableItemContext = createContext<SortableItemHandle | null>(null)
 
-function SortableItem({ id, children, connectorDepth }: { id: string; children: ReactNode; connectorDepth?: number }) {
+function SortableItem({ id, children, connectorDepth, connectorLast }: { id: string; children: ReactNode; connectorDepth?: number; connectorLast?: boolean }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id })
   const style = {
     // CSS.Translate (not CSS.Transform) deliberately drops the scale dnd-kit
@@ -71,10 +92,23 @@ function SortableItem({ id, children, connectorDepth }: { id: string; children: 
     opacity: isDragging ? 0.6 : 1,
     ...(connectorDepth != null ? ({ '--connector-depth': connectorDepth } as CSSProperties) : {}),
   }
+  const connectorClass = connectorDepth == null ? undefined : connectorLast ? styles.connectorItemLast : styles.connectorItem
 
   return (
-    <div ref={setNodeRef} style={style} className={connectorDepth != null ? styles.connectorItem : undefined}>
+    <div ref={setNodeRef} style={style} className={connectorClass}>
       <SortableItemContext.Provider value={{ attributes, listeners, setActivatorNodeRef }}>{children}</SortableItemContext.Provider>
+    </div>
+  )
+}
+
+// A non-sortable sibling that still needs to draw an organigram connector
+// at the same depth as a SortableList's items — the montage/finition rows
+// around a piece's section list (see PieceCard.tsx), which aren't part of
+// that reorderable list but visually belong to the same trunk.
+export function ConnectorItem({ depth, last = false, children }: { depth: number; last?: boolean; children: ReactNode }) {
+  return (
+    <div className={last ? styles.connectorItemLast : styles.connectorItem} style={{ '--connector-depth': depth } as CSSProperties}>
+      {children}
     </div>
   )
 }

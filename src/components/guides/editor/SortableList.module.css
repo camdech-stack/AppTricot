@@ -21,32 +21,42 @@
 }
 
 /* Organigram-style connector: a vertical trunk running through every
-   sibling, cut short on the last one, plus a horizontal tick per item —
-   see CLAUDE.md "Décisions d'interface (étape 5a)". Position is driven by
-   --connector-depth (set inline per item) so one rule covers every level;
-   24px approximates half of --tap-min, the header row's own height. */
-.connectorItem {
+   sibling, plus a horizontal tick per item — see CLAUDE.md "Décisions
+   d'interface (étape 5a)". Position is driven by --connector-depth (set
+   inline per item) so one rule covers every level; 24px approximates half
+   of --tap-min, the header row's own height.
+
+   Which item's line stops short is an explicit modifier class
+   (.connectorItemLast), never `:last-child`: a piece's montage/finition
+   rows connect to the very same trunk as its section list but live outside
+   that list's own DOM container, so "last child of my own parent" doesn't
+   mean "last node on the trunk" — see SortableList's `connectorTerminates`
+   and ConnectorItem. */
+.connectorItem,
+.connectorItemLast {
   position: relative;
 }
 
-.connectorItem::before {
+.connectorItem::before,
+.connectorItemLast::before {
   content: '';
   position: absolute;
-  left: calc((var(--connector-depth) - 1) * 14px + 7px);
+  left: calc((var(--connector-depth) - 1) * 20px + 7px);
   top: 0;
   bottom: 0;
   width: 1.5px;
   background: var(--color-border);
 }
 
-.connectorItem:last-child::before {
+.connectorItemLast::before {
   bottom: calc(100% - 24px);
 }
 
-.connectorItem::after {
+.connectorItem::after,
+.connectorItemLast::after {
   content: '';
   position: absolute;
-  left: calc((var(--connector-depth) - 1) * 14px + 7px);
+  left: calc((var(--connector-depth) - 1) * 20px + 7px);
   top: 24px;
   width: 7px;
   height: 1.5px;

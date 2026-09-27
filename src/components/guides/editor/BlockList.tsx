@@ -1,7 +1,7 @@
 import { CornerDownRight } from 'lucide-react'
 import styles from './BlockList.module.css'
 import { SortableList } from './SortableList'
-import { TreeNodeHeader } from './TreeNodeHeader'
+import { TreeNodeHeader, INDENT_PX } from './TreeNodeHeader'
 import { blockTypeLabel, blockTypeMeta, summarizeMeasureBlock, summarizeRepeatBlock, summarizeStitchCountBlock } from './blockTypeMeta'
 import { countRowsInBlocks, isContainerBlock, type Block } from '../../../data'
 import type { EditorController } from './editorController'
@@ -13,7 +13,14 @@ interface BlockListProps {
 }
 
 export function BlockList({ blocks, depth, controller }: BlockListProps) {
-  return <SortableList items={blocks} onReorder={controller.reorder} renderItem={(block) => <BlockCard block={block} depth={depth} controller={controller} />} />
+  return (
+    <SortableList
+      items={blocks}
+      onReorder={controller.reorder}
+      renderItem={(block) => <BlockCard block={block} depth={depth} controller={controller} />}
+      connectorDepth={depth}
+    />
+  )
 }
 
 interface BlockCardProps {
@@ -69,7 +76,7 @@ function BlockCard({ block, depth, controller }: BlockCardProps) {
           <button
             type="button"
             className={styles.addBlockButton}
-            style={{ marginLeft: Math.min(depth + 1, 4) * 14 }}
+            style={{ marginLeft: Math.min(depth + 1, 4) * INDENT_PX }}
             onClick={() => controller.onAddBlock(block.id)}
           >
             <CornerDownRight size={16} strokeWidth={1.75} />

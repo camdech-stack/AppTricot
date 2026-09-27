@@ -22,9 +22,15 @@ interface TreeNodeHeaderProps {
   accentColor?: string
   tintColor?: string
   icon?: ReactNode
+  // 'start' (default): right after the chevron, before the title — see
+  // CLAUDE.md "Style de blocs". 'end': after the title, right before the
+  // "⋯" menu — the other of the two placements compared on user request.
+  iconPosition?: 'start' | 'end'
 }
 
-const INDENT_PX = 14
+// Exported so BlockList/SectionCard compute their own "Ajouter…" button
+// indent with the exact same unit as the header's own margin.
+export const INDENT_PX = 20
 const MAX_INDENT_LEVEL = 4
 
 // The indent is a margin on this header's own box (not padding inside it),
@@ -43,11 +49,18 @@ export function TreeNodeHeader({
   accentColor,
   tintColor,
   icon,
+  iconPosition = 'start',
 }: TreeNodeHeaderProps) {
   const boxStyle =
     variant === 'tint'
       ? { marginLeft: Math.min(depth, MAX_INDENT_LEVEL) * INDENT_PX, background: tintColor }
       : { marginLeft: Math.min(depth, MAX_INDENT_LEVEL) * INDENT_PX, borderColor: accentColor }
+
+  const iconEl = icon && (
+    <span className={styles.icon} style={{ color: accentColor }}>
+      {icon}
+    </span>
+  )
 
   return (
     <div className={variant === 'tint' ? styles.headerTint : styles.headerOutline} style={boxStyle}>
@@ -59,15 +72,12 @@ export function TreeNodeHeader({
       ) : (
         <span className={styles.chevronSpacer} />
       )}
-      {icon && (
-        <span className={styles.icon} style={{ color: accentColor }}>
-          {icon}
-        </span>
-      )}
+      {iconPosition === 'start' && iconEl}
       <button type="button" className={styles.main} onClick={onEdit ?? onToggleExpand}>
         <span className={styles.title}>{title}</span>
         {subtitle && <span className={styles.subtitle}>{subtitle}</span>}
       </button>
+      {iconPosition === 'end' && iconEl}
       <button type="button" className={styles.menuButton} aria-label="Options" onClick={onOpenMenu}>
         <MoreHorizontal size={18} strokeWidth={1.75} />
       </button>

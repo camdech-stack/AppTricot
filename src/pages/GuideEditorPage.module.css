@@ -42,6 +42,7 @@
 
 .toolbar {
   display: flex;
+  justify-content: flex-end;
   gap: var(--space-8);
   padding: var(--space-8) calc(var(--safe-right) + var(--space-16)) 0 calc(var(--safe-left) + var(--space-16));
 }

@@ -1,7 +1,7 @@
 import { Plus, Rows3 } from 'lucide-react'
 import styles from './SectionCard.module.css'
 import { BlockList } from './BlockList'
-import { TreeNodeHeader } from './TreeNodeHeader'
+import { TreeNodeHeader, INDENT_PX } from './TreeNodeHeader'
 import type { EditorController } from './editorController'
 import type { Section } from '../../../data'
 
@@ -37,7 +37,7 @@ export function SectionCard({ section, depth, controller }: SectionCardProps) {
       {expanded && (
         <div>
           {section.blocks.length > 0 && <BlockList blocks={section.blocks} depth={depth + 1} controller={controller} />}
-          <button type="button" className={styles.addButton} style={{ marginLeft: Math.min(depth + 1, 4) * 14 }} onClick={() => controller.onAddBlock(section.id)}>
+          <button type="button" className={styles.addButton} style={{ marginLeft: Math.min(depth + 1, 4) * INDENT_PX }} onClick={() => controller.onAddBlock(section.id)}>
             <Plus size={16} strokeWidth={1.75} />
             Ajouter un bloc
           </button>
