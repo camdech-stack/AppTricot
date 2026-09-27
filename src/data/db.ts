@@ -334,6 +334,40 @@ class AppDatabase extends Dexie {
       projectGuides: 'id, projectId, guideId, [projectId+guideId]',
       guideProgress: 'id, projectId, guideId, [projectId+guideId]',
     })
+
+    // Adds `guideRowTextSize` (row text size on the guide follow screen) to
+    // settings. Not indexed, so its schema string is unchanged; still
+    // bumping the version to backfill existing installs.
+    this.version(13)
+      .stores({
+        settings: 'id',
+        projects: 'id, status, lastActivityAt',
+        counters: 'id, projectId, [projectId+position]',
+        counterEvents: 'id, counterId, [counterId+createdAt]',
+        coverImages: 'id, projectId',
+        sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+        yarns: 'id, name',
+        yarnImages: 'id, yarnId',
+        projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+        yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+        patterns: 'id, name, *tags, fileHash, createdAt, lastOpenedAt',
+        patternFiles: 'id, patternId',
+        patternCovers: 'id, patternId',
+        projectPatterns: 'id, projectId, patternId, [projectId+patternId]',
+        patternViewStates: 'id, patternId, projectId',
+        guides: 'id, patternId, createdAt',
+        guideContents: 'id, guideId',
+        projectGuides: 'id, projectId, guideId, [projectId+guideId]',
+        guideProgress: 'id, projectId, guideId, [projectId+guideId]',
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table('settings')
+          .toCollection()
+          .modify((settings: Record<string, unknown>) => {
+            settings.guideRowTextSize = 'medium'
+          })
+      })
   }
 }
 

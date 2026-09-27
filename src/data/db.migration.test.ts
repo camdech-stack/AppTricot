@@ -749,3 +749,160 @@ describe('schema migration to v12', () => {
     expect(await db.guideProgress.count()).toBe(0)
   })
 })
+
+describe('schema migration to v13', () => {
+  it('backfills guideRowTextSize on existing settings', async () => {
+    // Simulate a step-5b install already on schema v12, predating the
+    // follow screen's text-size setting.
+    const legacy = new Dexie(DB_NAME)
+    legacy.version(1).stores({ settings: 'id' })
+    legacy.version(2).stores({ settings: 'id' })
+    legacy.version(3).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+    })
+    legacy.version(4).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+    })
+    legacy.version(5).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+    })
+    legacy.version(6).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+    })
+    legacy.version(7).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+      yarns: 'id, name',
+      yarnImages: 'id, yarnId',
+      projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+      yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+    })
+    legacy.version(8).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+      yarns: 'id, name',
+      yarnImages: 'id, yarnId',
+      projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+      yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+    })
+    legacy.version(9).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+      yarns: 'id, name',
+      yarnImages: 'id, yarnId',
+      projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+      yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+      patterns: 'id, name, *tags, fileHash, createdAt, lastOpenedAt',
+      patternFiles: 'id, patternId',
+      patternCovers: 'id, patternId',
+      projectPatterns: 'id, projectId, patternId, [projectId+patternId]',
+      patternViewStates: 'id, patternId, projectId',
+    })
+    legacy.version(10).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+      yarns: 'id, name',
+      yarnImages: 'id, yarnId',
+      projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+      yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+      patterns: 'id, name, *tags, fileHash, createdAt, lastOpenedAt',
+      patternFiles: 'id, patternId',
+      patternCovers: 'id, patternId',
+      projectPatterns: 'id, projectId, patternId, [projectId+patternId]',
+      patternViewStates: 'id, patternId, projectId',
+    })
+    legacy.version(11).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+      yarns: 'id, name',
+      yarnImages: 'id, yarnId',
+      projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+      yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+      patterns: 'id, name, *tags, fileHash, createdAt, lastOpenedAt',
+      patternFiles: 'id, patternId',
+      patternCovers: 'id, patternId',
+      projectPatterns: 'id, projectId, patternId, [projectId+patternId]',
+      patternViewStates: 'id, patternId, projectId',
+      guides: 'id, patternId, createdAt',
+      guideContents: 'id, guideId',
+      projectGuides: 'id, projectId, guideId, [projectId+guideId]',
+    })
+    legacy.version(12).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+      yarns: 'id, name',
+      yarnImages: 'id, yarnId',
+      projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+      yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+      patterns: 'id, name, *tags, fileHash, createdAt, lastOpenedAt',
+      patternFiles: 'id, patternId',
+      patternCovers: 'id, patternId',
+      projectPatterns: 'id, projectId, patternId, [projectId+patternId]',
+      patternViewStates: 'id, patternId, projectId',
+      guides: 'id, patternId, createdAt',
+      guideContents: 'id, guideId',
+      projectGuides: 'id, projectId, guideId, [projectId+guideId]',
+      guideProgress: 'id, projectId, guideId, [projectId+guideId]',
+    })
+    await legacy.open()
+    await legacy.table('settings').put({
+      id: 'app-settings',
+      lengthUnit: 'm',
+      weightUnit: 'g',
+      trackingEnabled: true,
+      yarnQuantityUnit: 'weight',
+      ravelryEnabled: false,
+      ravelryUsername: null,
+      ravelryPassword: null,
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    })
+    legacy.close()
+
+    await db.open()
+
+    const settings = await db.settings.get('app-settings')
+    expect(settings?.guideRowTextSize).toBe('medium')
+  })
+})

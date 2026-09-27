@@ -148,10 +148,12 @@ export {
   advanceGuide,
   resetProgress,
   setLinkedCounter,
+  repairActiveCursor,
   getProjectGuideProgressInputs,
   getProjectResumeSummary,
   type GuideAdvanceAction,
   type ResetScope,
+  type RepairActiveCursorResult,
   type ProjectGuideResumeSummary,
 } from './guideProgressRepository'
 export {
@@ -286,12 +288,14 @@ export {
   type ProjectYarnLike,
   type ProjectLike,
 } from './yarnMath'
+export { GUIDE_ROW_TEXT_SIZES } from './types'
 export type {
   BaseEntity,
   AppSettingsRecord,
   LengthUnit,
   WeightUnit,
   YarnQuantityUnit,
+  GuideRowTextSize,
   ProjectRecord,
   ProjectCraft,
   ProjectStatus,

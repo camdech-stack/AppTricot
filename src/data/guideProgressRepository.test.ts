@@ -14,6 +14,7 @@ import {
   getProgress,
   getProjectGuideProgressInputs,
   getProjectResumeSummary,
+  repairActiveCursor,
   resetProgress,
   setActivePiece,
   setLinkedCounter,
@@ -311,6 +312,50 @@ describe('advanceGuide', () => {
     const updated = await advanceGuide(project.id, guide.id, { type: 'next' })
     expect(updated.pieces[piece1Id]?.cursor?.nodeId).not.toBe(currentRowId)
     expect(updated.pieces[piece1Id]?.cursor).not.toBeNull()
+  })
+})
+
+describe('repairActiveCursor', () => {
+  it('repositions the active cursor after a "Corriger" edit, without touching sessions or the linked counter', async () => {
+    const { project, guide, piece1Id, content, rowsBlock1Id } = await setupProjectWithGuide()
+    const counter = await addCounter(project.id, 'Rangs manuel')
+    await setLinkedCounter(project.id, guide.id, counter.id)
+    await startGuide(project.id, guide.id)
+    const started = await getProgress(project.id, guide.id)
+    const currentRowId = started!.pieces[piece1Id]!.cursor!.nodeId
+
+    const edited: GuideContent = {
+      ...content,
+      pieces: content.pieces.map((piece) =>
+        piece.id === piece1Id
+          ? {
+              ...piece,
+              sections: piece.sections.map((section) => ({
+                ...section,
+                blocks: section.blocks.map((block) =>
+                  block.id === rowsBlock1Id && block.type === 'rows' ? { ...block, rows: block.rows.filter((row) => row.id !== currentRowId) } : block,
+                ),
+              })),
+            }
+          : piece,
+      ),
+    }
+    await saveGuideContent(guide.id, edited)
+
+    const result = await repairActiveCursor(project.id, guide.id)
+    expect(result.adjusted).toBe(true)
+    expect(result.record.pieces[piece1Id]?.cursor?.nodeId).not.toBe(currentRowId)
+    expect(await db.sessions.count()).toBe(1) // no new/extended session from this
+    expect((await db.counters.get(counter.id))?.value).toBe(0) // untouched
+
+    const again = await repairActiveCursor(project.id, guide.id)
+    expect(again.adjusted).toBe(false)
+  })
+
+  it('is a no-op when the guide has not been started yet', async () => {
+    const { project, guide } = await setupProjectWithGuide()
+    const result = await repairActiveCursor(project.id, guide.id)
+    expect(result.adjusted).toBe(false)
   })
 })
 

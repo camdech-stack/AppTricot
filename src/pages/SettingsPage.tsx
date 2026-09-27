@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import styles from './SettingsPage.module.css'
 import { useSettings } from '../hooks/useSettings'
 import { formatFileSize } from '../utils/formatFileSize'
-import { getPatterns, isStoragePersisted, requestPersistentStorage, updateSettings, type LengthUnit, type YarnQuantityUnit } from '../data'
+import { getPatterns, isStoragePersisted, requestPersistentStorage, updateSettings, type GuideRowTextSize, type LengthUnit, type YarnQuantityUnit } from '../data'
 import { RavelrySettingsSection } from '../ravelry'
 
 // TEMPORARY: diagnosing a bottom safe-area rendering bug on a real iPhone,
@@ -70,6 +70,20 @@ const YARN_QUANTITY_OPTIONS: { value: YarnQuantityUnit; label: string }[] = [
   { value: 'weight', label: 'Poids' },
   { value: 'length', label: 'Longueur' },
 ]
+
+const GUIDE_ROW_TEXT_SIZE_OPTIONS: { value: GuideRowTextSize; label: string }[] = [
+  { value: 'small', label: 'Petit' },
+  { value: 'medium', label: 'Moyen' },
+  { value: 'large', label: 'Grand' },
+  { value: 'xlarge', label: 'Très grand' },
+]
+
+const GUIDE_ROW_TEXT_SIZE_PREVIEW: Record<GuideRowTextSize, string> = {
+  small: '18px',
+  medium: '22px',
+  large: '28px',
+  xlarge: '36px',
+}
 
 export function SettingsPage() {
   const settings = useSettings()
@@ -150,6 +164,33 @@ export function SettingsPage() {
           <p className={styles.helperText}>
             Le chrono démarre automatiquement au premier appui sur un compteur, et s'arrête quand l'application est
             quittée ou quand vous l'arrêtez vous-même.
+          </p>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionTitle}>Guide</div>
+        <div className={styles.card}>
+          <div className={styles.row}>
+            <span className={styles.rowLabel}>Taille du texte du rang</span>
+            <div className={styles.segmented} role="group" aria-label="Taille du texte du rang, écran de suivi">
+              {GUIDE_ROW_TEXT_SIZE_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={(settings?.guideRowTextSize ?? 'medium') === option.value}
+                  onClick={() => updateSettings({ guideRowTextSize: option.value })}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p
+            className={styles.helperText}
+            style={{ fontSize: GUIDE_ROW_TEXT_SIZE_PREVIEW[settings?.guideRowTextSize ?? 'medium'], fontWeight: 600 }}
+          >
+            Aperçu : 2 m end, 2 m env
           </p>
         </div>
       </section>

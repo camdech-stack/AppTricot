@@ -1,6 +1,6 @@
 import { liveQuery } from 'dexie'
 import { db } from './db'
-import type { AppSettingsRecord, LengthUnit, YarnQuantityUnit } from './types'
+import type { AppSettingsRecord, GuideRowTextSize, LengthUnit, YarnQuantityUnit } from './types'
 
 const SETTINGS_ID = 'app-settings'
 
@@ -11,6 +11,7 @@ function defaultSettings(now: string): AppSettingsRecord {
     weightUnit: 'g',
     trackingEnabled: true,
     yarnQuantityUnit: 'weight',
+    guideRowTextSize: 'medium',
     ravelryEnabled: false,
     ravelryUsername: null,
     ravelryPassword: null,
@@ -41,7 +42,13 @@ export async function updateSettings(
   patch: Partial<
     Pick<
       AppSettingsRecord,
-      'lengthUnit' | 'trackingEnabled' | 'yarnQuantityUnit' | 'ravelryEnabled' | 'ravelryUsername' | 'ravelryPassword'
+      | 'lengthUnit'
+      | 'trackingEnabled'
+      | 'yarnQuantityUnit'
+      | 'guideRowTextSize'
+      | 'ravelryEnabled'
+      | 'ravelryUsername'
+      | 'ravelryPassword'
     >
   >,
 ): Promise<AppSettingsRecord> {
@@ -59,4 +66,4 @@ export function watchSettings() {
   return liveQuery(() => db.settings.get(SETTINGS_ID))
 }
 
-export type { AppSettingsRecord, LengthUnit, YarnQuantityUnit }
+export type { AppSettingsRecord, GuideRowTextSize, LengthUnit, YarnQuantityUnit }

@@ -1,8 +1,9 @@
 import { forwardRef, useImperativeHandle, useState } from 'react'
-import { Pause, Play, Plus, RotateCcw, Target, Undo2 } from 'lucide-react'
+import { Plus, RotateCcw, Target, Undo2 } from 'lucide-react'
 import styles from './CounterPanel.module.css'
 import { IconButton, Pill, StripedProgressBar, ConfirmDialog } from '../ui'
 import { CounterCard } from './CounterCard'
+import { ChronoButton } from './ChronoButton'
 import { CounterMenuSheet } from './CounterMenuSheet'
 import { TextPromptSheet } from './TextPromptSheet'
 import { GoalSheet } from './GoalSheet'
@@ -15,7 +16,6 @@ import { useCounterEvents } from '../../hooks/useCounterEvents'
 import { useRelativeTime } from '../../hooks/useRelativeTime'
 import { useCounterChrono } from '../../hooks/useCounterChrono'
 import { useSettings } from '../../hooks/useSettings'
-import { formatClockDuration, formatDuration } from '../../utils/formatDuration'
 import {
   addCounter,
   applyCounterDelta,
@@ -100,27 +100,7 @@ export const CounterPanel = forwardRef<CounterPanelHandle, CounterPanelProps>(fu
             {activeCounter?.value ?? 0}
           </div>
           {lastTapped && <div className={styles.lastTap}>Dernier appui : {lastTapped}</div>}
-          {settings?.trackingEnabled !== false && (
-            <button
-              type="button"
-              className={chrono.running ? styles.chronoButtonRunning : styles.chronoButton}
-              onClick={chrono.toggle}
-              aria-label={chrono.running ? `En cours : ${formatDuration(chrono.elapsedMs)}, arrêter le chrono` : chrono.label}
-            >
-              {chrono.running ? (
-                <>
-                  <span className={styles.chronoDot} aria-hidden="true" />
-                  <span>En cours : {formatClockDuration(chrono.elapsedMs)}</span>
-                  <Pause size={18} strokeWidth={1.75} />
-                </>
-              ) : (
-                <>
-                  <Play size={18} strokeWidth={1.75} />
-                  <span>{chrono.label}</span>
-                </>
-              )}
-            </button>
-          )}
+          {settings?.trackingEnabled !== false && <ChronoButton chrono={chrono} />}
           {activeCounter?.goal != null && (
             <div className={styles.goalBlock}>
               <div className={styles.goalText}>

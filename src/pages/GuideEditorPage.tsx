@@ -17,9 +17,11 @@ import { blockTypeLabel } from '../components/guides/editor/blockTypeMeta'
 import { useGuideHistory } from '../components/guides/editor/useGuideHistory'
 import { useGuideAutosave } from '../components/guides/editor/useGuideAutosave'
 import { computeAncestorIds } from '../components/guides/editor/expandedPath'
+import { FollowGuideSheet } from '../components/guides/FollowGuideSheet'
 import type { EditorController } from '../components/guides/editor/editorController'
 import { useGuide } from '../hooks/useGuide'
 import { useGuideLibraryContext } from '../hooks/useGuideLibraryContext'
+import { useFollowGuideFlow } from '../hooks/useFollowGuideFlow'
 import {
   addBlock,
   addPiece,
@@ -168,6 +170,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
   // "Route de retour cohérente".
   const returnTo = (location.state as { returnTo?: string } | null)?.returnTo ?? '/patrons'
   const libraryContext = useGuideLibraryContext()
+  const followFlow = useFollowGuideFlow()
 
   const { content, setContent, undo, redo, canUndo, canRedo } = useGuideHistory(initialContent)
   const [lastEditedNodeId, setLastEditedNodeId] = useState<string | null>(guide.lastEditedNodeId)
@@ -587,10 +590,14 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
         open={guideMenuOpen}
         onClose={() => setGuideMenuOpen(false)}
         onEditMeta={() => setGuideMetaOpen(true)}
+        onFollow={() => void followFlow.startFollow(guideId)}
         onDuplicate={() => void handleDuplicateGuide()}
         onDelete={() => void handleDeleteGuide()}
         linkedProjects={linkedProjects}
       />
+      {followFlow.sheet && (
+        <FollowGuideSheet state={followFlow.sheet} onClose={followFlow.closeSheet} onSelect={(projectId) => void followFlow.followInProject(projectId)} />
+      )}
       <GuideMetaSheet
         open={guideMetaOpen}
         onClose={() => setGuideMetaOpen(false)}

@@ -17,11 +17,18 @@ export type WeightUnit = 'g'
 // (grams) or 'length' (meters/yards, sub-choice from `lengthUnit`).
 export type YarnQuantityUnit = 'skein' | 'weight' | 'length'
 
+// Step 5b: text size of the row shown on the guide follow screen — read
+// "at arm's length" while knitting, so it needs to go well past normal body
+// text (see CLAUDE.md "Écran de suivi").
+export type GuideRowTextSize = 'small' | 'medium' | 'large' | 'xlarge'
+export const GUIDE_ROW_TEXT_SIZES: readonly GuideRowTextSize[] = ['small', 'medium', 'large', 'xlarge']
+
 export interface AppSettingsRecord extends BaseEntity {
   lengthUnit: LengthUnit
   weightUnit: WeightUnit
   trackingEnabled: boolean
   yarnQuantityUnit: YarnQuantityUnit
+  guideRowTextSize: GuideRowTextSize
   // Ravelry catalog search (step 3b) — secrets, read-only credentials the
   // user creates on Ravelry's own site. Never logged, never put in a URL,
   // and must stay excluded from any future export/backup (step 7).

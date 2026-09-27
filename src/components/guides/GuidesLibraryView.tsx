@@ -4,9 +4,11 @@ import { Search } from 'lucide-react'
 import styles from './GuidesLibraryView.module.css'
 import { GuideCard } from './GuideCard'
 import { CreateGuideSheet } from './CreateGuideSheet'
+import { FollowGuideSheet } from './FollowGuideSheet'
 import { Button } from '../ui'
 import { useGuideLibraryContext } from '../../hooks/useGuideLibraryContext'
 import { useGuideContents } from '../../hooks/useGuideContents'
+import { useFollowGuideFlow } from '../../hooks/useFollowGuideFlow'
 
 interface GuidesLibraryViewProps {
   // The "+ Nouveau" button lives in the shared page header (PatternsPage,
@@ -22,6 +24,7 @@ export function GuidesLibraryView({ createOpen, onOpenCreate, onCloseCreate }: G
   const navigate = useNavigate()
   const context = useGuideLibraryContext()
   const [query, setQuery] = useState('')
+  const followFlow = useFollowGuideFlow()
 
   const contents = useGuideContents(context?.guides)
 
@@ -73,9 +76,14 @@ export function GuidesLibraryView({ createOpen, onOpenCreate, onCloseCreate }: G
                 .filter((link) => link.guideId === guide.id)
                 .map((link) => context.projects.find((project) => project.id === link.projectId))
                 .filter((project): project is NonNullable<typeof project> => Boolean(project))}
+              onFollow={() => void followFlow.startFollow(guide.id)}
             />
           ))}
         </div>
+      )}
+
+      {followFlow.sheet && (
+        <FollowGuideSheet state={followFlow.sheet} onClose={followFlow.closeSheet} onSelect={(projectId) => void followFlow.followInProject(projectId)} />
       )}
 
       <CreateGuideSheet

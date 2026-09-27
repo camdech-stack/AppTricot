@@ -86,6 +86,47 @@ export async function setActivePiece(projectId: string, guideId: string, pieceId
   })
 }
 
+export interface RepairActiveCursorResult {
+  record: GuideProgressRecord
+  adjusted: boolean
+}
+
+// Called right after "Corriger" edits the guide's content (a typo fix, or
+// deleting the current row) — repositions the active piece's cursor onto
+// the closest still-valid step if the edit moved it out from under it.
+// Never a step in itself: no session/counter/lastActivityAt touched, only
+// the cursor (and, if it landed elsewhere, stepsDone) — repeatable and
+// safe to call even when nothing changed (adjusted: false, no write).
+export async function repairActiveCursor(projectId: string, guideId: string): Promise<RepairActiveCursorResult> {
+  return db.transaction('rw', db.guideProgress, db.guideContents, async (tx) => {
+    const content = await loadContent(guideId)
+    const table = tx.table('guideProgress')
+    const record = (await table.where('[projectId+guideId]').equals([projectId, guideId]).first()) as GuideProgressRecord | undefined
+    if (!record?.activePieceId) return { record: record ?? emptyRecord(projectId, guideId, nowIso()), adjusted: false }
+
+    const piece = content.pieces.find((candidate) => candidate.id === record.activePieceId)
+    const pieceProgress = record.pieces[record.activePieceId]
+    if (!piece || !pieceProgress?.cursor) return { record, adjusted: false }
+
+    const repaired = repairCursor(content, pieceProgress.cursor)
+    if (!repaired.adjusted) return { record, adjusted: false }
+
+    const now = nowIso()
+    const updatedPieceProgress: PieceProgress = {
+      ...pieceProgress,
+      cursor: repaired.cursor,
+      stepsDone: computeStepsDone(piece, repaired.cursor),
+    }
+    const updated: GuideProgressRecord = {
+      ...record,
+      pieces: { ...record.pieces, [record.activePieceId]: updatedPieceProgress },
+      updatedAt: now,
+    }
+    await table.put(updated)
+    return { record: updated, adjusted: true }
+  })
+}
+
 // The "démarrage du guide" for the chrono (see CLAUDE.md "Suivi du
 // temps") — creates the progress record if needed, moves activePieceId to
 // getNextAvailablePieceId (auto-skipping any piece with zero steps so the

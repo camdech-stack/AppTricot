@@ -1,0 +1,165 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: calc(var(--safe-top) + var(--space-8)) calc(var(--safe-right) + var(--space-12)) var(--space-8)
+    calc(var(--safe-left) + var(--space-12));
+  border-bottom: 1px solid var(--color-border);
+}
+
+.breadcrumb {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-16) calc(var(--safe-right) + var(--space-20)) var(--space-8) calc(var(--safe-left) + var(--space-20));
+}
+
+.repeatPill {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  width: 100%;
+  max-width: 320px;
+}
+
+.card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-12);
+  text-align: center;
+  padding: var(--space-16) 0;
+}
+
+.blockLabel {
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.rowNumber {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-primary-strong);
+}
+
+.rowText {
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: pre-wrap;
+}
+
+.textSizeSmall .rowText {
+  font-size: var(--text-lg);
+}
+.textSizeMedium .rowText {
+  font-size: var(--text-xl);
+}
+.textSizeLarge .rowText {
+  font-size: var(--text-2xl);
+}
+.textSizeXlarge .rowText {
+  font-size: var(--text-3xl);
+}
+
+.stitchesAfter {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.correctButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  align-self: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-12);
+}
+
+.nextPreview {
+  align-self: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Anti-mis-tap zone, same convention as CounterPanel's countingZone. */
+.buttonZone {
+  flex: none;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding: var(--space-8) calc(var(--safe-right) + var(--space-20)) calc(var(--safe-bottom) + var(--space-20))
+    calc(var(--safe-left) + var(--space-20));
+}
+
+.nextButton {
+  min-height: var(--counter-btn-min);
+  width: 100%;
+  border: none;
+  border-radius: var(--radius-lg);
+  background: var(--gradient-hero);
+  color: var(--color-on-primary);
+  font-weight: 700;
+  font-size: var(--text-xl);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-fast);
+}
+
+.nextButton:active {
+  transform: scale(var(--press-scale));
+}
+
+.backButton {
+  align-self: center;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-20);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nextButton {
+    transition: none;
+  }
+}

@@ -1,0 +1,74 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  padding: calc(var(--safe-top) + var(--space-16)) calc(var(--safe-right) + var(--space-20))
+    calc(var(--safe-bottom) + var(--space-32)) calc(var(--safe-left) + var(--space-20));
+  gap: var(--space-20);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+
+.pieceList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.pieceCard {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-16);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.pieceCardLocked {
+  opacity: 0.55;
+}
+
+.pieceInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.pieceName {
+  font-weight: 700;
+}
+
+.pieceMeta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.emptyText {
+  color: var(--color-text-muted);
+  text-align: center;
+  padding: var(--space-32) 0;
+}
+
+.actionArea {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.resumeSummary {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+}

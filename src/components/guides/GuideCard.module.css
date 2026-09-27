@@ -1,19 +1,40 @@
 .card {
   display: flex;
-  gap: var(--space-12);
+  gap: var(--space-8);
   align-items: center;
   padding: var(--space-12);
   border-radius: var(--radius-md);
   border: 3px solid var(--color-border);
   background: var(--color-surface);
   box-shadow: var(--shadow-sm);
+}
+
+.cardLink {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: var(--space-12);
+  align-items: center;
   text-decoration: none;
   color: inherit;
   transition: transform var(--transition-fast);
 }
 
-.card:active {
+.cardLink:active {
   transform: scale(var(--press-scale));
+}
+
+.followButton {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border: none;
+  border-radius: 50%;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
 }
 
 .thumb {

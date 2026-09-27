@@ -1,0 +1,47 @@
+.chronoButton,
+.chronoButtonRunning {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: var(--tap-min);
+  padding: var(--space-8) var(--space-16);
+  border: none;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.chronoButton {
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+}
+
+.chronoButtonRunning {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+}
+
+.chronoDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  animation: chronoPulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chronoDot {
+    animation: none;
+  }
+}
+
+@keyframes chronoPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
