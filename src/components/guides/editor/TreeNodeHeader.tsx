@@ -65,6 +65,14 @@ export function TreeNodeHeader({
   return (
     <div className={variant === 'tint' ? styles.headerTint : styles.headerOutline} style={boxStyle}>
       <DragHandle color={accentColor} />
+      {iconPosition === 'start' && iconEl}
+      <button type="button" className={styles.main} onClick={onEdit ?? onToggleExpand}>
+        <span className={styles.title}>{title}</span>
+        {subtitle && <span className={styles.subtitle}>{subtitle}</span>}
+      </button>
+      {iconPosition === 'end' && iconEl}
+      {/* Plier/déplier à droite du bloc, juste avant le menu "⋯" — laisse
+          la zone de gauche (point de glisser-déposer + icône) dégagée. */}
       {expandable ? (
         <button type="button" className={expanded ? styles.chevronExpanded : styles.chevron} aria-label={expanded ? 'Replier' : 'Déplier'} onClick={onToggleExpand}>
           <ChevronRight size={18} strokeWidth={2} />
@@ -72,12 +80,6 @@ export function TreeNodeHeader({
       ) : (
         <span className={styles.chevronSpacer} />
       )}
-      {iconPosition === 'start' && iconEl}
-      <button type="button" className={styles.main} onClick={onEdit ?? onToggleExpand}>
-        <span className={styles.title}>{title}</span>
-        {subtitle && <span className={styles.subtitle}>{subtitle}</span>}
-      </button>
-      {iconPosition === 'end' && iconEl}
       <button type="button" className={styles.menuButton} aria-label="Options" onClick={onOpenMenu}>
         <MoreHorizontal size={18} strokeWidth={1.75} />
       </button>
