@@ -18,6 +18,7 @@ export function BlockList({ blocks, depth, controller }: BlockListProps) {
       items={blocks}
       onReorder={controller.reorder}
       renderItem={(block) => <BlockCard block={block} depth={depth} controller={controller} />}
+      connectorDepth={depth}
     />
   )
 }

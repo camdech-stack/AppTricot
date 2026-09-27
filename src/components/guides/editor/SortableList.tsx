@@ -4,7 +4,7 @@
 // each instance gets its own DndContext scoped to that one list, since a
 // node only ever reorders within its own parent list (see CLAUDE.md
 // "moveNode dans la même liste parente").
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext, type CSSProperties, type ReactNode } from 'react'
 import { DndContext, PointerSensor, useSensor, useSensors, closestCenter, type DragEndEvent } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -16,9 +16,15 @@ interface SortableListProps<T extends { id: string }> {
   onReorder: (id: string, targetIndex: number) => void
   renderItem: (item: T, index: number) => ReactNode
   className?: string
+  // Depth of the items in this list (1 = direct child of a piece/section,
+  // 2 = nested one level further, etc.) — when set, each item draws an
+  // organigram-style connector (a vertical trunk + a horizontal tick) back
+  // to its parent's icon column, in --color-border. Omit for a top-level
+  // list (pieces), which has no parent to connect to.
+  connectorDepth?: number
 }
 
-export function SortableList<T extends { id: string }>({ items, onReorder, renderItem, className }: SortableListProps<T>) {
+export function SortableList<T extends { id: string }>({ items, onReorder, renderItem, className, connectorDepth }: SortableListProps<T>) {
   // A short delay before a touch starts dragging keeps a normal scroll
   // gesture from being hijacked — only the handle itself sets
   // touch-action: none (see DragHandle below).
@@ -37,7 +43,7 @@ export function SortableList<T extends { id: string }>({ items, onReorder, rende
       <SortableContext items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
         <div className={className}>
           {items.map((item, index) => (
-            <SortableItem key={item.id} id={item.id}>
+            <SortableItem key={item.id} id={item.id} connectorDepth={connectorDepth}>
               {renderItem(item, index)}
             </SortableItem>
           ))}
@@ -55,7 +61,7 @@ interface SortableItemHandle {
 
 const SortableItemContext = createContext<SortableItemHandle | null>(null)
 
-function SortableItem({ id, children }: { id: string; children: ReactNode }) {
+function SortableItem({ id, children, connectorDepth }: { id: string; children: ReactNode; connectorDepth?: number }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id })
   const style = {
     // CSS.Translate (not CSS.Transform) deliberately drops the scale dnd-kit
@@ -64,10 +70,11 @@ function SortableItem({ id, children }: { id: string; children: ReactNode }) {
     transform: CSS.Translate.toString(transform),
     transition,
     opacity: isDragging ? 0.6 : 1,
+    ...(connectorDepth != null ? ({ '--connector-depth': connectorDepth } as CSSProperties) : {}),
   }
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className={connectorDepth != null ? styles.connectorItem : undefined}>
       <SortableItemContext.Provider value={{ attributes, listeners, setActivatorNodeRef }}>{children}</SortableItemContext.Provider>
     </div>
   )

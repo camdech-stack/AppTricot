@@ -15,7 +15,7 @@ interface TreeNodeHeaderProps {
   onOpenMenu: () => void
   depth: number
   // One color per node category (piece, section, each block type) — never
-  // by nesting depth. Purely decorative (a left border), so it's exempt
+  // by nesting depth. Purely decorative (a full contour), so it's exempt
   // from the "gold/sage never for small text" contrast rule.
   accentColor?: string
 }
@@ -27,7 +27,7 @@ export function TreeNodeHeader({ title, subtitle, expandable, expanded, onToggle
   return (
     <div
       className={styles.header}
-      style={{ paddingLeft: Math.min(depth, MAX_INDENT_LEVEL) * INDENT_PX, borderLeftColor: accentColor }}
+      style={{ paddingLeft: Math.min(depth, MAX_INDENT_LEVEL) * INDENT_PX, borderColor: accentColor }}
     >
       <DragHandle />
       {expandable ? (

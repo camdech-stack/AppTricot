@@ -49,6 +49,7 @@ function SectionCardList({ piece, controller }: { piece: Piece; controller: Edit
       items={piece.sections}
       onReorder={controller.reorder}
       renderItem={(section) => <SectionCard section={section} depth={1} controller={controller} />}
+      connectorDepth={1}
     />
   )
 }

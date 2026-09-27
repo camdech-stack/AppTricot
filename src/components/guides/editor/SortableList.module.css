@@ -13,3 +13,36 @@
 .handle:active {
   cursor: grabbing;
 }
+
+/* Organigram-style connector: a vertical trunk running through every
+   sibling, cut short on the last one, plus a horizontal tick per item —
+   see CLAUDE.md "Décisions d'interface (étape 5a)". Position is driven by
+   --connector-depth (set inline per item) so one rule covers every level;
+   24px approximates half of --tap-min, the header row's own height. */
+.connectorItem {
+  position: relative;
+}
+
+.connectorItem::before {
+  content: '';
+  position: absolute;
+  left: calc((var(--connector-depth) - 1) * 14px + 7px);
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  background: var(--color-border);
+}
+
+.connectorItem:last-child::before {
+  bottom: calc(100% - 24px);
+}
+
+.connectorItem::after {
+  content: '';
+  position: absolute;
+  left: calc((var(--connector-depth) - 1) * 14px + 7px);
+  top: 24px;
+  width: 7px;
+  height: 1.5px;
+  background: var(--color-border);
+}

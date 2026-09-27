@@ -3,8 +3,10 @@
   align-items: center;
   gap: var(--space-4);
   min-height: var(--tap-min);
-  border-left: 4px solid transparent;
+  border: 1.5px solid transparent;
   border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  margin-bottom: var(--space-4);
 }
 
 .chevron,
