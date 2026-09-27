@@ -41,7 +41,7 @@ export function ProjectPatternCard({ projectId }: ProjectPatternCardProps) {
                 key={link.id}
                 link={link}
                 pattern={pattern}
-                onOpen={() => navigate(`/patrons/${pattern.id}/lire?projet=${projectId}`)}
+                onOpen={() => navigate(`/projets/${projectId}/travail`, { state: { patternId: pattern.id } })}
                 onRemove={() => void unlinkPatternFromProject(link.id)}
               />
             )
