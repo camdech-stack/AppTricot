@@ -22,7 +22,7 @@ import {
 } from './guideTree'
 
 function withPieceAndSection(content: GuideContent = emptyGuideContent()) {
-  const afterPiece = addPiece(content, 'Dos')
+  const afterPiece = addPiece(content, { name: 'Dos' })
   const afterSection = addSection(afterPiece.content, afterPiece.id, { name: 'Corps', method: 'flat' })
   return { content: afterSection.content, pieceId: afterPiece.id, sectionId: afterSection.id }
 }
@@ -83,6 +83,31 @@ describe('addPiece/addSection/addBlock/addRow', () => {
       parentId = result.id
     }
     expect(() => addBlock(current, parentId, 'repeat', { times: 1 })).toThrow()
+  })
+})
+
+describe('piece/section category', () => {
+  it('defaults to no category, and passes a chosen one through', () => {
+    const { content } = withPieceAndSection()
+    const { content: withPiece2, id: piece2Id } = addPiece(content, { name: 'Devant', category: 'front' })
+    expect(findNode(withPiece2, piece2Id)?.node).toMatchObject({ category: 'front', customCategory: '' })
+
+    const { content: withSection2, id: section2Id } = addSection(withPiece2, piece2Id, { name: 'Col', category: 'other', customCategory: 'Col roulé' })
+    expect(findNode(withSection2, section2Id)?.node).toMatchObject({ category: 'other', customCategory: 'Col roulé' })
+  })
+})
+
+describe('measure/stitch_count optional instructions', () => {
+  it('defaults instructions to an empty string and keeps a given one', () => {
+    const { content, sectionId } = withPieceAndSection()
+    const { content: withMeasure, id: measureId } = addBlock(content, sectionId, 'measure', { length: 14, unit: 'cm', from: 'le montage' })
+    expect(findNode(withMeasure, measureId)?.node).toMatchObject({ instructions: '' })
+
+    const { content: withStitchCount, id: stitchCountId } = addBlock(content, sectionId, 'stitch_count', {
+      target: 45,
+      instructions: 'en diminuant tous les 2 rangs',
+    })
+    expect(findNode(withStitchCount, stitchCountId)?.node).toMatchObject({ instructions: 'en diminuant tous les 2 rangs' })
   })
 })
 
@@ -314,6 +339,15 @@ describe('validateGuideContent', () => {
     const errors = validateGuideContent(broken)
     expect(errors.some((error) => error.includes('times'))).toBe(true)
   })
+
+  it('rejects an unknown piece or section category', () => {
+    const { content, pieceId, sectionId } = withPieceAndSection()
+    const brokenPiece = updateNode(content, pieceId, { category: 'not-a-category' })
+    expect(validateGuideContent(brokenPiece).some((error) => error.includes('.category'))).toBe(true)
+
+    const brokenSection = updateNode(content, sectionId, { category: 'not-a-category' })
+    expect(validateGuideContent(brokenSection).some((error) => error.includes('.category'))).toBe(true)
+  })
 })
 
 describe('normalizeGuideContent', () => {
@@ -379,5 +413,54 @@ describe('normalizeGuideContent', () => {
     const { content } = withPieceAndSection()
     const normalized = normalizeGuideContent(content)
     expect(validateGuideContent(normalized)).toEqual([])
+  })
+
+  it('falls back an unknown category to null and drops customCategory unless category is "other"', () => {
+    const raw = {
+      schemaVersion: 1,
+      pieces: [
+        {
+          id: 'p1',
+          name: 'Manche',
+          category: 'not-a-category',
+          customCategory: 'ignored',
+          castOn: null,
+          finish: null,
+          notes: '',
+          sections: [{ id: 's1', name: 'Corps', category: 'other', customCategory: 'Point mousse', method: 'flat', blocks: [] }],
+        },
+      ],
+    }
+    const normalized = normalizeGuideContent(raw)
+    expect(normalized.pieces[0]).toMatchObject({ category: null, customCategory: '' })
+    expect(normalized.pieces[0]!.sections[0]).toMatchObject({ category: 'other', customCategory: 'Point mousse' })
+  })
+
+  it('defaults measure/stitch_count instructions to an empty string', () => {
+    const raw = {
+      schemaVersion: 1,
+      pieces: [
+        {
+          id: 'p1',
+          name: 'P',
+          castOn: null,
+          finish: null,
+          notes: '',
+          sections: [
+            {
+              id: 's1',
+              name: 'S',
+              method: 'flat',
+              blocks: [
+                { id: 'b1', type: 'measure', length: 14, unit: 'cm', from: '', blocks: [] },
+                { id: 'b2', type: 'stitch_count', target: 45, blocks: [] },
+              ],
+            },
+          ],
+        },
+      ],
+    }
+    const normalized = normalizeGuideContent(raw)
+    expect(normalized.pieces[0]!.sections[0]!.blocks).toMatchObject([{ instructions: '' }, { instructions: '' }])
   })
 })

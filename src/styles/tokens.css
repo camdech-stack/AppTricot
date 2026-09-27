@@ -81,6 +81,26 @@
      only a plain-color fallback for contexts that need one. */
   --color-yarn-multicolore: var(--color-primary);
 
+  /* Guide tree (étape 5a, retour utilisateur) : une couleur par catégorie de
+     nœud (pièce, section, chaque type de bloc), jamais par profondeur — un
+     bloc "mesure" est toujours vert quel que soit son niveau d'imbrication.
+     Aliases vers les tokens existants pour rester dans la même famille de
+     couleurs plutôt que d'en introduire de nouvelles. */
+  --color-guide-piece: var(--color-primary);
+  --color-guide-piece-soft: var(--color-primary-soft);
+  --color-guide-section: var(--color-gold);
+  --color-guide-section-soft: var(--color-gold-soft);
+  --color-guide-rows: var(--color-blue);
+  --color-guide-rows-soft: var(--color-blue-soft);
+  --color-guide-repeat: var(--color-sage);
+  --color-guide-repeat-soft: var(--color-sage-soft);
+  --color-guide-text: var(--color-yarn-violet);
+  --color-guide-text-soft: var(--color-yarn-violet-soft);
+  --color-guide-measure: var(--color-terracotta);
+  --color-guide-measure-soft: var(--color-terracotta-soft);
+  --color-guide-stitch-count: var(--color-yarn-marron);
+  --color-guide-stitch-count-soft: var(--color-yarn-marron-soft);
+
   /* Radii */
   --radius-sm: 12px;
   --radius-md: 20px;

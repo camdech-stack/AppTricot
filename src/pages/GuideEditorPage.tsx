@@ -281,7 +281,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
   }
 
   function handleAddPiece() {
-    const result = addPiece(content, 'Nouvelle pièce')
+    const result = addPiece(content, { name: 'Nouvelle pièce' })
     applyChange(result.content, result.id)
     expandIds([result.id])
     setSheet({ kind: 'piece', id: result.id })

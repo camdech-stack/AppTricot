@@ -71,6 +71,8 @@ export interface MeasureBlock {
   unit: MeasureUnit
   // Free short text naming the reference point, e.g. "le montage".
   from: string
+  // Optional free text alongside the measure, e.g. "en augmentant régulièrement".
+  instructions: string
   blocks: Block[]
 }
 
@@ -78,6 +80,8 @@ export interface StitchCountBlock {
   id: string
   type: 'stitch_count'
   target: number
+  // Optional free text alongside the target, e.g. "en diminuant tous les 2 rangs".
+  instructions: string
   blocks: Block[]
 }
 
@@ -92,16 +96,36 @@ export function isContainerBlock(block: Block): block is ContainerBlock {
 
 export type SectionMethod = 'flat' | 'round'
 
+// Fixed vocabulary (closed list + 'other') in addition to the free-text name
+// — lets the guide list/filter by what a section is for, not just its label.
+export type SectionType = 'ribbing' | 'body' | 'shaping' | 'colorwork' | 'neckline' | 'shoulder' | 'other'
+export const SECTION_TYPES: readonly SectionType[] = ['ribbing', 'body', 'shaping', 'colorwork', 'neckline', 'shoulder', 'other']
+
 export interface Section {
   id: string
   name: string
+  // Named "category", not "type", so it never collides with a Block's
+  // discriminant `type` field — updateNode strips any patch key named
+  // `type` to protect that discriminant, regardless of node kind.
+  category: SectionType | null
+  // Only meaningful when category === 'other'; empty string otherwise.
+  customCategory: string
   method: SectionMethod
   blocks: Block[]
 }
 
+// Same additive pattern as SectionType: a fixed vocabulary alongside the
+// free-text name, not instead of it.
+export type PieceType = 'front' | 'back' | 'sleeve' | 'body' | 'yoke' | 'collar' | 'hood' | 'pocket' | 'belt' | 'other'
+export const PIECE_TYPES: readonly PieceType[] = ['front', 'back', 'sleeve', 'body', 'yoke', 'collar', 'hood', 'pocket', 'belt', 'other']
+
 export interface Piece {
   id: string
   name: string
+  // See Section.category for why this isn't named `type`.
+  category: PieceType | null
+  // Only meaningful when category === 'other'; empty string otherwise.
+  customCategory: string
   castOn: Operation | null
   sections: Section[]
   finish: Operation | null

@@ -8,6 +8,8 @@ import {
   CAST_ON_OPERATION_KINDS,
   FINISH_OPERATION_KINDS,
   MAX_BLOCK_NESTING_DEPTH,
+  PIECE_TYPES,
+  SECTION_TYPES,
   isContainerBlock,
   type Block,
   type BlockType,
@@ -20,10 +22,12 @@ import {
   type Operation,
   type OperationKind,
   type Piece,
+  type PieceType,
   type Row,
   type RowSide,
   type Section,
   type SectionMethod,
+  type SectionType,
 } from './guideModel'
 
 // --- Reading the tree ------------------------------------------------
@@ -449,18 +453,42 @@ export function duplicateNode(content: GuideContent, id: string): { content: Gui
   return { content: insertAfter(content, id, clone), id: clone.id }
 }
 
-export function addPiece(content: GuideContent, name = ''): { content: GuideContent; id: string } {
-  const piece: Piece = { id: createId(), name, castOn: null, sections: [], finish: null, notes: '' }
+export interface AddPieceInput {
+  name?: string
+  category?: PieceType | null
+  customCategory?: string
+}
+
+export function addPiece(content: GuideContent, input: AddPieceInput = {}): { content: GuideContent; id: string } {
+  const piece: Piece = {
+    id: createId(),
+    name: input.name ?? '',
+    category: input.category ?? null,
+    customCategory: input.customCategory ?? '',
+    castOn: null,
+    sections: [],
+    finish: null,
+    notes: '',
+  }
   return { content: { ...content, pieces: [...content.pieces, piece] }, id: piece.id }
 }
 
 export interface AddSectionInput {
   name?: string
+  category?: SectionType | null
+  customCategory?: string
   method?: SectionMethod
 }
 
 export function addSection(content: GuideContent, pieceId: string, input: AddSectionInput = {}): { content: GuideContent; id: string } {
-  const section: Section = { id: createId(), name: input.name ?? '', method: input.method ?? 'flat', blocks: [] }
+  const section: Section = {
+    id: createId(),
+    name: input.name ?? '',
+    category: input.category ?? null,
+    customCategory: input.customCategory ?? '',
+    method: input.method ?? 'flat',
+    blocks: [],
+  }
   const next = transformNode(content, pieceId, (node) => {
     const piece = node as Piece
     return { ...piece, sections: [...piece.sections, section] }
@@ -487,9 +515,17 @@ function createEmptyBlock(type: BlockType, input: AddBlockInput): Block {
     case 'repeat':
       return { id, type, times: input.times ?? 1, blocks: [] }
     case 'measure':
-      return { id, type, length: input.length ?? 1, unit: input.unit ?? 'cm', from: input.from ?? '', blocks: [] }
+      return {
+        id,
+        type,
+        length: input.length ?? 1,
+        unit: input.unit ?? 'cm',
+        from: input.from ?? '',
+        instructions: input.instructions ?? '',
+        blocks: [],
+      }
     case 'stitch_count':
-      return { id, type, target: input.target ?? 0, blocks: [] }
+      return { id, type, target: input.target ?? 0, instructions: input.instructions ?? '', blocks: [] }
   }
 }
 
@@ -719,10 +755,12 @@ export function validateGuideContent(input: unknown): string[] {
           if (typeof block.length !== 'number' || (block.length as number) <= 0) errors.push(`${blockPath}.length : doit être un nombre strictement positif.`)
           if (block.unit !== 'cm' && block.unit !== 'in') errors.push(`${blockPath}.unit : doit être "cm" ou "in".`)
           if (typeof block.from !== 'string') errors.push(`${blockPath}.from : doit être un texte.`)
+          if (typeof block.instructions !== 'string') errors.push(`${blockPath}.instructions : doit être un texte.`)
           checkBlocks(block.blocks, `${blockPath}.blocks`, method, depth + 1)
           break
         case 'stitch_count':
           if (!Number.isInteger(block.target) || (block.target as number) < 0) errors.push(`${blockPath}.target : doit être un entier positif ou nul.`)
+          if (typeof block.instructions !== 'string') errors.push(`${blockPath}.instructions : doit être un texte.`)
           checkBlocks(block.blocks, `${blockPath}.blocks`, method, depth + 1)
           break
         default:
@@ -740,6 +778,8 @@ export function validateGuideContent(input: unknown): string[] {
     const piece = rawPiece as Record<string, unknown>
     checkId(piece.id, piecePath)
     if (typeof piece.name !== 'string') errors.push(`${piecePath}.name : doit être un texte.`)
+    if (piece.category !== null && !PIECE_TYPES.includes(piece.category as PieceType)) errors.push(`${piecePath}.category : doit être une valeur connue ou null.`)
+    if (typeof piece.customCategory !== 'string') errors.push(`${piecePath}.customCategory : doit être un texte.`)
     if (typeof piece.notes !== 'string') errors.push(`${piecePath}.notes : doit être un texte.`)
     checkOperation(piece.castOn, `${piecePath}.castOn`, CAST_ON_OPERATION_KINDS)
     checkOperation(piece.finish, `${piecePath}.finish`, FINISH_OPERATION_KINDS)
@@ -756,6 +796,8 @@ export function validateGuideContent(input: unknown): string[] {
       const section = rawSection as Record<string, unknown>
       checkId(section.id, sectionPath)
       if (typeof section.name !== 'string') errors.push(`${sectionPath}.name : doit être un texte.`)
+      if (section.category !== null && !SECTION_TYPES.includes(section.category as SectionType)) errors.push(`${sectionPath}.category : doit être une valeur connue ou null.`)
+      if (typeof section.customCategory !== 'string') errors.push(`${sectionPath}.customCategory : doit être un texte.`)
       if (section.method !== 'flat' && section.method !== 'round') errors.push(`${sectionPath}.method : doit être "flat" ou "round".`)
       checkBlocks(section.blocks, `${sectionPath}.blocks`, (section.method as SectionMethod) === 'round' ? 'round' : 'flat', 1)
     })
@@ -835,6 +877,7 @@ export function normalizeGuideContent(input: unknown): GuideContent {
           length: typeof block.length === 'number' && block.length > 0 ? block.length : 1,
           unit: block.unit === 'in' ? 'in' : 'cm',
           from: typeof block.from === 'string' ? block.from : '',
+          instructions: typeof block.instructions === 'string' ? block.instructions : '',
           blocks: canGoDeeper ? normalizeBlocks(block.blocks, method, depth + 1) : [],
         })
       } else if (block.type === 'stitch_count') {
@@ -842,6 +885,7 @@ export function normalizeGuideContent(input: unknown): GuideContent {
           id,
           type: 'stitch_count',
           target: Number.isInteger(block.target) && (block.target as number) >= 0 ? (block.target as number) : 0,
+          instructions: typeof block.instructions === 'string' ? block.instructions : '',
           blocks: canGoDeeper ? normalizeBlocks(block.blocks, method, depth + 1) : [],
         })
       }
@@ -853,9 +897,12 @@ export function normalizeGuideContent(input: unknown): GuideContent {
   function normalizeSection(raw: unknown): Section {
     const section = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
     const method: SectionMethod = section.method === 'round' ? 'round' : 'flat'
+    const category = SECTION_TYPES.includes(section.category as SectionType) ? (section.category as SectionType) : null
     return {
       id: normalizeId(section.id),
       name: typeof section.name === 'string' ? section.name : '',
+      category,
+      customCategory: category === 'other' && typeof section.customCategory === 'string' ? section.customCategory : '',
       method,
       blocks: normalizeBlocks(section.blocks, method, 1),
     }
@@ -863,9 +910,12 @@ export function normalizeGuideContent(input: unknown): GuideContent {
 
   function normalizePiece(raw: unknown): Piece {
     const piece = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>
+    const category = PIECE_TYPES.includes(piece.category as PieceType) ? (piece.category as PieceType) : null
     return {
       id: normalizeId(piece.id),
       name: typeof piece.name === 'string' ? piece.name : '',
+      category,
+      customCategory: category === 'other' && typeof piece.customCategory === 'string' ? piece.customCategory : '',
       castOn: normalizeOperation(piece.castOn, CAST_ON_OPERATION_KINDS),
       sections: Array.isArray(piece.sections) ? piece.sections.map(normalizeSection) : [],
       finish: normalizeOperation(piece.finish, FINISH_OPERATION_KINDS),
