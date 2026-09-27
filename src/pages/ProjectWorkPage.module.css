@@ -103,9 +103,22 @@
   padding: var(--space-32);
 }
 
-/* iPad / desktop landscape: side-by-side split view instead of tabs — both
-   panes stay in the DOM either way, only the layout changes (see CLAUDE.md
-   "iPad et écrans larges en paysage"). */
+/* On a phone, this is a transparent grouping div: its guide/counter
+   children behave exactly like the sibling "pattern" pane, switched by the
+   same outer 3-way pill (Patron | Guide | Compteur) — see CLAUDE.md
+   "Vue de travail d'un projet". */
+.rightColumn {
+  display: contents;
+}
+
+.innerTabBar {
+  display: none;
+}
+
+/* iPad / desktop landscape: PDF on the left (~50%), a Guide/Compteur pill
+   on the right instead of the phone's 3-way tab bar — both panes stay in
+   the DOM either way, only the layout changes (see CLAUDE.md "iPad et
+   écrans larges en paysage"). */
 @media (min-width: 1024px) and (orientation: landscape) {
   .tabBar {
     display: none;
@@ -116,21 +129,51 @@
     flex-direction: row;
   }
 
-  .paneVisible,
-  .paneHidden {
+  /* Only the pattern pane is forced visible regardless of `tab` — it's
+     always shown at this breakpoint. Guide/counter keep their normal
+     JS-computed visibility: exactly one of them shows in .rightColumn,
+     picked by `rightTab` rather than `tab` (see ProjectWorkPage.tsx). */
+  .paneVisible[data-pane='pattern'],
+  .paneHidden[data-pane='pattern'] {
     display: flex !important;
     flex-direction: column;
     height: 100%;
-  }
-
-  .paneVisible[data-pane='pattern'],
-  .paneHidden[data-pane='pattern'] {
-    flex: 0 0 60%;
+    flex: 0 0 50%;
     border-right: 1px solid var(--color-border);
   }
 
-  .paneVisible[data-pane='counter'],
-  .paneHidden[data-pane='counter'] {
-    flex: 0 0 40%;
+  .rightColumn {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 50%;
+    min-height: 0;
+  }
+
+  .innerTabBar {
+    display: flex;
+    gap: var(--space-8);
+    padding: var(--space-12) var(--space-16) 0;
+  }
+
+  .innerTabBar button {
+    flex: 1;
+    min-height: var(--tap-min);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--color-text-muted);
+  }
+
+  .innerTabBar button[aria-selected='true'] {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  .rightColumn .paneVisible,
+  .rightColumn .paneHidden {
+    flex: 1;
   }
 }

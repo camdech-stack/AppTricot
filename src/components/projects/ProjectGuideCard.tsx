@@ -2,13 +2,23 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { NotebookPen, Plus } from 'lucide-react'
 import styles from './ProjectGuideCard.module.css'
-import { IconButton } from '../ui'
+import { IconButton, Button, ConfirmDialog } from '../ui'
 import { AssociateGuideSheet } from './AssociateGuideSheet'
 import { CreateGuideSheet } from '../guides/CreateGuideSheet'
 import { useGuideLibraryContext } from '../../hooks/useGuideLibraryContext'
 import { useGuideContents } from '../../hooks/useGuideContents'
+import { useGuideProgress } from '../../hooks/useGuideProgress'
 import { useProjectPatterns } from '../../hooks/useProjectPatterns'
-import { computeGuideStats, linkGuideToProject, unlinkGuideFromProject, type GuideRecord, type ProjectGuideRecord } from '../../data'
+import {
+  computeGuideStats,
+  getGuideProgress,
+  getResumeSummary,
+  linkGuideToProject,
+  unlinkGuideFromProject,
+  type GuideContent,
+  type GuideRecord,
+  type ProjectGuideRecord,
+} from '../../data'
 
 interface ProjectGuideCardProps {
   projectId: string
@@ -21,6 +31,7 @@ export function ProjectGuideCard({ projectId }: ProjectGuideCardProps) {
   const contents = useGuideContents(context?.guides)
   const [associateOpen, setAssociateOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
+  const [removeConfirm, setRemoveConfirm] = useState<ProjectGuideRecord | null>(null)
 
   if (!context) return null
 
@@ -46,16 +57,15 @@ export function ProjectGuideCard({ projectId }: ProjectGuideCardProps) {
           {links.map((link) => {
             const guide = context.guides.find((candidate) => candidate.id === link.guideId)
             if (!guide) return null
-            const content = contents[guide.id]
-            const rows = content ? computeGuideStats(content).knownRows : undefined
             return (
               <GuideRow
                 key={link.id}
-                link={link}
+                projectId={projectId}
                 guide={guide}
-                rows={rows}
+                content={contents[guide.id]}
                 onOpen={() => navigate(`/guides/${guide.id}`, { state: { returnTo: `/projets/${projectId}` } })}
-                onRemove={() => void unlinkGuideFromProject(link.id)}
+                onResume={() => navigate(`/projets/${projectId}/guides/${guide.id}/suivre`)}
+                onRemove={() => setRemoveConfirm(link)}
               />
             )
           })}
@@ -77,19 +87,51 @@ export function ProjectGuideCard({ projectId }: ProjectGuideCardProps) {
         defaultCraft={project?.craft ?? null}
         defaultPatternId={firstLinkedPatternId}
       />
+
+      <ConfirmDialog
+        open={removeConfirm !== null}
+        title="Retirer ce guide"
+        message="La progression de ce guide dans ce projet sera supprimée. Le temps déjà passé et les compteurs du projet ne le sont pas."
+        confirmLabel="Retirer"
+        danger
+        onConfirm={() => {
+          if (removeConfirm) void unlinkGuideFromProject(removeConfirm.id)
+          setRemoveConfirm(null)
+        }}
+        onCancel={() => setRemoveConfirm(null)}
+      />
     </div>
   )
 }
 
 interface GuideRowProps {
-  link: ProjectGuideRecord
+  projectId: string
   guide: GuideRecord
-  rows: number | undefined
+  content: GuideContent | undefined
   onOpen: () => void
+  onResume: () => void
   onRemove: () => void
 }
 
-function GuideRow({ guide, rows, onOpen, onRemove }: GuideRowProps) {
+function GuideRow({ projectId, guide, content, onOpen, onResume, onRemove }: GuideRowProps) {
+  const progress = useGuideProgress(projectId, guide.id)
+  const stats = content ? computeGuideStats(content) : undefined
+  const rows = stats?.knownRows
+
+  const hasStarted = Boolean(progress && Object.keys(progress.pieces).length > 0)
+  const guideProgress = content && progress ? getGuideProgress(content, progress) : null
+  const resumeSummary = content && progress ? getResumeSummary(content, progress) : null
+  const stepLabel = resumeSummary?.description
+    ? [resumeSummary.description.pieceName, resumeSummary.description.rowLabel ?? resumeSummary.description.blockLabel].filter(Boolean).join(' · ')
+    : null
+
+  const metaText =
+    hasStarted && guideProgress
+      ? `${guideProgress.percent} %${stepLabel ? ` · ${stepLabel}` : ''}`
+      : rows != null
+        ? `${rows} rang${rows > 1 ? 's' : ''}`
+        : '—'
+
   return (
     <div className={styles.item}>
       <button type="button" className={styles.itemMain} onClick={onOpen}>
@@ -98,9 +140,14 @@ function GuideRow({ guide, rows, onOpen, onRemove }: GuideRowProps) {
         </div>
         <div className={styles.itemInfo}>
           <span className={styles.itemName}>{guide.name}</span>
-          <span className={styles.itemMeta}>{rows != null ? `${rows} rang${rows > 1 ? 's' : ''}` : '—'}</span>
+          <span className={styles.itemMeta}>{metaText}</span>
         </div>
       </button>
+      {hasStarted && (
+        <Button size="sm" variant="secondary" onClick={onResume}>
+          Reprendre
+        </Button>
+      )}
       <button type="button" className={styles.removeButton} onClick={onRemove}>
         Retirer
       </button>

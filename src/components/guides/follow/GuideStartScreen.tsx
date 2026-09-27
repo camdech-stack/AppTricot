@@ -16,7 +16,9 @@ interface GuideStartScreenProps {
   guideName: string
   content: GuideContent
   progress: GuideProgressRecord | undefined
-  onBack: () => void
+  // Omitted when embedded in a page that already has its own back button
+  // (the project work view's "Guide" tab) — see CLAUDE.md "Vue de travail".
+  onBack?: () => void
   onStart: () => void
 }
 
@@ -33,7 +35,7 @@ export function GuideStartScreen({ guideName, content, progress, onBack, onStart
     return (
       <div className={styles.page}>
         <div className={styles.header}>
-          <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" onClick={onBack} />
+          {onBack && <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" onClick={onBack} />}
           <span className={styles.title}>{guideName}</span>
         </div>
         <p className={styles.emptyText}>Ce guide n’a pas encore de pièce à suivre. Ajoute-en une depuis l’éditeur.</p>
@@ -44,7 +46,7 @@ export function GuideStartScreen({ guideName, content, progress, onBack, onStart
   return (
     <div className={styles.page}>
       <div className={styles.header}>
-        <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" onClick={onBack} />
+        {onBack && <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" onClick={onBack} />}
         <span className={styles.title}>{guideName}</span>
       </div>
 

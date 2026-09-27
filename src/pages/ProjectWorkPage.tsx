@@ -5,23 +5,37 @@ import styles from './ProjectWorkPage.module.css'
 import { IconButton } from '../components/ui'
 import { PdfViewerCore } from '../components/patterns/PdfViewerCore'
 import { CounterPanel } from '../components/counters/CounterPanel'
+import { LazyGuidePanel } from '../components/guides/follow/LazyGuidePanel'
 import { useProject } from '../hooks/useProject'
 import { useProjectPatterns } from '../hooks/useProjectPatterns'
+import { useProjectGuides } from '../hooks/useProjectGuides'
+import { useLastUsedGuideId } from '../hooks/useLastUsedGuideId'
 import { usePatternLibraryContext } from '../hooks/usePatternLibraryContext'
+import { useGuideLibraryContext } from '../hooks/useGuideLibraryContext'
 import { useWakeLock } from '../hooks/useWakeLock'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 import { getLastUsedPatternIdForProject, updateProject, type ProjectWorkTab } from '../data'
 
-// /projets/:projectId/travail — no FloatingTabBar, screen kept on. Pattern
-// and counter panes are both always mounted (never conditionally rendered)
-// so the PDF's page/zoom/position survive switching tabs — see CLAUDE.md
-// "Vue de travail d'un projet".
+// Mirrors ProjectWorkPage.module.css's own split-view breakpoint — see
+// useMediaQuery for why this one place needs a JS media query instead of
+// the pure-CSS toggle used everywhere else (FloatingTabBar).
+const DESKTOP_SPLIT_QUERY = '(min-width: 1024px) and (orientation: landscape)'
+
+// /projets/:projectId/travail — no FloatingTabBar, screen kept on. Pattern,
+// guide and counter panes are all always mounted (never conditionally
+// rendered) so each one's own position/state survives switching tabs — see
+// CLAUDE.md "Vue de travail d'un projet".
 export function ProjectWorkPage() {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
   const location = useLocation()
   const project = useProject(projectId)
   const links = useProjectPatterns(projectId ?? '')
+  const guideLinks = useProjectGuides(projectId ?? '')
   const context = usePatternLibraryContext()
+  const guideContext = useGuideLibraryContext()
+  const lastUsedGuideId = useLastUsedGuideId(projectId, guideLinks)
+  const isDesktopSplit = useMediaQuery(DESKTOP_SPLIT_QUERY)
 
   useWakeLock(true)
 
@@ -34,6 +48,8 @@ export function ProjectWorkPage() {
   const tabInitializedRef = useRef(false)
   const [selectedPatternId, setSelectedPatternId] = useState<string | undefined>(undefined)
   const patternSelectionInitializedRef = useRef(false)
+  const [selectedGuideId, setSelectedGuideId] = useState<string | undefined>(undefined)
+  const guideSelectionInitializedRef = useRef(false)
 
   useEffect(() => {
     if (!project || tabInitializedRef.current) return
@@ -54,6 +70,12 @@ export function ProjectWorkPage() {
     })
   }, [projectId, links, requestedPatternId])
 
+  useEffect(() => {
+    if (!guideLinks || guideSelectionInitializedRef.current || guideLinks.length === 0 || lastUsedGuideId === undefined) return
+    guideSelectionInitializedRef.current = true
+    setSelectedGuideId(lastUsedGuideId)
+  }, [guideLinks, lastUsedGuideId])
+
   function handleTabChange(next: ProjectWorkTab) {
     setTab(next)
     if (projectId) void updateProject(projectId, { lastWorkTab: next })
@@ -66,8 +88,19 @@ export function ProjectWorkPage() {
   const linkedPatterns = (links ?? [])
     .map((link) => context.patterns.find((pattern) => pattern.id === link.patternId))
     .filter((pattern): pattern is NonNullable<typeof pattern> => Boolean(pattern))
-
   const selectedPattern = linkedPatterns.find((pattern) => pattern.id === selectedPatternId) ?? linkedPatterns[0]
+
+  const linkedGuides = (guideLinks ?? [])
+    .map((link) => guideContext?.guides.find((guide) => guide.id === link.guideId))
+    .filter((guide): guide is NonNullable<typeof guide> => Boolean(guide))
+  const selectedGuide = linkedGuides.find((guide) => guide.id === selectedGuideId) ?? linkedGuides[0]
+
+  // On the desktop split, the right column shows Guide/Compteur regardless
+  // of `tab` (Patron is always the left pane there) — `tab` still tracks
+  // which of the two was last active so it persists across breakpoints.
+  const rightTab: 'guide' | 'counter' = tab === 'guide' || tab === 'counter' ? tab : linkedGuides.length > 0 ? 'guide' : 'counter'
+  const guidePaneActive = isDesktopSplit ? rightTab === 'guide' : tab === 'guide'
+  const counterPaneActive = isDesktopSplit ? rightTab === 'counter' : tab === 'counter'
 
   return (
     <div className={styles.page}>
@@ -80,11 +113,11 @@ export function ProjectWorkPage() {
         <button type="button" role="tab" aria-selected={tab === 'pattern'} onClick={() => handleTabChange('pattern')}>
           Patron
         </button>
+        <button type="button" role="tab" aria-selected={tab === 'guide'} onClick={() => handleTabChange('guide')}>
+          Guide
+        </button>
         <button type="button" role="tab" aria-selected={tab === 'counter'} onClick={() => handleTabChange('counter')}>
           Compteur
-        </button>
-        <button type="button" role="tab" aria-selected={false} disabled className={styles.tabDisabled}>
-          Guide (bientôt)
         </button>
       </div>
 
@@ -110,8 +143,40 @@ export function ProjectWorkPage() {
           )}
         </div>
 
-        <div className={tab === 'counter' ? styles.paneVisible : styles.paneHidden} data-pane="counter">
-          <CounterPanel projectId={projectId} project={project} isStandalone={false} />
+        <div className={styles.rightColumn}>
+          <div className={styles.innerTabBar} role="tablist" aria-label="Guide ou compteur">
+            <button type="button" role="tab" aria-selected={rightTab === 'guide'} onClick={() => handleTabChange('guide')}>
+              Guide
+            </button>
+            <button type="button" role="tab" aria-selected={rightTab === 'counter'} onClick={() => handleTabChange('counter')}>
+              Compteur
+            </button>
+          </div>
+
+          <div className={guidePaneActive ? styles.paneVisible : styles.paneHidden} data-pane="guide">
+            {linkedGuides.length > 1 && (
+              <div className={styles.patternSelector}>
+                {linkedGuides.map((guide) => (
+                  <button key={guide.id} type="button" aria-pressed={guide.id === selectedGuide?.id} onClick={() => setSelectedGuideId(guide.id)}>
+                    {guide.name}
+                  </button>
+                ))}
+              </div>
+            )}
+            {selectedGuide ? (
+              <div className={styles.viewerHost}>
+                <LazyGuidePanel projectId={projectId} guideId={selectedGuide.id} />
+              </div>
+            ) : (
+              <div className={styles.emptyPattern}>
+                <p>Aucun guide associé à ce projet.</p>
+              </div>
+            )}
+          </div>
+
+          <div className={counterPaneActive ? styles.paneVisible : styles.paneHidden} data-pane="counter">
+            <CounterPanel projectId={projectId} project={project} isStandalone={false} />
+          </div>
         </div>
       </div>
     </div>

@@ -6,7 +6,9 @@ interface PieceFinishedScreenProps {
   finishedPieceName: string
   nextPieceName: string
   onContinue: () => void
-  onBack: () => void
+  // Omitted when embedded (the project work view's "Guide" tab) — there's
+  // nowhere else to "sortir sans avancer" to (see CLAUDE.md "Vue de travail").
+  onBack?: () => void
 }
 
 // Shown right after finishing a piece, before the next one has started —
@@ -22,9 +24,11 @@ export function PieceFinishedScreen({ finishedPieceName, nextPieceName, onContin
         <Button size="lg" onClick={onContinue}>
           Passer à {nextPieceName || 'la pièce suivante'}
         </Button>
-        <Button variant="ghost" onClick={onBack}>
-          Retour
-        </Button>
+        {onBack && (
+          <Button variant="ghost" onClick={onBack}>
+            Retour
+          </Button>
+        )}
       </div>
     </div>
   )

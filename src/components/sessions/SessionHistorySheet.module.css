@@ -62,6 +62,15 @@
   padding: 2px var(--space-8);
 }
 
+.originPill {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-pill);
+  padding: 2px var(--space-8);
+}
+
 .rowActions {
   display: flex;
   gap: var(--space-8);

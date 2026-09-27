@@ -5,6 +5,7 @@ import patterns from '../../styles/patterns.module.css'
 import { Pill } from '../ui'
 import { computeProjectProgress, type ProjectRecord } from '../../data'
 import { useCounters } from '../../hooks/useCounters'
+import { useProjectGuideProgressInputs } from '../../hooks/useProjectGuideProgressInputs'
 import { useCoverImageUrl } from '../../hooks/useCoverImageUrl'
 import { formatDateFr } from '../../utils/formatDate'
 import { STATUS_LABELS, STATUS_PILL_COLORS } from './statusMeta'
@@ -26,13 +27,13 @@ interface ProjectCardProps {
 export function ProjectCard({ project }: ProjectCardProps) {
   const coverUrl = useCoverImageUrl(project.id)
   const counters = useCounters(project.id)
-  const progress = computeProjectProgress(counters ?? [])
+  const guideInputs = useProjectGuideProgressInputs(project.id)
+  const progress = computeProjectProgress(counters ?? [], guideInputs ?? [])
   const isDone = project.status === 'done'
-  // The card always shows a percentage, even without a counter goal to
-  // compute a real ratio from: a done project reads 100%, anything else 0%
-  // (row counts read as clutter next to the other cards' real percentages).
-  // Once progress comes from the guide (step 5b) every project will have a
-  // real ratio here.
+  // The card always shows a percentage: a guide's step progress takes over
+  // as soon as one is linked with a known step (see computeProjectProgress);
+  // otherwise a done project reads 100%, anything else 0% (row counts read
+  // as clutter next to the other cards' real percentages).
   const progressPercent = progress.kind === 'percent' ? Math.round(progress.ratio * 100) : isDone ? 100 : 0
 
   return (

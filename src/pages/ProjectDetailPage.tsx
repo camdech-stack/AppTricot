@@ -12,6 +12,7 @@ import { ProjectYarnCard } from '../components/yarn/ProjectYarnCard'
 import { ProjectPatternCard } from '../components/projects/ProjectPatternCard'
 import { ProjectGuideCard } from '../components/projects/ProjectGuideCard'
 import { useProjectGuides } from '../hooks/useProjectGuides'
+import { useProjectGuideProgressInputs } from '../hooks/useProjectGuideProgressInputs'
 import { CRAFT_LABELS, STATUS_LABELS, STATUS_PILL_COLORS } from '../components/projects/statusMeta'
 import { projectColorVar, projectColorSoftVar, projectGradient } from '../components/projects/colorMeta'
 import { useProject } from '../hooks/useProject'
@@ -42,6 +43,7 @@ export function ProjectDetailPage() {
   const counters = useCounters(projectId ?? null)
   const patternLinks = useProjectPatterns(projectId ?? '')
   const guideLinks = useProjectGuides(projectId ?? '')
+  const guideProgressInputs = useProjectGuideProgressInputs(projectId)
   const coverUrl = useCoverImageUrl(projectId)
   const lastActivity = useRelativeTime(project?.lastActivityAt)
 
@@ -81,7 +83,7 @@ export function ProjectDetailPage() {
     return <div className={layoutStyles.shell} />
   }
 
-  const progress = computeProjectProgress(counters ?? [])
+  const progress = computeProjectProgress(counters ?? [], guideProgressInputs ?? [])
   const totalRows = (counters ?? []).reduce((sum, counter) => sum + counter.value, 0)
   const isDone = project.status === 'done'
   const hasPatterns = (patternLinks?.length ?? 0) > 0

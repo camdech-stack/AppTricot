@@ -57,7 +57,9 @@ interface GuideFollowScreenProps {
   project: ProjectRecord
   content: GuideContent
   progress: GuideProgressRecord
-  onBack: () => void
+  // Omitted when embedded in a page that already has its own back button
+  // (the project work view's "Guide" tab) — see CLAUDE.md "Vue de travail".
+  onBack?: () => void
 }
 
 export function GuideFollowScreen({ projectId, guideId, project, content, progress, onBack }: GuideFollowScreenProps) {
@@ -96,7 +98,7 @@ export function GuideFollowScreen({ projectId, guideId, project, content, progre
 
   const header = (
     <div className={styles.header}>
-      <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" onClick={onBack} />
+      {onBack && <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" onClick={onBack} />}
       <span className={styles.breadcrumb}>{breadcrumbFor(content, progress)}</span>
       {settings?.trackingEnabled !== false && <ChronoButton chrono={chrono} />}
       <IconButton icon={<MoreHorizontal strokeWidth={1.75} />} label="Menu du guide" onClick={() => setMenuOpen(true)} />

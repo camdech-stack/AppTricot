@@ -132,6 +132,7 @@ export function SessionHistorySheet({ target, onClose }: SessionHistorySheetProp
                         {isOpen ? 'en cours' : TIME_FORMAT.format(new Date(session.endedAt!))}
                       </span>
                       <span className={styles.duration}>{formatDuration(durationMs)}</span>
+                      {session.origin === 'guide' && <span className={styles.originPill}>Guide</span>}
                       {session.source === 'manual' && <span className={styles.manualPill}>manuelle</span>}
                     </div>
                     {!isOpen && (
