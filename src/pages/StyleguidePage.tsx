@@ -75,6 +75,16 @@ const PROJECT_COLORS: { color: ProjectColor; name: string; hex: string }[] = [
   { color: 'rose', name: 'Rose', hex: '#EE8FB8' },
 ]
 
+const GUIDE_COLOR_OPTIONS: { label: string; varName: string }[] = [
+  { label: 'Pièce', varName: '--color-guide-piece' },
+  { label: 'Section', varName: '--color-guide-section' },
+  { label: 'Rangs', varName: '--color-guide-rows' },
+  { label: 'Répétition', varName: '--color-guide-repeat' },
+  { label: 'Texte libre', varName: '--color-guide-text' },
+  { label: 'Longueur', varName: '--color-guide-measure' },
+  { label: 'Nombre de mailles', varName: '--color-guide-stitch-count' },
+]
+
 const RADII: { name: string; varName: string }[] = [
   { name: 'sm', varName: '--radius-sm' },
   { name: 'md', varName: '--radius-md' },
@@ -158,6 +168,18 @@ export function StyleguidePage() {
                 }
               />
               <div className={styles.swatchName}>{COLOR_FAMILY_LABELS[family]}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <SectionTitle title="Couleurs du guide de patron (étape 5a)" />
+        <div className={styles.projectGrid}>
+          {GUIDE_COLOR_OPTIONS.map((option) => (
+            <div key={option.varName} className={styles.projectCard}>
+              <div className={styles.swatchColor} style={{ background: `var(${option.varName})` }} />
+              <div className={styles.swatchName}>{option.label}</div>
             </div>
           ))}
         </div>

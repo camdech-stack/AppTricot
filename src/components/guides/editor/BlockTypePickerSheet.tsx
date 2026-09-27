@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import styles from './BlockTypePickerSheet.module.css'
 import { Sheet } from '../../ui'
 import { BLOCK_TYPE_META } from './blockTypeMeta'
@@ -21,10 +22,20 @@ export function BlockTypePickerSheet({ open, onClose, allowedTypes, onSelect }: 
     <Sheet open={open} onClose={onClose} title="Ajouter un bloc">
       <div className={styles.list}>
         {BLOCK_TYPE_META.filter((meta) => allowedTypes.includes(meta.type)).map((meta) => (
-          <button key={meta.type} type="button" className={styles.item} onClick={() => onSelect(meta.type)}>
-            <span className={styles.itemLabel}>{meta.label}</span>
-            <span className={styles.itemDescription}>{meta.description}</span>
-            <span className={styles.itemExample}>{meta.example}</span>
+          <button
+            key={meta.type}
+            type="button"
+            className={styles.item}
+            style={{ '--item-color': meta.colorVar } as CSSProperties}
+            onClick={() => onSelect(meta.type)}
+          >
+            <span className={styles.itemIcon} style={{ color: meta.colorVar }}>
+              <meta.icon size={20} strokeWidth={1.75} />
+            </span>
+            <span className={styles.itemBody}>
+              <span className={styles.itemLabel}>{meta.label}</span>
+              <span className={styles.itemDescription}>{meta.description}</span>
+            </span>
           </button>
         ))}
         {allowedTypes.length === 0 && <p className={styles.empty}>Profondeur maximale atteinte : impossible d'ajouter un bloc ici.</p>}

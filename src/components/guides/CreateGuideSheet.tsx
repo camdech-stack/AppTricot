@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check } from 'lucide-react'
 import styles from './CreateGuideSheet.module.css'
 import { Sheet, Button } from '../ui'
@@ -24,16 +24,21 @@ export function CreateGuideSheet({ open, onClose, onCreated, patterns, defaultCr
   const [pickerOpen, setPickerOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [saving, setSaving] = useState(false)
+  // Le nom se pré-remplit depuis le patron choisi tant que l'utilisateur n'a pas
+  // tapé son propre nom — une fois modifié à la main, plus jamais resynchronisé.
+  const nameEditedByUserRef = useRef(false)
 
   useEffect(() => {
     if (!open) return
-    setName('')
+    const defaultPattern = defaultPatternId ? patterns.find((pattern) => pattern.id === defaultPatternId) : undefined
+    nameEditedByUserRef.current = false
+    setName(defaultPattern?.name ?? '')
     setCraft(defaultCraft ?? '')
     setPatternId(defaultPatternId ?? null)
     setSizeLabel('')
     setPickerOpen(false)
     setQuery('')
-  }, [open, defaultCraft, defaultPatternId])
+  }, [open, defaultCraft, defaultPatternId, patterns])
 
   const filteredPatterns = useMemo(() => {
     const needle = query.trim().toLowerCase()
@@ -42,6 +47,19 @@ export function CreateGuideSheet({ open, onClose, onCreated, patterns, defaultCr
   }, [patterns, query])
 
   const selectedPattern = patterns.find((pattern) => pattern.id === patternId)
+
+  function handleNameChange(value: string) {
+    nameEditedByUserRef.current = true
+    setName(value)
+  }
+
+  function handlePatternSelected(pattern: PatternRecord | null) {
+    setPatternId(pattern?.id ?? null)
+    setPickerOpen(false)
+    if (pattern && !nameEditedByUserRef.current) {
+      setName(pattern.name)
+    }
+  }
 
   async function handleSubmit() {
     if (!name.trim() || saving) return
@@ -70,7 +88,7 @@ export function CreateGuideSheet({ open, onClose, onCreated, patterns, defaultCr
       >
         <label className={styles.field}>
           <span className={styles.label}>Nom</span>
-          <input className={styles.input} value={name} onChange={(event) => setName(event.target.value)} placeholder="Pull torsades" required autoFocus />
+          <input className={styles.input} value={name} onChange={(event) => handleNameChange(event.target.value)} placeholder="Pull torsades" required autoFocus />
         </label>
 
         <label className={styles.field}>
@@ -98,14 +116,7 @@ export function CreateGuideSheet({ open, onClose, onCreated, patterns, defaultCr
                 autoFocus
               />
               <div className={styles.pickerList}>
-                <button
-                  type="button"
-                  className={styles.pickerItem}
-                  onClick={() => {
-                    setPatternId(null)
-                    setPickerOpen(false)
-                  }}
-                >
+                <button type="button" className={styles.pickerItem} onClick={() => handlePatternSelected(null)}>
                   <span>Aucun patron</span>
                   {patternId === null && <Check size={16} strokeWidth={2} />}
                 </button>
@@ -114,10 +125,7 @@ export function CreateGuideSheet({ open, onClose, onCreated, patterns, defaultCr
                     key={pattern.id}
                     type="button"
                     className={styles.pickerItem}
-                    onClick={() => {
-                      setPatternId(pattern.id)
-                      setPickerOpen(false)
-                    }}
+                    onClick={() => handlePatternSelected(pattern)}
                   >
                     <span>{pattern.name}</span>
                     {patternId === pattern.id && <Check size={16} strokeWidth={2} />}

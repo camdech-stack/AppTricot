@@ -54,7 +54,7 @@ export function PasteRowsSheet({ open, onClose, startingNumber, onConfirm }: Pas
               <div key={index} className={excludedLines.has(index) ? ownStyles.previewRowExcluded : ownStyles.previewRow}>
                 <span className={ownStyles.previewNumber}>{row.number ?? '—'}</span>
                 {row.side && <Pill color={row.side === 'rs' ? 'primary' : 'blue'}>{row.side === 'rs' ? 'END' : 'ENV'}</Pill>}
-                <span className={ownStyles.previewText}>{row.text || '(vide)'}</span>
+                <span className={ownStyles.previewText}>{row.instructions || '(vide)'}</span>
                 <button
                   type="button"
                   className={ownStyles.previewRemove}

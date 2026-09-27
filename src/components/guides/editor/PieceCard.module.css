@@ -5,25 +5,52 @@
 .body {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-8);
   padding-top: var(--space-4);
 }
 
-.operationRow {
-  display: flex;
-}
-
-.operationButton {
-  flex: 1;
+.sectionList {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+  gap: var(--space-8);
+}
+
+.operationButton,
+.addOperationButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
   min-height: var(--tap-min);
   padding: var(--space-8) var(--space-12);
   border-radius: var(--radius-sm);
-  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
   text-align: left;
+}
+
+.addOperationButton {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.operationIcon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+}
+
+.operationText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .operationLabel {
@@ -38,7 +65,6 @@
   font-size: var(--text-sm);
 }
 
-.addOperationButton,
 .addSectionButton {
   display: flex;
   align-items: center;

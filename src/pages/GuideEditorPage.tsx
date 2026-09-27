@@ -11,7 +11,7 @@ import { GuideMenuSheet } from '../components/guides/editor/GuideMenuSheet'
 import { GuideMetaSheet } from '../components/guides/editor/GuideMetaSheet'
 import { BlockTypePickerSheet } from '../components/guides/editor/BlockTypePickerSheet'
 import { PasteRowsSheet } from '../components/guides/editor/PasteRowsSheet'
-import { RowSheet } from '../components/guides/editor/RowSheet'
+import { RowsScreen } from '../components/guides/editor/RowsScreen'
 import { PieceSheet, OperationSheet, SectionSheet, TextBlockSheet, RepeatSheet, MeasureSheet, StitchCountSheet } from '../components/guides/editor/NodeFormSheets'
 import { blockTypeLabel } from '../components/guides/editor/blockTypeMeta'
 import { useGuideHistory } from '../components/guides/editor/useGuideHistory'
@@ -44,7 +44,6 @@ import {
   type GuideContent,
   type GuideRecord,
   type Piece,
-  type Row,
   type Section,
   type SectionMethod,
 } from '../data'
@@ -58,9 +57,7 @@ type SheetState =
   | { kind: 'repeat'; id: string }
   | { kind: 'measure'; id: string }
   | { kind: 'stitchCount'; id: string }
-  | { kind: 'createRow'; blockId: string }
-  | { kind: 'editRow'; blockId: string; id: string }
-  | { kind: 'pasteRows'; blockId: string }
+  | { kind: 'rowsScreen'; id: string }
   | null
 
 // --- Local helpers (UI-only, not worth adding to the pure data layer) ---
@@ -78,14 +75,6 @@ function findOwningSectionMethod(content: GuideContent, blockId: string): Sectio
     for (const section of piece.sections) {
       if (blockExistsIn(section.blocks, blockId)) return section.method
     }
-  }
-  return undefined
-}
-
-function findOperationOwner(content: GuideContent, operationId: string): { pieceId: string; slot: 'castOn' | 'finish' } | undefined {
-  for (const piece of content.pieces) {
-    if (piece.castOn && piece.castOn.id === operationId) return { pieceId: piece.id, slot: 'castOn' }
-    if (piece.finish && piece.finish.id === operationId) return { pieceId: piece.id, slot: 'finish' }
   }
   return undefined
 }
@@ -110,10 +99,7 @@ function describeForMenu(content: GuideContent, id: string): MenuInfo | undefine
   if (found.kind === 'block') {
     const block = found.node as Block
     const hasChildren = block.type === 'rows' ? block.rows.length > 0 : isContainerBlock(block) ? block.blocks.length > 0 : false
-    return { label: blockTypeLabel(block.type), hasChildren, hasEdit: block.type !== 'rows' }
-  }
-  if (found.kind === 'row') {
-    return { label: 'Rang', hasChildren: false, hasEdit: true }
+    return { label: blockTypeLabel(block.type), hasChildren, hasEdit: true }
   }
   return undefined
 }
@@ -122,8 +108,12 @@ function collectAllExpandableIds(content: GuideContent): string[] {
   const ids: string[] = []
   function walkBlocks(blocks: Block[]) {
     for (const block of blocks) {
-      if (block.type === 'rows' || isContainerBlock(block)) ids.push(block.id)
-      if (isContainerBlock(block)) walkBlocks(block.blocks)
+      // A rows block has no chevron to expand (see BlockCard.expandable) —
+      // it isn't part of "Tout déplier"/"Tout plier".
+      if (isContainerBlock(block)) {
+        ids.push(block.id)
+        walkBlocks(block.blocks)
+      }
     }
   }
   for (const piece of content.pieces) {
@@ -189,6 +179,9 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
   const [guideMenuOpen, setGuideMenuOpen] = useState(false)
   const [guideMetaOpen, setGuideMetaOpen] = useState(false)
   const [deleteToast, setDeleteToast] = useState<string | null>(null)
+  // Paste-rows opens on top of the Rangs full-screen panel (RowsScreen), so
+  // it's tracked separately from `sheet` rather than replacing it.
+  const [pasteRowsFor, setPasteRowsFor] = useState<string | null>(null)
   // Which pane shows on a phone-width screen when the guide has a linked
   // pattern — both panes stay mounted either way so the PDF's position and
   // the tree's scroll/expand state survive switching (see CLAUDE.md
@@ -233,11 +226,6 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
       setSheet({ kind: 'piece', id })
       return
     }
-    if (found.kind === 'operation') {
-      const owner = findOperationOwner(content, id)
-      if (owner) setSheet({ kind: 'operation', pieceId: owner.pieceId, slot: owner.slot })
-      return
-    }
     if (found.kind === 'section') {
       setSheet({ kind: 'section', id })
       return
@@ -248,11 +236,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
       else if (block.type === 'repeat') setSheet({ kind: 'repeat', id })
       else if (block.type === 'measure') setSheet({ kind: 'measure', id })
       else if (block.type === 'stitch_count') setSheet({ kind: 'stitchCount', id })
-      return
-    }
-    if (found.kind === 'row') {
-      const parent = getParentAndIndex(content, id)
-      if (parent?.listKind === 'rows' && parent.parentId) setSheet({ kind: 'editRow', blockId: parent.parentId, id })
+      else if (block.type === 'rows') setSheet({ kind: 'rowsScreen', id })
     }
   }
 
@@ -262,12 +246,25 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
     showDeleteToast(info?.label ?? 'Élément')
   }
 
+  // Appends a row directly (RowsScreen shows it right away, already
+  // editable in place) instead of opening a separate "new row" form.
+  function handleAddRowInline(blockId: string) {
+    const found = findNode(content, blockId)
+    const block = found?.kind === 'block' ? (found.node as Block) : undefined
+    const rows = block?.type === 'rows' ? block.rows : []
+    const last = rows[rows.length - 1]
+    const showSide = findOwningSectionMethod(content, blockId) === 'flat'
+    const number = last?.number != null ? last.number + 1 : rows.length + 1
+    const side = showSide && last?.side ? (last.side === 'rs' ? 'ws' : 'rs') : null
+    const result = addRow(content, blockId, { number, side })
+    applyChange(result.content, result.id)
+  }
+
   const controller: EditorController = {
     isExpanded: (id) => expanded.has(id),
     toggleExpanded,
     onEdit: handleEdit,
     onOpenMenu: (id) => setMenuId(id),
-    onAddOperation: (pieceId, slot) => setSheet({ kind: 'operation', pieceId, slot }),
     onAddSection: (pieceId) => {
       const result = addSection(content, pieceId)
       applyChange(result.content, result.id)
@@ -275,13 +272,12 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
       setSheet({ kind: 'section', id: result.id })
     },
     onAddBlock: (parentId) => setSheet({ kind: 'pickBlockType', parentId }),
-    onAddRow: (blockId) => setSheet({ kind: 'createRow', blockId }),
-    onPasteRows: (blockId) => setSheet({ kind: 'pasteRows', blockId }),
+    onEditOperation: (pieceId, slot) => setSheet({ kind: 'operation', pieceId, slot }),
     reorder: (id, targetIndex) => applyChange(moveNode(content, id, targetIndex), id),
   }
 
   function handleAddPiece() {
-    const result = addPiece(content, 'Nouvelle pièce')
+    const result = addPiece(content, { name: 'Nouvelle pièce' })
     applyChange(result.content, result.id)
     expandIds([result.id])
     setSheet({ kind: 'piece', id: result.id })
@@ -295,8 +291,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
     else if (type === 'repeat') setSheet({ kind: 'repeat', id: result.id })
     else if (type === 'measure') setSheet({ kind: 'measure', id: result.id })
     else if (type === 'stitch_count') setSheet({ kind: 'stitchCount', id: result.id })
-    // 'rows' has nothing more to configure up front — just close the picker.
-    else setSheet(null)
+    else setSheet({ kind: 'rowsScreen', id: result.id })
   }
 
   async function handleDuplicateGuide() {
@@ -318,20 +313,8 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
   const repeatBlock = sheet?.kind === 'repeat' ? (findNode(content, sheet.id)?.node as Extract<Block, { type: 'repeat' }> | undefined) : undefined
   const measureBlock = sheet?.kind === 'measure' ? (findNode(content, sheet.id)?.node as Extract<Block, { type: 'measure' }> | undefined) : undefined
   const stitchCountBlock = sheet?.kind === 'stitchCount' ? (findNode(content, sheet.id)?.node as Extract<Block, { type: 'stitch_count' }> | undefined) : undefined
-  const editingRow = sheet?.kind === 'editRow' ? (findNode(content, sheet.id)?.node as Row | undefined) : undefined
-
-  let createRowNumber: number | null = null
-  let createRowSide: Row['side'] = null
-  let createRowShowSide = false
-  if (sheet?.kind === 'createRow') {
-    const found = findNode(content, sheet.blockId)
-    const block = found?.kind === 'block' ? (found.node as Block) : undefined
-    const rows = block?.type === 'rows' ? block.rows : []
-    const last = rows[rows.length - 1]
-    createRowNumber = last?.number != null ? last.number + 1 : rows.length + 1
-    createRowShowSide = findOwningSectionMethod(content, sheet.blockId) === 'flat'
-    createRowSide = createRowShowSide && last?.side ? (last.side === 'rs' ? 'ws' : 'rs') : null
-  }
+  const rowsScreenBlock = sheet?.kind === 'rowsScreen' ? (findNode(content, sheet.id)?.node as Extract<Block, { type: 'rows' }> | undefined) : undefined
+  const rowsScreenShowSide = sheet?.kind === 'rowsScreen' ? findOwningSectionMethod(content, sheet.id) === 'flat' : false
 
   const menuInfo = menuId ? describeForMenu(content, menuId) : undefined
   const menuPosition = menuId ? getParentAndIndex(content, menuId) : undefined
@@ -342,16 +325,15 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
   const saveStatusLabel = autosave.status === 'saving' ? 'Enregistrement…' : autosave.status === 'error' ? 'Échec de l’enregistrement' : 'Enregistré'
   const linkedPattern = guide.patternId ? libraryContext?.patterns.find((pattern) => pattern.id === guide.patternId) : undefined
 
+  const allExpandableIds = collectAllExpandableIds(content)
+  const allExpanded = allExpandableIds.length > 0 && allExpandableIds.every((id) => expanded.has(id))
+
   const guidePaneContent = (
     <>
       <div className={styles.toolbar}>
-        <button type="button" className={styles.toolbarButton} onClick={() => setExpanded(new Set(collectAllExpandableIds(content)))}>
-          <ChevronsUpDown size={16} strokeWidth={1.75} />
-          Tout déplier
-        </button>
-        <button type="button" className={styles.toolbarButton} onClick={() => setExpanded(new Set())}>
-          <ChevronsDownUp size={16} strokeWidth={1.75} />
-          Tout plier
+        <button type="button" className={styles.toolbarButton} onClick={() => setExpanded(allExpanded ? new Set() : new Set(allExpandableIds))}>
+          {allExpanded ? <ChevronsDownUp size={16} strokeWidth={1.75} /> : <ChevronsUpDown size={16} strokeWidth={1.75} />}
+          {allExpanded ? 'Tout plier' : 'Tout déplier'}
         </button>
       </div>
 
@@ -377,8 +359,10 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
     <div className={styles.page}>
       <div className={styles.header}>
         <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" onClick={() => navigate(returnTo)} />
-        <span className={styles.headerTitle}>{guide.name}</span>
-        <span className={autosave.status === 'error' ? styles.saveStatusError : styles.saveStatus}>{saveStatusLabel}</span>
+        <div className={styles.headerTitleGroup}>
+          <span className={styles.headerTitle}>{guide.name}</span>
+          <span className={autosave.status === 'error' ? styles.saveStatusError : styles.saveStatus}>{saveStatusLabel}</span>
+        </div>
         <IconButton icon={<Undo2 strokeWidth={1.75} />} label="Annuler" disabled={!canUndo} onClick={undo} />
         <IconButton icon={<Redo2 strokeWidth={1.75} />} label="Rétablir" disabled={!canRedo} onClick={redo} />
         <IconButton icon={<MoreHorizontal strokeWidth={1.75} />} label="Menu du guide" onClick={() => setGuideMenuOpen(true)} />
@@ -442,8 +426,11 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           open
           onClose={() => setSheet(null)}
           initialName={piece.name}
+          initialCategory={piece.category}
+          initialCustomCategory={piece.customCategory}
           initialNotes={piece.notes}
           onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
+          linkedPattern={linkedPattern}
         />
       )}
 
@@ -468,6 +455,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
                 }
               : undefined
           }
+          linkedPattern={linkedPattern}
         />
       )}
 
@@ -476,8 +464,11 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           open
           onClose={() => setSheet(null)}
           initialName={section.name}
+          initialCategory={section.category}
+          initialCustomCategory={section.customCategory}
           initialMethod={section.method}
           onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
+          linkedPattern={linkedPattern}
         />
       )}
 
@@ -491,11 +482,23 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
       )}
 
       {textBlock && sheet?.kind === 'text' && (
-        <TextBlockSheet open onClose={() => setSheet(null)} initialText={textBlock.text} onSave={(text) => applyChange(updateNode(content, sheet.id, { text }), sheet.id)} />
+        <TextBlockSheet
+          open
+          onClose={() => setSheet(null)}
+          initialText={textBlock.instructions}
+          onSave={(text) => applyChange(updateNode(content, sheet.id, { instructions: text }), sheet.id)}
+          linkedPattern={linkedPattern}
+        />
       )}
 
       {repeatBlock && sheet?.kind === 'repeat' && (
-        <RepeatSheet open onClose={() => setSheet(null)} initialTimes={repeatBlock.times} onSave={(times) => applyChange(updateNode(content, sheet.id, { times }), sheet.id)} />
+        <RepeatSheet
+          open
+          onClose={() => setSheet(null)}
+          initialTimes={repeatBlock.times}
+          onSave={(times) => applyChange(updateNode(content, sheet.id, { times }), sheet.id)}
+          linkedPattern={linkedPattern}
+        />
       )}
 
       {measureBlock && sheet?.kind === 'measure' && (
@@ -505,7 +508,9 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           initialLength={measureBlock.length}
           initialUnit={measureBlock.unit}
           initialFrom={measureBlock.from}
+          initialInstructions={measureBlock.instructions}
           onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
+          linkedPattern={linkedPattern}
         />
       )}
 
@@ -514,49 +519,41 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
           open
           onClose={() => setSheet(null)}
           initialTarget={stitchCountBlock.target}
-          onSave={(target) => applyChange(updateNode(content, sheet.id, { target }), sheet.id)}
+          initialInstructions={stitchCountBlock.instructions}
+          onSave={(input) => applyChange(updateNode(content, sheet.id, input), sheet.id)}
+          linkedPattern={linkedPattern}
         />
       )}
 
-      {sheet?.kind === 'createRow' && (
-        <RowSheet
+      {rowsScreenBlock && sheet?.kind === 'rowsScreen' && (
+        <RowsScreen
           open
           onClose={() => setSheet(null)}
-          mode="create"
-          showSide={createRowShowSide}
-          initialNumber={createRowNumber}
-          initialSide={createRowSide}
-          onSave={(input) => {
-            const result = addRow(content, sheet.blockId, input)
+          rows={rowsScreenBlock.rows}
+          showSide={rowsScreenShowSide}
+          onReorder={(id, targetIndex) => applyChange(moveNode(content, id, targetIndex), id)}
+          onChangeRow={(id, patch) => applyChange(updateNode(content, id, { ...patch }), id)}
+          onDuplicateRow={(id) => {
+            const result = duplicateNode(content, id)
             applyChange(result.content, result.id)
           }}
+          onDeleteRow={(id) => handleDeleteNode(id)}
+          onAddRow={() => handleAddRowInline(sheet.id)}
+          linkedPattern={linkedPattern}
+          onPasteRows={() => setPasteRowsFor(sheet.id)}
         />
       )}
 
-      {editingRow && sheet?.kind === 'editRow' && (
-        <RowSheet
-          open
-          onClose={() => setSheet(null)}
-          mode="edit"
-          showSide={findOwningSectionMethod(content, sheet.blockId) === 'flat'}
-          initialNumber={editingRow.number}
-          initialSide={editingRow.side}
-          initialText={editingRow.text}
-          initialStitchesAfter={editingRow.stitchesAfter}
-          onSave={(input) => applyChange(updateNode(content, sheet.id, { ...input }), sheet.id)}
-        />
-      )}
-
-      {sheet?.kind === 'pasteRows' && (
+      {pasteRowsFor && (
         <PasteRowsSheet
           open
-          onClose={() => setSheet(null)}
-          startingNumber={pasteRowsStartingNumber(content, sheet.blockId)}
+          onClose={() => setPasteRowsFor(null)}
+          startingNumber={pasteRowsStartingNumber(content, pasteRowsFor)}
           onConfirm={(rows) => {
             let next = content
             let lastId: string | null = null
             for (const row of rows) {
-              const result = addRow(next, sheet.blockId, row)
+              const result = addRow(next, pasteRowsFor, row)
               next = result.content
               lastId = result.id
             }

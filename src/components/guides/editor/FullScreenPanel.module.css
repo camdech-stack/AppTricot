@@ -1,0 +1,79 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  /* Below Sheet's z-index (100): a bottom sheet (paste-rows, a confirmation)
+     can still open on top of a full-screen panel, e.g. from the Rangs
+     screen — see RowsScreen. */
+  z-index: 90;
+  background: var(--color-bg);
+  animation: slideIn var(--transition-base);
+}
+
+.panel {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: calc(var(--safe-top) + var(--space-12)) var(--space-16) var(--space-12);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.cancelButton,
+.headerSpacer {
+  flex: 1;
+  min-height: var(--tap-min);
+}
+
+.cancelButton {
+  text-align: left;
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.title {
+  flex: none;
+  margin: 0;
+  font-size: var(--text-lg);
+  text-align: center;
+}
+
+.pdfButton {
+  flex: 1;
+  min-height: var(--tap-min);
+  display: flex;
+  justify-content: flex-end;
+  color: var(--color-text-muted);
+}
+
+.pdfOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  background: var(--color-bg);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-16) var(--space-16) calc(var(--safe-bottom) + var(--space-24));
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay {
+    animation: none;
+  }
+}

@@ -63,7 +63,7 @@ describe('updateGuideMeta', () => {
 describe('saveGuideContent', () => {
   it('persists the full content and updates lastEditedNodeId', async () => {
     const guide = await createGuide({ name: 'Pull' })
-    const { content, id: pieceId } = addPiece((await getGuideContent(guide.id)) as GuideContent, 'Dos')
+    const { content, id: pieceId } = addPiece((await getGuideContent(guide.id)) as GuideContent, { name: 'Dos' })
     await saveGuideContent(guide.id, content, pieceId)
 
     const reloaded = await getGuide(guide.id)
@@ -88,7 +88,7 @@ describe('duplicateGuide', () => {
     const project = await createTestProject()
     await linkGuideToProject(project.id, guide.id)
     const original = (await getGuideContent(guide.id))!
-    const { content: withPiece } = addPiece(original, 'Dos')
+    const { content: withPiece } = addPiece(original, { name: 'Dos' })
     await saveGuideContent(guide.id, withPiece)
 
     const copy = await duplicateGuide(guide.id)

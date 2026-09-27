@@ -150,13 +150,5 @@
 
 .secondaryActionsRow {
   display: flex;
-  gap: var(--space-12);
-}
-
-.secondaryActionsRow > * {
-  flex: 1;
-}
-
-.guideButton {
-  width: 100%;
+  justify-content: center;
 }

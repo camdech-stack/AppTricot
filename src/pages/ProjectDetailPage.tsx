@@ -11,6 +11,7 @@ import { SessionHistorySheet } from '../components/sessions/SessionHistorySheet'
 import { ProjectYarnCard } from '../components/yarn/ProjectYarnCard'
 import { ProjectPatternCard } from '../components/projects/ProjectPatternCard'
 import { ProjectGuideCard } from '../components/projects/ProjectGuideCard'
+import { useProjectGuides } from '../hooks/useProjectGuides'
 import { CRAFT_LABELS, STATUS_LABELS, STATUS_PILL_COLORS } from '../components/projects/statusMeta'
 import { projectColorVar, projectColorSoftVar, projectGradient } from '../components/projects/colorMeta'
 import { useProject } from '../hooks/useProject'
@@ -40,6 +41,7 @@ export function ProjectDetailPage() {
   const project = useProject(projectId)
   const counters = useCounters(projectId ?? null)
   const patternLinks = useProjectPatterns(projectId ?? '')
+  const guideLinks = useProjectGuides(projectId ?? '')
   const coverUrl = useCoverImageUrl(projectId)
   const lastActivity = useRelativeTime(project?.lastActivityAt)
 
@@ -83,6 +85,7 @@ export function ProjectDetailPage() {
   const totalRows = (counters ?? []).reduce((sum, counter) => sum + counter.value, 0)
   const isDone = project.status === 'done'
   const hasPatterns = (patternLinks?.length ?? 0) > 0
+  const firstGuideId = (guideLinks ?? []).slice().sort((a, b) => a.position - b.position)[0]?.guideId ?? null
 
   const heroStyle: CSSProperties = coverUrl
     ? {
@@ -224,19 +227,23 @@ export function ProjectDetailPage() {
               size="lg"
               className={styles.continueButton}
               style={{ background: projectGradient(project.colorKey) }}
-              onClick={() => navigate(hasPatterns ? `/projets/${projectId}/travail` : `/projets/${projectId}/compteur`)}
+              onClick={() =>
+                navigate(
+                  firstGuideId
+                    ? `/guides/${firstGuideId}`
+                    : hasPatterns
+                      ? `/projets/${projectId}/travail`
+                      : `/projets/${projectId}/compteur`,
+                  firstGuideId ? { state: { returnTo: `/projets/${projectId}` } } : undefined,
+                )
+              }
             >
               Continuer
             </Button>
 
             <div className={styles.secondaryActionsRow}>
-              {hasPatterns && (
-                <Button size="md" variant="secondary" onClick={() => navigate(`/projets/${projectId}/compteur`)}>
-                  Compteur seul
-                </Button>
-              )}
-              <Button size="md" variant="secondary" disabled className={styles.guideButton}>
-                Guide de patron (bientôt)
+              <Button size="sm" variant="secondary" onClick={() => navigate(`/projets/${projectId}/compteur`)}>
+                Compteur
               </Button>
             </div>
           </div>

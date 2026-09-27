@@ -1,9 +1,8 @@
-import { Plus } from 'lucide-react'
+import { CornerDownRight } from 'lucide-react'
 import styles from './BlockList.module.css'
 import { SortableList } from './SortableList'
-import { RowList } from './RowList'
-import { TreeNodeHeader } from './TreeNodeHeader'
-import { blockTypeLabel, summarizeMeasureBlock, summarizeRepeatBlock, summarizeStitchCountBlock } from './blockTypeMeta'
+import { TreeNodeHeader, INDENT_PX } from './TreeNodeHeader'
+import { blockTypeLabel, blockTypeMeta, summarizeMeasureBlock, summarizeRepeatBlock, summarizeStitchCountBlock } from './blockTypeMeta'
 import { countRowsInBlocks, isContainerBlock, type Block } from '../../../data'
 import type { EditorController } from './editorController'
 
@@ -19,6 +18,7 @@ export function BlockList({ blocks, depth, controller }: BlockListProps) {
       items={blocks}
       onReorder={controller.reorder}
       renderItem={(block) => <BlockCard block={block} depth={depth} controller={controller} />}
+      connectorDepth={depth}
     />
   )
 }
@@ -42,29 +42,33 @@ function blockSubtitle(block: Block): string | undefined {
       return `${count} rang${count > 1 ? 's' : ''}`
     }
     case 'text':
-      return block.text || undefined
+      return block.instructions || undefined
   }
 }
 
 function BlockCard({ block, depth, controller }: BlockCardProps) {
   const expanded = controller.isExpanded(block.id)
-  const expandable = block.type !== 'text'
-  const editable = block.type !== 'rows'
+  // A rows block has nothing to expand into — tapping it opens the
+  // full-screen Rangs screen (RowsScreen) instead, like every other block.
+  const expandable = block.type !== 'text' && block.type !== 'rows'
+  const meta = blockTypeMeta(block.type)
 
   return (
-    <div className={styles.block}>
+    <div>
       <TreeNodeHeader
         depth={depth}
         title={blockTypeLabel(block.type)}
         subtitle={blockSubtitle(block)}
         expandable={expandable}
         expanded={expanded}
+        variant="tint"
+        accentColor={meta.colorVar}
+        tintColor={meta.colorSoftVar}
+        icon={<meta.icon size={18} strokeWidth={1.75} />}
         onToggleExpand={() => controller.toggleExpanded(block.id)}
-        onEdit={editable ? () => controller.onEdit(block.id) : undefined}
+        onEdit={() => controller.onEdit(block.id)}
         onOpenMenu={() => controller.onOpenMenu(block.id)}
       />
-
-      {expanded && block.type === 'rows' && <RowList rows={block.rows} blockId={block.id} depth={depth + 1} controller={controller} />}
 
       {expanded && isContainerBlock(block) && (
         <div>
@@ -72,11 +76,11 @@ function BlockCard({ block, depth, controller }: BlockCardProps) {
           <button
             type="button"
             className={styles.addBlockButton}
-            style={{ marginLeft: Math.min(depth + 1, 4) * 14 }}
+            style={{ marginLeft: Math.min(depth + 1, 4) * INDENT_PX }}
             onClick={() => controller.onAddBlock(block.id)}
           >
-            <Plus size={16} strokeWidth={1.75} />
-            Ajouter un bloc
+            <CornerDownRight size={16} strokeWidth={1.75} />
+            Ajouter un bloc imbriqué
           </button>
         </div>
       )}

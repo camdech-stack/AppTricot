@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import styles from './ProjectWorkPage.module.css'
 import { IconButton } from '../components/ui'
@@ -18,11 +18,17 @@ import { getLastUsedPatternIdForProject, updateProject, type ProjectWorkTab } fr
 export function ProjectWorkPage() {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const project = useProject(projectId)
   const links = useProjectPatterns(projectId ?? '')
   const context = usePatternLibraryContext()
 
   useWakeLock(true)
+
+  // Set when opened from a specific pattern row (ProjectPatternCard) so that
+  // exact pattern opens on the Patron tab, instead of whichever one
+  // patternViewStates last recorded for this project.
+  const requestedPatternId = (location.state as { patternId?: string } | null)?.patternId
 
   const [tab, setTab] = useState<ProjectWorkTab>('counter')
   const tabInitializedRef = useRef(false)
@@ -32,17 +38,21 @@ export function ProjectWorkPage() {
   useEffect(() => {
     if (!project || tabInitializedRef.current) return
     tabInitializedRef.current = true
-    setTab(project.lastWorkTab ?? (links && links.length > 0 ? 'pattern' : 'counter'))
-  }, [project, links])
+    setTab(requestedPatternId ? 'pattern' : (project.lastWorkTab ?? (links && links.length > 0 ? 'pattern' : 'counter')))
+  }, [project, links, requestedPatternId])
 
   useEffect(() => {
     if (!projectId || !links || patternSelectionInitializedRef.current || links.length === 0) return
     patternSelectionInitializedRef.current = true
+    if (requestedPatternId && links.some((link) => link.patternId === requestedPatternId)) {
+      setSelectedPatternId(requestedPatternId)
+      return
+    }
     void getLastUsedPatternIdForProject(projectId).then((lastUsed) => {
       const stillLinked = lastUsed && links.some((link) => link.patternId === lastUsed)
       setSelectedPatternId(stillLinked ? lastUsed : links[0]?.patternId)
     })
-  }, [projectId, links])
+  }, [projectId, links, requestedPatternId])
 
   function handleTabChange(next: ProjectWorkTab) {
     setTab(next)

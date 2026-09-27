@@ -22,7 +22,7 @@ import {
 } from './guideTree'
 
 function withPieceAndSection(content: GuideContent = emptyGuideContent()) {
-  const afterPiece = addPiece(content, 'Dos')
+  const afterPiece = addPiece(content, { name: 'Dos' })
   const afterSection = addSection(afterPiece.content, afterPiece.id, { name: 'Corps', method: 'flat' })
   return { content: afterSection.content, pieceId: afterPiece.id, sectionId: afterSection.id }
 }
@@ -31,14 +31,14 @@ describe('addPiece/addSection/addBlock/addRow', () => {
   it('builds a tree and keeps ids stable across the chain', () => {
     const { content, pieceId, sectionId } = withPieceAndSection()
     const { content: withBlock, id: blockId } = addBlock(content, sectionId, 'rows')
-    const { content: withRow, id: rowId } = addRow(withBlock, blockId, { number: 1, text: '1 m end, 1 m env' })
+    const { content: withRow, id: rowId } = addRow(withBlock, blockId, { number: 1, instructions: '1 m end, 1 m env' })
 
     const piece = findNode(withRow, pieceId)
     const section = findNode(withRow, sectionId)
     const row = findNode(withRow, rowId)
     expect(piece?.kind).toBe('piece')
     expect(section?.kind).toBe('section')
-    expect(row).toEqual({ kind: 'row', node: { id: rowId, number: 1, side: null, text: '1 m end, 1 m env', stitchesAfter: null } })
+    expect(row).toEqual({ kind: 'row', node: { id: rowId, number: 1, side: null, instructions: '1 m end, 1 m env', stitchesAfter: null } })
   })
 
   it('"repeat rows 1 and 2, 10 times" counts as 20 known rows', () => {
@@ -86,6 +86,31 @@ describe('addPiece/addSection/addBlock/addRow', () => {
   })
 })
 
+describe('piece/section category', () => {
+  it('defaults to no category, and passes a chosen one through', () => {
+    const { content } = withPieceAndSection()
+    const { content: withPiece2, id: piece2Id } = addPiece(content, { name: 'Devant', category: 'front' })
+    expect(findNode(withPiece2, piece2Id)?.node).toMatchObject({ category: 'front', customCategory: '' })
+
+    const { content: withSection2, id: section2Id } = addSection(withPiece2, piece2Id, { name: 'Col', category: 'other', customCategory: 'Col roulé' })
+    expect(findNode(withSection2, section2Id)?.node).toMatchObject({ category: 'other', customCategory: 'Col roulé' })
+  })
+})
+
+describe('measure/stitch_count optional instructions', () => {
+  it('defaults instructions to an empty string and keeps a given one', () => {
+    const { content, sectionId } = withPieceAndSection()
+    const { content: withMeasure, id: measureId } = addBlock(content, sectionId, 'measure', { length: 14, unit: 'cm', from: 'le montage' })
+    expect(findNode(withMeasure, measureId)?.node).toMatchObject({ instructions: '' })
+
+    const { content: withStitchCount, id: stitchCountId } = addBlock(content, sectionId, 'stitch_count', {
+      target: 45,
+      instructions: 'en diminuant tous les 2 rangs',
+    })
+    expect(findNode(withStitchCount, stitchCountId)?.node).toMatchObject({ instructions: 'en diminuant tous les 2 rangs' })
+  })
+})
+
 describe('canNest', () => {
   it('allows a container at depth 3 to gain a child (depth 4)', () => {
     expect(canNest('repeat', 'repeat', 3)).toBe(true)
@@ -111,9 +136,9 @@ describe('updateNode', () => {
   it('keeps a row id stable when its text is edited', () => {
     const { content, sectionId } = withPieceAndSection()
     const { content: withBlock, id: blockId } = addBlock(content, sectionId, 'rows')
-    const { content: withRow, id: rowId } = addRow(withBlock, blockId, { text: 'avant' })
-    const updated = updateNode(withRow, rowId, { text: 'après' })
-    expect(findNode(updated, rowId)?.node).toMatchObject({ id: rowId, text: 'après' })
+    const { content: withRow, id: rowId } = addRow(withBlock, blockId, { instructions: 'avant' })
+    const updated = updateNode(withRow, rowId, { instructions: 'après' })
+    expect(findNode(updated, rowId)?.node).toMatchObject({ id: rowId, instructions: 'après' })
   })
 
   it('ignores an attempt to change the id or type', () => {
@@ -135,7 +160,7 @@ describe('moveNode', () => {
 
   it('is a no-op moving the first item up or the last item down', () => {
     const { content, sectionId } = withPieceAndSection()
-    const { content: withBlock, id: blockId } = addBlock(content, sectionId, 'text', { text: 'a' })
+    const { content: withBlock, id: blockId } = addBlock(content, sectionId, 'text', { instructions: 'a' })
     const attemptUp = moveNode(withBlock, blockId, 'up')
     expect(attemptUp).toEqual(withBlock)
     const attemptDown = moveNode(withBlock, blockId, 'down')
@@ -181,7 +206,7 @@ describe('duplicateNode', () => {
 describe('deleteNode', () => {
   it('removes a node and everything under it', () => {
     const { content, sectionId } = withPieceAndSection()
-    const { content: withBlock, id: blockId } = addBlock(content, sectionId, 'text', { text: 'note' })
+    const { content: withBlock, id: blockId } = addBlock(content, sectionId, 'text', { instructions: 'note' })
     const deleted = deleteNode(withBlock, blockId)
     expect(findNode(deleted, blockId)).toBeUndefined()
   })
@@ -216,7 +241,7 @@ describe('setOperation', () => {
 describe('getParentAndIndex', () => {
   it('reports the section as the parent of a top-level block', () => {
     const { content, sectionId } = withPieceAndSection()
-    const { content: withBlock, id: blockId } = addBlock(content, sectionId, 'text', { text: 'a' })
+    const { content: withBlock, id: blockId } = addBlock(content, sectionId, 'text', { instructions: 'a' })
     const info = getParentAndIndex(withBlock, blockId)
     expect(info).toEqual({ parentId: sectionId, listKind: 'blocks', index: 0, siblingCount: 1 })
   })
@@ -236,29 +261,29 @@ describe('parsePastedRows', () => {
   it('detects "Rang N :" prefixes and strips them', () => {
     const result = parsePastedRows('Rang 1 : *2m end, 2m env* rép\nRang 2 : tout en env')
     expect(result).toEqual([
-      { number: 1, side: null, text: '*2m end, 2m env* rép' },
-      { number: 2, side: null, text: 'tout en env' },
+      { number: 1, side: null, instructions: '*2m end, 2m env* rép' },
+      { number: 2, side: null, instructions: 'tout en env' },
     ])
   })
 
   it('detects "R12", "Rg 12" and "12." prefixes', () => {
     const result = parsePastedRows('R1 avant\nRg 2 milieu\n3. fin')
     expect(result.map((row) => row.number)).toEqual([1, 2, 3])
-    expect(result.map((row) => row.text)).toEqual(['avant', 'milieu', 'fin'])
+    expect(result.map((row) => row.instructions)).toEqual(['avant', 'milieu', 'fin'])
   })
 
   it('detects a (END)/(ENV) side marker anywhere in the line', () => {
     const result = parsePastedRows('Rang 1 (END) : jersey endroit\nRang 2 (ENV) : jersey envers')
-    expect(result[0]).toEqual({ number: 1, side: 'rs', text: 'jersey endroit' })
-    expect(result[1]).toEqual({ number: 2, side: 'ws', text: 'jersey envers' })
+    expect(result[0]).toEqual({ number: 1, side: 'rs', instructions: 'jersey endroit' })
+    expect(result[1]).toEqual({ number: 2, side: 'ws', instructions: 'jersey envers' })
   })
 
   it('drops empty lines and proposes the next number when none is given', () => {
     const result = parsePastedRows('Rang 5 : a\n\nb\nc')
     expect(result).toEqual([
-      { number: 5, side: null, text: 'a' },
-      { number: 6, side: null, text: 'b' },
-      { number: 7, side: null, text: 'c' },
+      { number: 5, side: null, instructions: 'a' },
+      { number: 6, side: null, instructions: 'b' },
+      { number: 7, side: null, instructions: 'c' },
     ])
   })
 
@@ -314,6 +339,15 @@ describe('validateGuideContent', () => {
     const errors = validateGuideContent(broken)
     expect(errors.some((error) => error.includes('times'))).toBe(true)
   })
+
+  it('rejects an unknown piece or section category', () => {
+    const { content, pieceId, sectionId } = withPieceAndSection()
+    const brokenPiece = updateNode(content, pieceId, { category: 'not-a-category' })
+    expect(validateGuideContent(brokenPiece).some((error) => error.includes('.category'))).toBe(true)
+
+    const brokenSection = updateNode(content, sectionId, { category: 'not-a-category' })
+    expect(validateGuideContent(brokenSection).some((error) => error.includes('.category'))).toBe(true)
+  })
 })
 
 describe('normalizeGuideContent', () => {
@@ -352,7 +386,7 @@ describe('normalizeGuideContent', () => {
               id: 's1',
               name: 'Corps',
               method: 'round',
-              blocks: [{ id: 'b1', type: 'rows', rows: [{ id: 'r1', number: 1, side: 'rs', text: 'jersey', stitchesAfter: null }] }],
+              blocks: [{ id: 'b1', type: 'rows', rows: [{ id: 'r1', number: 1, side: 'rs', instructions: 'jersey', stitchesAfter: null }] }],
             },
           ],
         },
@@ -363,7 +397,7 @@ describe('normalizeGuideContent', () => {
   })
 
   it('truncates blocks nested beyond the max depth instead of keeping them', () => {
-    let raw: unknown = { type: 'text', text: 'leaf' }
+    let raw: unknown = { type: 'text', instructions: 'leaf' }
     for (let level = 0; level < MAX_BLOCK_NESTING_DEPTH + 2; level += 1) {
       raw = { type: 'repeat', times: 1, blocks: [raw] }
     }
@@ -379,5 +413,54 @@ describe('normalizeGuideContent', () => {
     const { content } = withPieceAndSection()
     const normalized = normalizeGuideContent(content)
     expect(validateGuideContent(normalized)).toEqual([])
+  })
+
+  it('falls back an unknown category to null and drops customCategory unless category is "other"', () => {
+    const raw = {
+      schemaVersion: 1,
+      pieces: [
+        {
+          id: 'p1',
+          name: 'Manche',
+          category: 'not-a-category',
+          customCategory: 'ignored',
+          castOn: null,
+          finish: null,
+          notes: '',
+          sections: [{ id: 's1', name: 'Corps', category: 'other', customCategory: 'Point mousse', method: 'flat', blocks: [] }],
+        },
+      ],
+    }
+    const normalized = normalizeGuideContent(raw)
+    expect(normalized.pieces[0]).toMatchObject({ category: null, customCategory: '' })
+    expect(normalized.pieces[0]!.sections[0]).toMatchObject({ category: 'other', customCategory: 'Point mousse' })
+  })
+
+  it('defaults measure/stitch_count instructions to an empty string', () => {
+    const raw = {
+      schemaVersion: 1,
+      pieces: [
+        {
+          id: 'p1',
+          name: 'P',
+          castOn: null,
+          finish: null,
+          notes: '',
+          sections: [
+            {
+              id: 's1',
+              name: 'S',
+              method: 'flat',
+              blocks: [
+                { id: 'b1', type: 'measure', length: 14, unit: 'cm', from: '', blocks: [] },
+                { id: 'b2', type: 'stitch_count', target: 45, blocks: [] },
+              ],
+            },
+          ],
+        },
+      ],
+    }
+    const normalized = normalizeGuideContent(raw)
+    expect(normalized.pieces[0]!.sections[0]!.blocks).toMatchObject([{ instructions: '' }, { instructions: '' }])
   })
 })

@@ -27,6 +27,14 @@
   flex-shrink: 0;
 }
 
+.sm {
+  /* Still --tap-min, never smaller — see CLAUDE.md "Gros boutons tactiles" —
+     only the padding/text shrink. */
+  min-height: var(--tap-min);
+  padding: var(--space-8) var(--space-16);
+  font-size: var(--text-sm);
+}
+
 .md {
   min-height: var(--tap-min);
   padding: var(--space-12) var(--space-20);

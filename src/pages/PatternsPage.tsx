@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Filter, Plus, Search } from 'lucide-react'
 import styles from './PatternsPage.module.css'
 import { PatternCard } from '../components/patterns/PatternCard'
@@ -21,12 +21,17 @@ const SORT_OPTIONS: { value: PatternSortOption; label: string }[] = [
 export function PatternsPage() {
   const navigate = useNavigate()
   const context = usePatternLibraryContext()
-  const [view, setView] = useState<LibraryView>('patterns')
+  // In the URL (not local state) so a guide's "back" can return here already
+  // on the Guides tab — see CLAUDE.md "Route de retour".
+  const [searchParams, setSearchParams] = useSearchParams()
+  const view: LibraryView = searchParams.get('vue') === 'guides' ? 'guides' : 'patterns'
+  const setView = (next: LibraryView) => setSearchParams(next === 'guides' ? { vue: 'guides' } : {}, { replace: true })
   const [query, setQuery] = useState('')
   const [sort, setSort] = useState<PatternSortOption>('recent')
   const [filters, setFilters] = useState(DEFAULT_PATTERN_FILTERS)
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [createGuideOpen, setCreateGuideOpen] = useState(false)
 
   const items = useMemo<PatternListItem[]>(() => {
     if (!context) return []
@@ -53,7 +58,7 @@ export function PatternsPage() {
     <div className={styles.page}>
       <div className={styles.header}>
         <h1>{view === 'patterns' ? 'Patrons' : 'Guides'}</h1>
-        {view === 'patterns' && (
+        {view === 'patterns' ? (
           <div className={styles.headerActions}>
             <IconButton
               icon={<Filter strokeWidth={1.75} />}
@@ -63,6 +68,12 @@ export function PatternsPage() {
             />
             <Button icon={<Plus size={18} strokeWidth={1.75} />} onClick={() => setImportOpen(true)}>
               Importer
+            </Button>
+          </div>
+        ) : (
+          <div className={styles.headerActions}>
+            <Button icon={<Plus size={18} strokeWidth={1.75} />} onClick={() => setCreateGuideOpen(true)}>
+              Nouveau
             </Button>
           </div>
         )}
@@ -78,7 +89,11 @@ export function PatternsPage() {
       </div>
 
       {view === 'guides' ? (
-        <GuidesLibraryView />
+        <GuidesLibraryView
+          createOpen={createGuideOpen}
+          onOpenCreate={() => setCreateGuideOpen(true)}
+          onCloseCreate={() => setCreateGuideOpen(false)}
+        />
       ) : context === undefined ? null : (
         <>
           {context.patterns.length > 0 && (

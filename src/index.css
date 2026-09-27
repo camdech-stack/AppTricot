@@ -43,6 +43,15 @@ select {
 
 button {
   cursor: pointer;
+  /* Neutralize the browser's default button chrome — every component that
+     wants a visible background/border sets its own, more specific than this
+     bare element selector. Without -webkit-appearance: none, iOS Safari
+     keeps rendering its native button chrome (grey fill, sometimes painted
+     over child content) regardless of the background/border set above. */
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: none;
 }
 
 a {
