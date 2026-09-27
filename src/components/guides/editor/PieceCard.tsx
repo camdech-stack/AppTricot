@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Flag, Play, Plus } from 'lucide-react'
 import styles from './PieceCard.module.css'
 import { Card } from '../../ui'
 import { SortableList } from './SortableList'
@@ -35,7 +35,10 @@ export function PieceCard({ piece, controller }: PieceCardProps) {
           <div className={styles.operationRow}>
             {piece.castOn ? (
               <button type="button" className={styles.operationButton} onClick={() => controller.onEdit(piece.castOn!.id)}>
-                <span className={styles.operationLabel}>Montage</span>
+                <span className={styles.operationLabelRow}>
+                  <Play size={14} strokeWidth={1.75} />
+                  <span className={styles.operationLabel}>Montage</span>
+                </span>
                 <span className={styles.operationSummary}>{summarizeOperation(piece.castOn)}</span>
               </button>
             ) : (
@@ -56,7 +59,10 @@ export function PieceCard({ piece, controller }: PieceCardProps) {
           <div className={styles.operationRow}>
             {piece.finish ? (
               <button type="button" className={styles.operationButton} onClick={() => controller.onEdit(piece.finish!.id)}>
-                <span className={styles.operationLabel}>Finition</span>
+                <span className={styles.operationLabelRow}>
+                  <Flag size={14} strokeWidth={1.75} />
+                  <span className={styles.operationLabel}>Finition</span>
+                </span>
                 <span className={styles.operationSummary}>{summarizeOperation(piece.finish)}</span>
               </button>
             ) : (

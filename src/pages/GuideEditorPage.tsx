@@ -373,8 +373,10 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
     <div className={styles.page}>
       <div className={styles.header}>
         <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" onClick={() => navigate(returnTo)} />
-        <span className={styles.headerTitle}>{guide.name}</span>
-        <span className={autosave.status === 'error' ? styles.saveStatusError : styles.saveStatus}>{saveStatusLabel}</span>
+        <div className={styles.headerTitleGroup}>
+          <span className={styles.headerTitle}>{guide.name}</span>
+          <span className={autosave.status === 'error' ? styles.saveStatusError : styles.saveStatus}>{saveStatusLabel}</span>
+        </div>
         <IconButton icon={<Undo2 strokeWidth={1.75} />} label="Annuler" disabled={!canUndo} onClick={undo} />
         <IconButton icon={<Redo2 strokeWidth={1.75} />} label="Rétablir" disabled={!canRedo} onClick={redo} />
         <IconButton icon={<MoreHorizontal strokeWidth={1.75} />} label="Menu du guide" onClick={() => setGuideMenuOpen(true)} />
