@@ -636,9 +636,9 @@ export function describeCursor(content: GuideContent, cursor: Cursor): CursorDes
       rowLabel = row.number != null ? `Rang ${row.number}` : 'Rang'
       side = row.side
       stitchesAfter = row.stitchesAfter
-      text = row.text
+      text = row.instructions
     } else if (cursor.step === 'text' && node) {
-      text = (node as Extract<Block, { type: 'text' }>).text
+      text = (node as Extract<Block, { type: 'text' }>).instructions
       blockLabel = 'Remarque'
     } else if (cursor.step === 'operation' && node) {
       const operation = node as Operation

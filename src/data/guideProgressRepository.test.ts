@@ -35,25 +35,25 @@ async function createTestProject() {
 // block, 2 rows). Invented content, per CLAUDE.md "Confidentialité".
 async function createTwoPieceGuide() {
   let content: GuideContent = emptyGuideContent()
-  const p1 = addPiece(content, 'Dos')
+  const p1 = addPiece(content, { name: 'Dos' })
   content = p1.content
   const s1 = addSection(content, p1.id, { name: 'Corps', method: 'flat' })
   content = s1.content
   const b1 = addBlock(content, s1.id, 'rows')
   content = b1.content
   for (let i = 1; i <= 3; i++) {
-    const r = addRow(content, b1.id, { number: i, text: `rang ${i}` })
+    const r = addRow(content, b1.id, { number: i, instructions: `rang ${i}` })
     content = r.content
   }
 
-  const p2 = addPiece(content, 'Devant')
+  const p2 = addPiece(content, { name: 'Devant' })
   content = p2.content
   const s2 = addSection(content, p2.id, { name: 'Corps', method: 'flat' })
   content = s2.content
   const b2 = addBlock(content, s2.id, 'rows')
   content = b2.content
   for (let i = 1; i <= 2; i++) {
-    const r = addRow(content, b2.id, { number: i, text: `rang ${i}` })
+    const r = addRow(content, b2.id, { number: i, instructions: `rang ${i}` })
     content = r.content
   }
 
@@ -133,15 +133,15 @@ describe('startGuide', () => {
   it('auto-skips a piece with zero steps so the guide never gets stuck on it', async () => {
     const project = await createTestProject()
     let content: GuideContent = emptyGuideContent()
-    const empty = addPiece(content, 'Vide')
+    const empty = addPiece(content, { name: 'Vide' })
     content = empty.content
-    const real = addPiece(content, 'Dos')
+    const real = addPiece(content, { name: 'Dos' })
     content = real.content
     const section = addSection(content, real.id, { name: 'Corps', method: 'flat' })
     content = section.content
     const block = addBlock(content, section.id, 'rows')
     content = block.content
-    const row = addRow(content, block.id, { text: 'rang' })
+    const row = addRow(content, block.id, { instructions: 'rang' })
     content = row.content
 
     const guide = await createGuide({ name: 'Guide avec pièce vide' })
@@ -232,14 +232,14 @@ describe('advanceGuide', () => {
   it('handles a rapid burst of concurrent "next" calls without losing or skipping a step', async () => {
     const project = await createTestProject()
     let content: GuideContent = emptyGuideContent()
-    const p = addPiece(content, 'Dos')
+    const p = addPiece(content, { name: 'Dos' })
     content = p.content
     const section = addSection(content, p.id, { name: 'Corps', method: 'flat' })
     content = section.content
     const block = addBlock(content, section.id, 'rows')
     content = block.content
     for (let i = 1; i <= 30; i++) {
-      const r = addRow(content, block.id, { number: i, text: `rang ${i}` })
+      const r = addRow(content, block.id, { number: i, instructions: `rang ${i}` })
       content = r.content
     }
     const guide = await createGuide({ name: 'Longue pièce' })

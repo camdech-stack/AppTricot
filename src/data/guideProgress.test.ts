@@ -35,15 +35,15 @@ function piece(content: GuideContent, pieceId: string): Piece {
 // block -> a text block -> finish (bind-off). 5 steps total.
 function buildLinearPiece() {
   let content = emptyGuideContent()
-  const p = addPiece(content, 'Dos')
+  const p = addPiece(content, { name: 'Dos' })
   content = setOperation(p.content, p.id, 'castOn', { kind: 'cast_on', stitches: 20 })
   const section = addSection(content, p.id, { name: 'Corps', method: 'flat' })
   content = section.content
   const rowsBlock = addBlock(content, section.id, 'rows')
   content = rowsBlock.content
-  const row1 = addRow(content, rowsBlock.id, { number: 1, side: 'rs', text: 'Tricoter à l’endroit', stitchesAfter: 20 })
+  const row1 = addRow(content, rowsBlock.id, { number: 1, side: 'rs', instructions: 'Tricoter à l’endroit', stitchesAfter: 20 })
   content = row1.content
-  const row2 = addRow(content, rowsBlock.id, { number: 2, side: 'ws', text: 'Tricoter à l’envers', stitchesAfter: 20 })
+  const row2 = addRow(content, rowsBlock.id, { number: 2, side: 'ws', instructions: 'Tricoter à l’envers', stitchesAfter: 20 })
   content = row2.content
   const textBlock = addBlock(content, section.id, 'text')
   content = textBlock.content
@@ -64,16 +64,16 @@ function buildLinearPiece() {
 // block of 2 rows, 20 steps total. No cast-on/finish, kept minimal.
 function buildRepeatPiece(times = 10) {
   let content = emptyGuideContent()
-  const p = addPiece(content, 'Écharpe')
+  const p = addPiece(content, { name: 'Écharpe' })
   const section = addSection(p.content, p.id, { name: 'Corps', method: 'flat' })
   content = section.content
   const repeatBlock = addBlock(content, section.id, 'repeat', { times })
   content = repeatBlock.content
   const rowsBlock = addBlock(content, repeatBlock.id, 'rows')
   content = rowsBlock.content
-  const rowA = addRow(content, rowsBlock.id, { number: 1, text: '*2 m end, 2 m env*' })
+  const rowA = addRow(content, rowsBlock.id, { number: 1, instructions: '*2 m end, 2 m env*' })
   content = rowA.content
-  const rowB = addRow(content, rowsBlock.id, { number: 2, text: 'tricoter les mailles comme elles se présentent' })
+  const rowB = addRow(content, rowsBlock.id, { number: 2, instructions: 'tricoter les mailles comme elles se présentent' })
   content = rowB.content
 
   return { content, pieceId: p.id, sectionId: section.id, repeatBlockId: repeatBlock.id, rowsBlockId: rowsBlock.id, rowAId: rowA.id, rowBId: rowB.id }
@@ -83,7 +83,7 @@ function buildRepeatPiece(times = 10) {
 // single row — 6 steps total, with nested passage tracking.
 function buildNestedRepeatPiece() {
   let content = emptyGuideContent()
-  const p = addPiece(content, 'Manche')
+  const p = addPiece(content, { name: 'Manche' })
   const section = addSection(p.content, p.id, { name: 'Corps', method: 'flat' })
   content = section.content
   const outer = addBlock(content, section.id, 'repeat', { times: 3 })
@@ -92,7 +92,7 @@ function buildNestedRepeatPiece() {
   content = inner.content
   const rowsBlock = addBlock(content, inner.id, 'rows')
   content = rowsBlock.content
-  const row = addRow(content, rowsBlock.id, { number: 1, text: 'rang' })
+  const row = addRow(content, rowsBlock.id, { number: 1, instructions: 'rang' })
   content = row.content
 
   return { content, pieceId: p.id, outerId: outer.id, innerId: inner.id, rowsBlockId: rowsBlock.id, rowId: row.id }
@@ -101,14 +101,14 @@ function buildNestedRepeatPiece() {
 // A measure block ("jusqu'à 14 cm") with a 1-row child block.
 function buildMeasurePiece() {
   let content = emptyGuideContent()
-  const p = addPiece(content, 'Dos')
+  const p = addPiece(content, { name: 'Dos' })
   const section = addSection(p.content, p.id, { name: 'Corps', method: 'flat' })
   content = section.content
   const measure = addBlock(content, section.id, 'measure', { length: 14, unit: 'cm', from: 'le montage' })
   content = measure.content
   const rowsBlock = addBlock(content, measure.id, 'rows')
   content = rowsBlock.content
-  const row = addRow(content, rowsBlock.id, { number: 1, text: 'jersey endroit' })
+  const row = addRow(content, rowsBlock.id, { number: 1, instructions: 'jersey endroit' })
   content = row.content
   const afterText = addBlock(content, section.id, 'text')
   content = afterText.content
@@ -120,7 +120,7 @@ function buildMeasurePiece() {
 // one-shot step (see CLAUDE.md "Parcours du guide").
 function buildChildlessMeasurePiece() {
   let content = emptyGuideContent()
-  const p = addPiece(content, 'Dos')
+  const p = addPiece(content, { name: 'Dos' })
   const section = addSection(p.content, p.id, { name: 'Corps', method: 'flat' })
   content = section.content
   const measure = addBlock(content, section.id, 'measure', { length: 14, unit: 'cm', from: 'le montage' })
@@ -172,7 +172,7 @@ describe('advance — linear traversal', () => {
 describe('empty pieces and blocks', () => {
   it('a piece with no cast-on/section/finish has no initial cursor and zero known steps', () => {
     let content = emptyGuideContent()
-    const p = addPiece(content, 'Vide')
+    const p = addPiece(content, { name: 'Vide' })
     content = p.content
     const emptyPiece = piece(content, p.id)
     expect(getInitialCursor(emptyPiece)).toBeNull()
@@ -181,7 +181,7 @@ describe('empty pieces and blocks', () => {
 
   it('a rows block with zero rows and an empty repeat produce no steps', () => {
     let content = emptyGuideContent()
-    const p = addPiece(content, 'Test')
+    const p = addPiece(content, { name: 'Test' })
     const section = addSection(p.content, p.id, { name: 'Corps', method: 'flat' })
     content = section.content
     content = addBlock(content, section.id, 'rows').content // no rows added
@@ -352,14 +352,14 @@ describe('back', () => {
 
   it('gives up and does not move when the previous step is an already-exited measure/stitch_count sibling', () => {
     let content = emptyGuideContent()
-    const p1 = addPiece(content, 'Test')
+    const p1 = addPiece(content, { name: 'Test' })
     const section = addSection(p1.content, p1.id, { name: 'Corps', method: 'flat' })
     content = section.content
     const measure = addBlock(content, section.id, 'measure', { length: 14, unit: 'cm', from: 'le montage' })
     content = measure.content
     const measureRowsBlock = addBlock(content, measure.id, 'rows')
     content = measureRowsBlock.content
-    const measureRow = addRow(content, measureRowsBlock.id, { text: 'x' })
+    const measureRow = addRow(content, measureRowsBlock.id, { instructions: 'x' })
     content = measureRow.content
     const afterBlock = addBlock(content, section.id, 'text')
     content = afterBlock.content
@@ -441,24 +441,24 @@ describe('getPieceProgress / getGuideProgress', () => {
 
   it('sums done/known across every piece of a guide', () => {
     let content = emptyGuideContent()
-    const p1 = addPiece(content, 'Dos')
+    const p1 = addPiece(content, { name: 'Dos' })
     content = p1.content
     const s1 = addSection(content, p1.id, { name: 'Corps', method: 'flat' })
     content = s1.content
     const r1block = addBlock(content, s1.id, 'rows')
     content = r1block.content
-    const r1 = addRow(content, r1block.id, { text: 'a' })
+    const r1 = addRow(content, r1block.id, { instructions: 'a' })
     content = r1.content
-    const r2 = addRow(content, r1block.id, { text: 'b' })
+    const r2 = addRow(content, r1block.id, { instructions: 'b' })
     content = r2.content
 
-    const p2 = addPiece(content, 'Devant')
+    const p2 = addPiece(content, { name: 'Devant' })
     content = p2.content
     const s2 = addSection(content, p2.id, { name: 'Corps', method: 'flat' })
     content = s2.content
     const r2block = addBlock(content, s2.id, 'rows')
     content = r2block.content
-    const r3 = addRow(content, r2block.id, { text: 'c' })
+    const r3 = addRow(content, r2block.id, { instructions: 'c' })
     content = r3.content
 
     const piece1 = piece(content, p1.id)
@@ -484,9 +484,9 @@ describe('getPieceProgress / getGuideProgress', () => {
 describe('getNextAvailablePieceId', () => {
   function threePieceGuide() {
     let content = emptyGuideContent()
-    const p1 = addPiece(content, 'Dos')
-    const p2 = addPiece(p1.content, 'Devant')
-    const p3 = addPiece(p2.content, 'Manches')
+    const p1 = addPiece(content, { name: 'Dos' })
+    const p2 = addPiece(p1.content, { name: 'Devant' })
+    const p3 = addPiece(p2.content, { name: 'Manches' })
     return { content: p3.content, ids: [p1.id, p2.id, p3.id] }
   }
 
@@ -669,19 +669,19 @@ describe('getResumeSummary', () => {
 describe('getNodeStatus', () => {
   it('marks the piece and its current section as in_progress, later sections as todo', () => {
     let content = emptyGuideContent()
-    const p = addPiece(content, 'Dos')
+    const p = addPiece(content, { name: 'Dos' })
     content = p.content
     const s1 = addSection(content, p.id, { name: 'Côtes', method: 'flat' })
     content = s1.content
     const s1rows = addBlock(content, s1.id, 'rows')
     content = s1rows.content
-    const s1row = addRow(content, s1rows.id, { text: 'a' })
+    const s1row = addRow(content, s1rows.id, { instructions: 'a' })
     content = s1row.content
     const s2 = addSection(content, p.id, { name: 'Corps', method: 'flat' })
     content = s2.content
     const s2rows = addBlock(content, s2.id, 'rows')
     content = s2rows.content
-    const s2row = addRow(content, s2rows.id, { text: 'b' })
+    const s2row = addRow(content, s2rows.id, { instructions: 'b' })
     content = s2row.content
 
     const testPiece = piece(content, p.id)
