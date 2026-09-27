@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import styles from './GuidesLibraryView.module.css'
 import { GuideCard } from './GuideCard'
 import { CreateGuideSheet } from './CreateGuideSheet'
@@ -8,11 +8,20 @@ import { Button } from '../ui'
 import { useGuideLibraryContext } from '../../hooks/useGuideLibraryContext'
 import { useGuideContents } from '../../hooks/useGuideContents'
 
-export function GuidesLibraryView() {
+interface GuidesLibraryViewProps {
+  // The "+ Nouveau" button lives in the shared page header (PatternsPage,
+  // at the same level as the title, like "+ Importer" for patterns) rather
+  // than inside this view — both entry points (that button and the empty
+  // state's own "Créer un guide") open the same sheet.
+  createOpen: boolean
+  onOpenCreate: () => void
+  onCloseCreate: () => void
+}
+
+export function GuidesLibraryView({ createOpen, onOpenCreate, onCloseCreate }: GuidesLibraryViewProps) {
   const navigate = useNavigate()
   const context = useGuideLibraryContext()
   const [query, setQuery] = useState('')
-  const [createOpen, setCreateOpen] = useState(false)
 
   const contents = useGuideContents(context?.guides)
 
@@ -25,12 +34,6 @@ export function GuidesLibraryView() {
 
   return (
     <div className={styles.view}>
-      <div className={styles.header}>
-        <Button icon={<Plus size={18} strokeWidth={1.75} />} onClick={() => setCreateOpen(true)}>
-          Nouveau guide
-        </Button>
-      </div>
-
       {context.guides.length > 0 && (
         <>
           <p className={styles.summary}>
@@ -52,7 +55,7 @@ export function GuidesLibraryView() {
       {context.guides.length === 0 ? (
         <div className={styles.empty}>
           <p>Crée ton premier guide pour suivre un patron étape par étape.</p>
-          <Button onClick={() => setCreateOpen(true)}>Créer un guide</Button>
+          <Button onClick={onOpenCreate}>Créer un guide</Button>
         </div>
       ) : filtered.length === 0 ? (
         <div className={styles.empty}>
@@ -77,10 +80,10 @@ export function GuidesLibraryView() {
 
       <CreateGuideSheet
         open={createOpen}
-        onClose={() => setCreateOpen(false)}
+        onClose={onCloseCreate}
         onCreated={(guide) => {
-          setCreateOpen(false)
-          navigate(`/guides/${guide.id}`)
+          onCloseCreate()
+          navigate(`/guides/${guide.id}`, { state: { returnTo: '/patrons?vue=guides' } })
         }}
         patterns={context.patterns}
       />

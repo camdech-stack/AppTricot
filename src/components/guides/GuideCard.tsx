@@ -21,7 +21,7 @@ export function GuideCard({ guide, content, pattern, linkedProjects }: GuideCard
   const metaParts = [guide.craft ? CRAFT_LABELS[guide.craft] : null, pattern ? pattern.name : 'Aucun patron lié'].filter(Boolean)
 
   return (
-    <Link to={`/guides/${guide.id}`} className={styles.card}>
+    <Link to={`/guides/${guide.id}`} state={{ returnTo: '/patrons?vue=guides' }} className={styles.card}>
       <div className={styles.thumb}>
         <NotebookText size={28} strokeWidth={1.75} />
       </div>

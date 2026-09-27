@@ -3,12 +3,6 @@
   flex-direction: column;
 }
 
-.header {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: var(--space-16);
-}
-
 .summary {
   margin: var(--space-16) 0 0;
   font-size: var(--text-sm);
