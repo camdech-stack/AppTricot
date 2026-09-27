@@ -1,3 +1,4 @@
+import type { Transaction } from 'dexie'
 import { db } from './db'
 import { createId } from './id'
 import { nowIso } from './date'
@@ -99,39 +100,46 @@ export async function deleteCounter(id: string): Promise<void> {
   })
 }
 
-// The single write path for every +1/-1/+5 tap: reads the current value
-// from inside the transaction (never from React state) and writes the
-// counter update, the event and the project's lastActivityAt atomically, so
-// rapid taps can never race or drop a count.
+// The shared counter+event bookkeeping behind every +1/-1/+5 tap AND step
+// 5b's linked-counter increments/decrements (a guide row's "next"/"back") —
+// reads the current value from inside the caller's transaction (never from
+// React state) so rapid taps, or a burst of guide steps, can never race or
+// drop a count. Deliberately never touches sessions/recordActivity: each
+// caller records its own activity with its own origin ('counter' vs
+// 'guide'), see applyCounterDelta below and guideProgressRepository.ts.
+export async function applyCounterDeltaInTx(tx: Transaction, id: string, delta: number): Promise<{ counter: CounterRecord; changed: boolean }> {
+  const counters = tx.table('counters')
+  const counter = (await counters.get(id)) as CounterRecord | undefined
+  if (!counter) throw new Error(`Compteur introuvable : ${id}`)
+
+  const valueBefore = counter.value
+  const valueAfter = Math.max(0, valueBefore + delta)
+  const appliedDelta = valueAfter - valueBefore
+  if (appliedDelta === 0) return { counter, changed: false }
+
+  const now = nowIso()
+  const updated: CounterRecord = { ...counter, value: valueAfter, lastTappedAt: now, updatedAt: now }
+  await counters.put(updated)
+
+  await recordEventInTx(tx, id, appliedDelta > 0 ? 'increment' : 'decrement', appliedDelta, valueBefore, valueAfter, now)
+
+  if (counter.projectId) {
+    await tx.table('projects').update(counter.projectId, { lastActivityAt: now })
+  }
+
+  return { counter: updated, changed: true }
+}
+
+// The single write path for every +1/-1/+5 tap: applies the delta, then
+// records the activity — a no-op delta (e.g. -1 already at zero) never
+// touches sessions, matching the rule that opening a screen without
+// tapping starts nothing.
 export async function applyCounterDelta(id: string, delta: number): Promise<CounterRecord> {
   return db.transaction('rw', db.counters, db.counterEvents, db.projects, db.sessions, db.settings, async (tx) => {
-    const counter = await db.counters.get(id)
-    if (!counter) throw new Error(`Compteur introuvable : ${id}`)
-
-    const valueBefore = counter.value
-    const valueAfter = Math.max(0, valueBefore + delta)
-    const appliedDelta = valueAfter - valueBefore
-    const now = nowIso()
-
-    if (appliedDelta === 0) return counter
-
-    const updated: CounterRecord = {
-      ...counter,
-      value: valueAfter,
-      lastTappedAt: now,
-      updatedAt: now,
-    }
-    await db.counters.put(updated)
-
-    await recordEvent(id, appliedDelta > 0 ? 'increment' : 'decrement', appliedDelta, valueBefore, valueAfter, now)
-
-    if (counter.projectId) {
-      await db.projects.update(counter.projectId, { lastActivityAt: now })
-    }
-
-    await recordActivity({ projectId: counter.projectId }, now, tx, { origin: 'counter' })
-
-    return updated
+    const { counter, changed } = await applyCounterDeltaInTx(tx, id, delta)
+    if (!changed) return counter
+    await recordActivity({ projectId: counter.projectId }, counter.updatedAt, tx, { origin: 'counter' })
+    return counter
   })
 }
 
@@ -147,7 +155,7 @@ export async function setCounterValue(id: string, value: number): Promise<Counte
     const updated: CounterRecord = { ...counter, value: valueAfter, updatedAt: now }
     await db.counters.put(updated)
 
-    await recordEvent(counter.id, 'set', valueAfter - valueBefore, valueBefore, valueAfter, now)
+    await recordEventInTx(tx, counter.id, 'set', valueAfter - valueBefore, valueBefore, valueAfter, now)
 
     if (counter.projectId) {
       await db.projects.update(counter.projectId, { lastActivityAt: now })
@@ -170,7 +178,7 @@ export async function resetCounter(id: string): Promise<CounterRecord> {
     const updated: CounterRecord = { ...counter, value: 0, updatedAt: now }
     await db.counters.put(updated)
 
-    await recordEvent(counter.id, 'reset', -valueBefore, valueBefore, 0, now)
+    await recordEventInTx(tx, counter.id, 'reset', -valueBefore, valueBefore, 0, now)
 
     if (counter.projectId) {
       await db.projects.update(counter.projectId, { lastActivityAt: now })
@@ -186,7 +194,8 @@ export async function resetCounter(id: string): Promise<CounterRecord> {
 // computed from inside the caller's transaction (so it stays correct even
 // when several events are written back-to-back within the same
 // millisecond, e.g. a burst of taps).
-async function recordEvent(
+async function recordEventInTx(
+  tx: Transaction,
   counterId: string,
   type: CounterEventType,
   delta: number,
@@ -194,7 +203,8 @@ async function recordEvent(
   valueAfter: number,
   now: string,
 ): Promise<void> {
-  const sequence = await db.counterEvents.where('counterId').equals(counterId).count()
+  const table = tx.table('counterEvents')
+  const sequence = await table.where('counterId').equals(counterId).count()
   const event: CounterEventRecord = {
     id: createId(),
     counterId,
@@ -207,7 +217,7 @@ async function recordEvent(
     createdAt: now,
     updatedAt: now,
   }
-  await db.counterEvents.add(event)
+  await table.add(event)
 }
 
 export async function getCounterEvents(counterId: string): Promise<CounterEventRecord[]> {

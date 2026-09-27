@@ -5,6 +5,7 @@ import type {
   CounterRecord,
   CoverImageRecord,
   GuideContentRecord,
+  GuideProgressRecord,
   GuideRecord,
   PatternCoverRecord,
   PatternFileRecord,
@@ -47,6 +48,7 @@ class AppDatabase extends Dexie {
   guides!: EntityTable<GuideRecord, 'id'>
   guideContents!: EntityTable<GuideContentRecord, 'id'>
   projectGuides!: EntityTable<ProjectGuideRecord, 'id'>
+  guideProgress!: EntityTable<GuideProgressRecord, 'id'>
 
   constructor() {
     super('mon-carnet-de-tricot')
@@ -306,6 +308,31 @@ class AppDatabase extends Dexie {
       guides: 'id, patternId, createdAt',
       guideContents: 'id, guideId',
       projectGuides: 'id, projectId, guideId, [projectId+guideId]',
+    })
+
+    // Step 5b: progress through a guide, per (project, guide) pair — never
+    // inside the guide's own content tree (see guideProgress.ts). Brand new
+    // table, nothing to backfill.
+    this.version(12).stores({
+      settings: 'id',
+      projects: 'id, status, lastActivityAt',
+      counters: 'id, projectId, [projectId+position]',
+      counterEvents: 'id, counterId, [counterId+createdAt]',
+      coverImages: 'id, projectId',
+      sessions: 'id, projectId, startedAt, [projectId+startedAt]',
+      yarns: 'id, name',
+      yarnImages: 'id, yarnId',
+      projectYarns: 'id, projectId, yarnId, [projectId+yarnId]',
+      yarnUsages: 'id, yarnId, projectId, [yarnId+usedAt]',
+      patterns: 'id, name, *tags, fileHash, createdAt, lastOpenedAt',
+      patternFiles: 'id, patternId',
+      patternCovers: 'id, patternId',
+      projectPatterns: 'id, projectId, patternId, [projectId+patternId]',
+      patternViewStates: 'id, patternId, projectId',
+      guides: 'id, patternId, createdAt',
+      guideContents: 'id, guideId',
+      projectGuides: 'id, projectId, guideId, [projectId+guideId]',
+      guideProgress: 'id, projectId, guideId, [projectId+guideId]',
     })
   }
 }

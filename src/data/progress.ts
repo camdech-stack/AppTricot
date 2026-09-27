@@ -1,9 +1,17 @@
-// Pure, isolated so it's easy to test and to swap out later for guide-based
-// progress (step 5b) without touching the counters/projects repositories.
+// Pure, isolated so it's easy to test independently of the counters/
+// projects/guides repositories.
 export interface ProgressCounterInput {
   value: number
   goal: number | null
   isMain: boolean
+}
+
+// One linked guide's step progress (see guideProgress.ts's
+// getGuideProgress) — a plain pure-data shape, never a DB read, so this
+// file stays a pure function like the rest of it.
+export interface ProgressGuideInput {
+  knownSteps: number
+  doneSteps: number
 }
 
 export interface ProjectProgressPercent {
@@ -23,7 +31,19 @@ function clampRatio(ratio: number): number {
   return Math.min(1, Math.max(0, ratio))
 }
 
-export function computeProjectProgress(counters: ProgressCounterInput[]): ProjectProgress {
+// Step 5b: once a project has at least one linked guide with at least one
+// known step, its progress becomes "steps done / steps known" summed
+// across every linked guide — the counter-based calculation below is only
+// a fallback for projects with no (usable) guide. `guides` defaults to an
+// empty array so every pre-5b call site keeps compiling and behaving
+// exactly as before.
+export function computeProjectProgress(counters: ProgressCounterInput[], guides: ProgressGuideInput[] = []): ProjectProgress {
+  const totalKnownSteps = guides.reduce((sum, guide) => sum + guide.knownSteps, 0)
+  if (totalKnownSteps > 0) {
+    const totalDoneSteps = guides.reduce((sum, guide) => sum + guide.doneSteps, 0)
+    return { kind: 'percent', ratio: clampRatio(totalDoneSteps / totalKnownSteps) }
+  }
+
   const mainCounter = counters.find((counter) => counter.isMain)
 
   if (mainCounter?.goal) {

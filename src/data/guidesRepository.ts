@@ -103,12 +103,14 @@ export async function saveGuideContent(guideId: string, content: GuideContent, l
   })
 }
 
-// Deletes the content and every project link. Confirmation (listing the
-// linked projects) is the caller's responsibility, same as deletePattern.
+// Deletes the content, every project link and every project's progress
+// through this guide. Confirmation (listing the linked projects) is the
+// caller's responsibility, same as deletePattern.
 export async function deleteGuide(id: string): Promise<void> {
-  await db.transaction('rw', db.guides, db.guideContents, db.projectGuides, async () => {
+  await db.transaction('rw', db.guides, db.guideContents, db.projectGuides, db.guideProgress, async () => {
     await db.guideContents.delete(id)
     await db.projectGuides.where('guideId').equals(id).delete()
+    await db.guideProgress.where('guideId').equals(id).delete()
     await db.guides.delete(id)
   })
 }
@@ -175,6 +177,15 @@ export async function linkGuideToProject(projectId: string, guideId: string): Pr
   })
 }
 
+// Also deletes this project's progress through the guide (see
+// CLAUDE.md "Suppression et guides", step 5b) — the caller is responsible
+// for confirming this with the user first, since it isn't recoverable.
 export async function unlinkGuideFromProject(linkId: string): Promise<void> {
-  await db.projectGuides.delete(linkId)
+  await db.transaction('rw', db.projectGuides, db.guideProgress, async (tx) => {
+    const link = await tx.table('projectGuides').get(linkId)
+    if (link) {
+      await tx.table('guideProgress').where('[projectId+guideId]').equals([link.projectId, link.guideId]).delete()
+    }
+    await tx.table('projectGuides').delete(linkId)
+  })
 }

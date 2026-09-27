@@ -29,7 +29,7 @@ export {
 } from './countersRepository'
 export { setCoverImage, getCoverImage, deleteCoverImage } from './coverImagesRepository'
 export { compressCoverImage } from './image'
-export { computeProjectProgress, type ProjectProgress, type ProgressCounterInput } from './progress'
+export { computeProjectProgress, type ProjectProgress, type ProgressCounterInput, type ProgressGuideInput } from './progress'
 export { nowIso, todayDateString } from './date'
 export {
   recordActivity,
@@ -140,6 +140,51 @@ export {
   type NewGuideInput,
   type GuideMetaUpdateInput,
 } from './guidesRepository'
+export {
+  getProgress,
+  getOrCreateProgress,
+  setActivePiece,
+  startGuide,
+  advanceGuide,
+  resetProgress,
+  setLinkedCounter,
+  getProjectGuideProgressInputs,
+  getProjectResumeSummary,
+  type GuideAdvanceAction,
+  type ResetScope,
+  type ProjectGuideResumeSummary,
+} from './guideProgressRepository'
+export {
+  getInitialCursor,
+  advance,
+  back,
+  goTo,
+  countSteps,
+  getPieceProgress,
+  getGuideProgress,
+  describeCursor,
+  getResumeSummary,
+  repairCursor,
+  getNodeStatus,
+  getNextAvailablePieceId,
+  computeStepsDone,
+  createEmptyPieceProgress,
+  PIECE_HISTORY_LIMIT,
+  type Cursor,
+  type CursorStep,
+  type PieceStatus,
+  type PieceProgress,
+  type GuideProgressState,
+  type AdvanceOptions,
+  type GoToOptions,
+  type StepCount,
+  type PieceProgressSummary,
+  type GuideProgressSummary,
+  type CursorDescription,
+  type ResumeSummary,
+  type RepairResult,
+  type NodeStatus,
+} from './guideProgress'
 export {
   MAX_BLOCK_NESTING_DEPTH,
   CAST_ON_OPERATION_KINDS,
@@ -264,6 +309,7 @@ export type {
   GuideRecord,
   GuideContentRecord,
   ProjectGuideRecord,
+  GuideProgressRecord,
   YarnRecord,
   YarnDraft,
   YarnColorFamily,

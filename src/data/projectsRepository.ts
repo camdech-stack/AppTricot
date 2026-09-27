@@ -130,6 +130,7 @@ export async function deleteProject(id: string, keepYarnUsage = true): Promise<v
       db.projectPatterns,
       db.patternViewStates,
       db.projectGuides,
+      db.guideProgress,
     ],
     async (tx) => {
       const counters = await getCounters(id)
@@ -155,8 +156,9 @@ export async function deleteProject(id: string, keepYarnUsage = true): Promise<v
       await db.patternViewStates.where('projectId').equals(id).delete()
 
       // Same logic as patterns: the guide itself is never deleted here,
-      // only this project's link to it.
+      // only this project's link to it and its progress through it.
       await db.projectGuides.where('projectId').equals(id).delete()
+      await db.guideProgress.where('projectId').equals(id).delete()
 
       await db.projects.delete(id)
     },

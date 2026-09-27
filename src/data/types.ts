@@ -1,4 +1,5 @@
 import type { GuideContent } from './guideModel'
+import type { PieceProgress } from './guideProgress'
 
 // Shared shape for every persisted entity: a stable UUID plus audit timestamps.
 // Every future table (projects, counters, yarns, patterns, ...) should build
@@ -324,4 +325,24 @@ export interface ProjectGuideRecord extends BaseEntity {
   projectId: string
   guideId: string
   position: number
+}
+
+// Step 5b: progress through a guide, for one (project, guide) pair — never
+// inside the guide's own content tree (see guideProgress.ts), so the same
+// guide can be knitted in parallel by several projects without them
+// stepping on each other. At most one record per (projectId, guideId) pair.
+export interface GuideProgressRecord extends BaseEntity {
+  projectId: string
+  guideId: string
+  // The piece currently being worked, per the array order in `pieces` —
+  // never a free choice (see guideProgress.ts "getNextAvailablePieceId").
+  activePieceId: string | null
+  pieces: Record<string, PieceProgress>
+  // Which of the project's own counters (if any) mirrors "next"/"back" on
+  // a row — see CLAUDE.md "Compteur intégré". Untouched by any other
+  // advanceGuide action.
+  linkedCounterId: string | null
+  startedAt: string
+  lastAdvancedAt: string
+  completedAt: string | null
 }
