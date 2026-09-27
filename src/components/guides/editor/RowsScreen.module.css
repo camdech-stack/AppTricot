@@ -29,13 +29,15 @@
 
 .numberInput {
   flex: none;
-  width: 44px;
+  width: 48px;
   min-height: var(--tap-min);
   padding: 0 var(--space-8);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
-  font-size: var(--text-sm);
+  /* iOS Safari zooms the page in on focus if a text input's font-size is
+     below 16px — never go under --text-md on an <input>/<textarea>. */
+  font-size: var(--text-md);
   font-weight: 700;
   text-align: center;
 }
@@ -101,13 +103,13 @@
 }
 
 .stitchesInput {
-  width: 64px;
+  width: 72px;
   min-height: var(--tap-min);
   padding: 0 var(--space-8);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: var(--color-surface);
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
   text-align: center;
 }
 

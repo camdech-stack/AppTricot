@@ -58,7 +58,10 @@ const SortableItemContext = createContext<SortableItemHandle | null>(null)
 function SortableItem({ id, children }: { id: string; children: ReactNode }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id })
   const style = {
-    transform: CSS.Transform.toString(transform),
+    // CSS.Translate (not CSS.Transform) deliberately drops the scale dnd-kit
+    // reports when a dragged item's measured rect differs from its layout
+    // size — using Transform stretched the card's height while dragging.
+    transform: CSS.Translate.toString(transform),
     transition,
     opacity: isDragging ? 0.6 : 1,
   }
