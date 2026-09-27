@@ -1,0 +1,134 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  padding: var(--space-24) 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-12);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--color-guide-rows);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.numberInput {
+  flex: none;
+  width: 44px;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-align: center;
+}
+
+.sideToggle {
+  flex: none;
+  display: flex;
+  gap: var(--space-4);
+}
+
+.sideOption,
+.sideOptionActive {
+  border-radius: var(--radius-pill);
+  opacity: 0.5;
+}
+
+.sideOptionActive {
+  opacity: 1;
+}
+
+.sidePill {
+  font-size: 10px;
+  padding: 2px var(--space-8);
+}
+
+.cardHeaderSpacer {
+  flex: 1;
+}
+
+.iconButton,
+.iconButtonDanger {
+  flex: none;
+  width: var(--tap-min);
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+}
+
+.iconButtonDanger:active {
+  color: var(--color-danger);
+}
+
+.textarea {
+  min-height: calc(var(--tap-min) * 1.5);
+  padding: var(--space-8) var(--space-12);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: var(--text-md);
+  font-family: var(--font-body);
+  color: var(--color-text);
+  resize: vertical;
+}
+
+.stitchesField {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.stitchesInput {
+  width: 64px;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-8);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin-top: var(--space-16);
+  padding-top: var(--space-16);
+  border-top: 1px solid var(--color-border);
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: var(--tap-min);
+  padding: 0 var(--space-12);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}

@@ -11,7 +11,7 @@ import { GuideMenuSheet } from '../components/guides/editor/GuideMenuSheet'
 import { GuideMetaSheet } from '../components/guides/editor/GuideMetaSheet'
 import { BlockTypePickerSheet } from '../components/guides/editor/BlockTypePickerSheet'
 import { PasteRowsSheet } from '../components/guides/editor/PasteRowsSheet'
-import { RowSheet } from '../components/guides/editor/RowSheet'
+import { RowsScreen } from '../components/guides/editor/RowsScreen'
 import { PieceSheet, OperationSheet, SectionSheet, TextBlockSheet, RepeatSheet, MeasureSheet, StitchCountSheet } from '../components/guides/editor/NodeFormSheets'
 import { blockTypeLabel } from '../components/guides/editor/blockTypeMeta'
 import { useGuideHistory } from '../components/guides/editor/useGuideHistory'
@@ -44,7 +44,6 @@ import {
   type GuideContent,
   type GuideRecord,
   type Piece,
-  type Row,
   type Section,
   type SectionMethod,
 } from '../data'
@@ -58,9 +57,7 @@ type SheetState =
   | { kind: 'repeat'; id: string }
   | { kind: 'measure'; id: string }
   | { kind: 'stitchCount'; id: string }
-  | { kind: 'createRow'; blockId: string }
-  | { kind: 'editRow'; blockId: string; id: string }
-  | { kind: 'pasteRows'; blockId: string }
+  | { kind: 'rowsScreen'; id: string }
   | null
 
 // --- Local helpers (UI-only, not worth adding to the pure data layer) ---
@@ -110,10 +107,7 @@ function describeForMenu(content: GuideContent, id: string): MenuInfo | undefine
   if (found.kind === 'block') {
     const block = found.node as Block
     const hasChildren = block.type === 'rows' ? block.rows.length > 0 : isContainerBlock(block) ? block.blocks.length > 0 : false
-    return { label: blockTypeLabel(block.type), hasChildren, hasEdit: block.type !== 'rows' }
-  }
-  if (found.kind === 'row') {
-    return { label: 'Rang', hasChildren: false, hasEdit: true }
+    return { label: blockTypeLabel(block.type), hasChildren, hasEdit: true }
   }
   return undefined
 }
@@ -122,8 +116,12 @@ function collectAllExpandableIds(content: GuideContent): string[] {
   const ids: string[] = []
   function walkBlocks(blocks: Block[]) {
     for (const block of blocks) {
-      if (block.type === 'rows' || isContainerBlock(block)) ids.push(block.id)
-      if (isContainerBlock(block)) walkBlocks(block.blocks)
+      // A rows block has no chevron to expand (see BlockCard.expandable) —
+      // it isn't part of "Tout déplier"/"Tout plier".
+      if (isContainerBlock(block)) {
+        ids.push(block.id)
+        walkBlocks(block.blocks)
+      }
     }
   }
   for (const piece of content.pieces) {
@@ -189,6 +187,9 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
   const [guideMenuOpen, setGuideMenuOpen] = useState(false)
   const [guideMetaOpen, setGuideMetaOpen] = useState(false)
   const [deleteToast, setDeleteToast] = useState<string | null>(null)
+  // Paste-rows opens on top of the Rangs full-screen panel (RowsScreen), so
+  // it's tracked separately from `sheet` rather than replacing it.
+  const [pasteRowsFor, setPasteRowsFor] = useState<string | null>(null)
   // Which pane shows on a phone-width screen when the guide has a linked
   // pattern — both panes stay mounted either way so the PDF's position and
   // the tree's scroll/expand state survive switching (see CLAUDE.md
@@ -248,11 +249,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
       else if (block.type === 'repeat') setSheet({ kind: 'repeat', id })
       else if (block.type === 'measure') setSheet({ kind: 'measure', id })
       else if (block.type === 'stitch_count') setSheet({ kind: 'stitchCount', id })
-      return
-    }
-    if (found.kind === 'row') {
-      const parent = getParentAndIndex(content, id)
-      if (parent?.listKind === 'rows' && parent.parentId) setSheet({ kind: 'editRow', blockId: parent.parentId, id })
+      else if (block.type === 'rows') setSheet({ kind: 'rowsScreen', id })
     }
   }
 
@@ -260,6 +257,20 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
     const info = describeForMenu(content, id)
     applyChange(deleteNode(content, id), null)
     showDeleteToast(info?.label ?? 'Élément')
+  }
+
+  // Appends a row directly (RowsScreen shows it right away, already
+  // editable in place) instead of opening a separate "new row" form.
+  function handleAddRowInline(blockId: string) {
+    const found = findNode(content, blockId)
+    const block = found?.kind === 'block' ? (found.node as Block) : undefined
+    const rows = block?.type === 'rows' ? block.rows : []
+    const last = rows[rows.length - 1]
+    const showSide = findOwningSectionMethod(content, blockId) === 'flat'
+    const number = last?.number != null ? last.number + 1 : rows.length + 1
+    const side = showSide && last?.side ? (last.side === 'rs' ? 'ws' : 'rs') : null
+    const result = addRow(content, blockId, { number, side })
+    applyChange(result.content, result.id)
   }
 
   const controller: EditorController = {
@@ -275,8 +286,6 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
       setSheet({ kind: 'section', id: result.id })
     },
     onAddBlock: (parentId) => setSheet({ kind: 'pickBlockType', parentId }),
-    onAddRow: (blockId) => setSheet({ kind: 'createRow', blockId }),
-    onPasteRows: (blockId) => setSheet({ kind: 'pasteRows', blockId }),
     reorder: (id, targetIndex) => applyChange(moveNode(content, id, targetIndex), id),
   }
 
@@ -295,8 +304,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
     else if (type === 'repeat') setSheet({ kind: 'repeat', id: result.id })
     else if (type === 'measure') setSheet({ kind: 'measure', id: result.id })
     else if (type === 'stitch_count') setSheet({ kind: 'stitchCount', id: result.id })
-    // 'rows' has nothing more to configure up front — just close the picker.
-    else setSheet(null)
+    else setSheet({ kind: 'rowsScreen', id: result.id })
   }
 
   async function handleDuplicateGuide() {
@@ -318,20 +326,8 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
   const repeatBlock = sheet?.kind === 'repeat' ? (findNode(content, sheet.id)?.node as Extract<Block, { type: 'repeat' }> | undefined) : undefined
   const measureBlock = sheet?.kind === 'measure' ? (findNode(content, sheet.id)?.node as Extract<Block, { type: 'measure' }> | undefined) : undefined
   const stitchCountBlock = sheet?.kind === 'stitchCount' ? (findNode(content, sheet.id)?.node as Extract<Block, { type: 'stitch_count' }> | undefined) : undefined
-  const editingRow = sheet?.kind === 'editRow' ? (findNode(content, sheet.id)?.node as Row | undefined) : undefined
-
-  let createRowNumber: number | null = null
-  let createRowSide: Row['side'] = null
-  let createRowShowSide = false
-  if (sheet?.kind === 'createRow') {
-    const found = findNode(content, sheet.blockId)
-    const block = found?.kind === 'block' ? (found.node as Block) : undefined
-    const rows = block?.type === 'rows' ? block.rows : []
-    const last = rows[rows.length - 1]
-    createRowNumber = last?.number != null ? last.number + 1 : rows.length + 1
-    createRowShowSide = findOwningSectionMethod(content, sheet.blockId) === 'flat'
-    createRowSide = createRowShowSide && last?.side ? (last.side === 'rs' ? 'ws' : 'rs') : null
-  }
+  const rowsScreenBlock = sheet?.kind === 'rowsScreen' ? (findNode(content, sheet.id)?.node as Extract<Block, { type: 'rows' }> | undefined) : undefined
+  const rowsScreenShowSide = sheet?.kind === 'rowsScreen' ? findOwningSectionMethod(content, sheet.id) === 'flat' : false
 
   const menuInfo = menuId ? describeForMenu(content, menuId) : undefined
   const menuPosition = menuId ? getParentAndIndex(content, menuId) : undefined
@@ -524,45 +520,34 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
         />
       )}
 
-      {sheet?.kind === 'createRow' && (
-        <RowSheet
+      {rowsScreenBlock && sheet?.kind === 'rowsScreen' && (
+        <RowsScreen
           open
           onClose={() => setSheet(null)}
-          mode="create"
-          showSide={createRowShowSide}
-          initialNumber={createRowNumber}
-          initialSide={createRowSide}
-          onSave={(input) => {
-            const result = addRow(content, sheet.blockId, input)
+          rows={rowsScreenBlock.rows}
+          showSide={rowsScreenShowSide}
+          onReorder={(id, targetIndex) => applyChange(moveNode(content, id, targetIndex), id)}
+          onChangeRow={(id, patch) => applyChange(updateNode(content, id, { ...patch }), id)}
+          onDuplicateRow={(id) => {
+            const result = duplicateNode(content, id)
             applyChange(result.content, result.id)
           }}
+          onDeleteRow={(id) => handleDeleteNode(id)}
+          onAddRow={() => handleAddRowInline(sheet.id)}
+          onPasteRows={() => setPasteRowsFor(sheet.id)}
         />
       )}
 
-      {editingRow && sheet?.kind === 'editRow' && (
-        <RowSheet
-          open
-          onClose={() => setSheet(null)}
-          mode="edit"
-          showSide={findOwningSectionMethod(content, sheet.blockId) === 'flat'}
-          initialNumber={editingRow.number}
-          initialSide={editingRow.side}
-          initialInstructions={editingRow.instructions}
-          initialStitchesAfter={editingRow.stitchesAfter}
-          onSave={(input) => applyChange(updateNode(content, sheet.id, { ...input }), sheet.id)}
-        />
-      )}
-
-      {sheet?.kind === 'pasteRows' && (
+      {pasteRowsFor && (
         <PasteRowsSheet
           open
-          onClose={() => setSheet(null)}
-          startingNumber={pasteRowsStartingNumber(content, sheet.blockId)}
+          onClose={() => setPasteRowsFor(null)}
+          startingNumber={pasteRowsStartingNumber(content, pasteRowsFor)}
           onConfirm={(rows) => {
             let next = content
             let lastId: string | null = null
             for (const row of rows) {
-              const result = addRow(next, sheet.blockId, row)
+              const result = addRow(next, pasteRowsFor, row)
               next = result.content
               lastId = result.id
             }

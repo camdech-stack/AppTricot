@@ -1,7 +1,6 @@
 import { CornerDownRight } from 'lucide-react'
 import styles from './BlockList.module.css'
 import { SortableList } from './SortableList'
-import { RowList } from './RowList'
 import { TreeNodeHeader } from './TreeNodeHeader'
 import { blockTypeLabel, blockTypeMeta, summarizeMeasureBlock, summarizeRepeatBlock, summarizeStitchCountBlock } from './blockTypeMeta'
 import { countRowsInBlocks, isContainerBlock, type Block } from '../../../data'
@@ -48,8 +47,9 @@ function blockSubtitle(block: Block): string | undefined {
 
 function BlockCard({ block, depth, controller }: BlockCardProps) {
   const expanded = controller.isExpanded(block.id)
-  const expandable = block.type !== 'text'
-  const editable = block.type !== 'rows'
+  // A rows block has nothing to expand into — tapping it opens the
+  // full-screen Rangs screen (RowsScreen) instead, like every other block.
+  const expandable = block.type !== 'text' && block.type !== 'rows'
 
   return (
     <div className={styles.block}>
@@ -60,12 +60,10 @@ function BlockCard({ block, depth, controller }: BlockCardProps) {
         expandable={expandable}
         expanded={expanded}
         onToggleExpand={() => controller.toggleExpanded(block.id)}
-        onEdit={editable ? () => controller.onEdit(block.id) : undefined}
+        onEdit={() => controller.onEdit(block.id)}
         onOpenMenu={() => controller.onOpenMenu(block.id)}
         accentColor={blockTypeMeta(block.type).colorVar}
       />
-
-      {expanded && block.type === 'rows' && <RowList rows={block.rows} blockId={block.id} depth={depth + 1} controller={controller} />}
 
       {expanded && isContainerBlock(block) && (
         <div>

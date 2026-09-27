@@ -1,8 +1,8 @@
 // Full-screen editors for the tree nodes that just need a plain form: a
 // piece's name/type/notes, a montage/finition operation, a section's name/
 // type/method, and the four "simple" block types (text/repeat/measure/
-// stitch_count). Rows and pasted rows get their own file since they carry
-// more specific logic (RowSheet.tsx, PasteRowsSheet.tsx).
+// stitch_count). A rows block's own rows are edited in RowsScreen.tsx, and
+// pasting several rows at once has its own sheet (PasteRowsSheet.tsx).
 import { useEffect, useState } from 'react'
 import styles from './FormSheet.module.css'
 import { FullScreenPanel } from './FullScreenPanel'

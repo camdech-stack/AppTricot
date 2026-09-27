@@ -9,10 +9,11 @@ interface FullScreenPanelProps {
 }
 
 // Full-screen editor for a piece/section/block: slides in from the right
-// instead of the bottom Sheet used elsewhere, per the retour utilisateur —
-// closing it (the "Annuler" button) discards, the form's own "Enregistrer"
-// button commits. No input inside ever sets autoFocus, so opening it never
-// pops the keyboard on its own.
+// instead of the bottom Sheet used elsewhere, per the retour utilisateur.
+// No input inside ever sets autoFocus, so opening it never pops the
+// keyboard on its own. The close button says "Fermer", matching Sheet's
+// own close button elsewhere — not "Annuler", which the editor's header
+// already uses for Undo and shouldn't share an accessible name with.
 export function FullScreenPanel({ open, onClose, title, children }: FullScreenPanelProps) {
   if (!open) return null
 
@@ -21,7 +22,7 @@ export function FullScreenPanel({ open, onClose, title, children }: FullScreenPa
       <div className={styles.panel}>
         <div className={styles.header}>
           <button type="button" className={styles.cancelButton} onClick={onClose}>
-            Annuler
+            Fermer
           </button>
           <h2 className={styles.title}>{title}</h2>
           <span className={styles.headerSpacer} aria-hidden="true" />

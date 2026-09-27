@@ -1,7 +1,10 @@
 .overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  /* Below Sheet's z-index (100): a bottom sheet (paste-rows, a confirmation)
+     can still open on top of a full-screen panel, e.g. from the Rangs
+     screen — see RowsScreen. */
+  z-index: 90;
   background: var(--color-bg);
   animation: slideIn var(--transition-base);
 }
