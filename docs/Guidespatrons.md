@@ -239,6 +239,13 @@ la manche avant d'avoir fini le dos. La seule exception est la relecture :
 une fois une pièce marquée « faite », on peut y revenir consulter ou
 corriger un rang sans la rouvrir ni perturber la pièce réellement active.
 
+Un guide peut aussi se parcourir sans aucun projet ni progression du tout
+(« Aperçu », menu de l'éditeur) : cette lecture-là ne crée jamais de ligne
+dans `guideProgress` — la position vit uniquement en mémoire le temps de
+l'aperçu, et l'ordre des pièces n'y est plus contraint puisque rien n'est
+réellement tricoté. Voir CLAUDE.md « Aperçu du guide (lecture seule, sans
+projet) ».
+
 ### 9.2 La table `guideProgress`
 
 Un enregistrement `GuideProgressRecord` (schéma Dexie v12) contient :
