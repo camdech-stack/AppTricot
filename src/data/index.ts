@@ -171,6 +171,7 @@ export {
   getNextAvailablePieceId,
   computeStepsDone,
   createEmptyPieceProgress,
+  getContainerStepOverview,
   PIECE_HISTORY_LIMIT,
   type Cursor,
   type CursorStep,
@@ -183,9 +184,11 @@ export {
   type PieceProgressSummary,
   type GuideProgressSummary,
   type CursorDescription,
+  type InnermostContainerInfo,
   type ResumeSummary,
   type RepairResult,
   type NodeStatus,
+  type StepOverviewEntry,
 } from './guideProgress'
 export {
   MAX_BLOCK_NESTING_DEPTH,

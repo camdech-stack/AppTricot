@@ -586,6 +586,20 @@ function formatContainerLabel(block: Block, pass: number): string {
   return ''
 }
 
+// The innermost repeat/measure/stitch_count block directly containing the
+// cursor's position (not the checkpoint block itself for a 'checkpoint'
+// cursor, which gets its own dedicated screen instead) — feeds the "carte
+// répétition/passage" of the follow screen, see CLAUDE.md "Décisions
+// d'interface (étape 5b, refonte visuelle)".
+export interface InnermostContainerInfo {
+  nodeId: string
+  kind: 'repeat' | 'measure' | 'stitch_count'
+  pass: number
+  // Total passes for a 'repeat' (its `times`); null for 'measure'/
+  // 'stitch_count', whose total pass count is never known ahead of time.
+  total: number | null
+}
+
 export interface CursorDescription {
   pieceName: string
   sectionName: string | null
@@ -595,6 +609,13 @@ export interface CursorDescription {
   side: RowSide | null
   stitchesAfter: number | null
   text: string
+  // 1-based position of the current row within its own `rows` block, and
+  // that block's total row count — e.g. "3 / 13" — null unless step is
+  // 'row'. Distinct from `row.number`, which is the pattern's own row
+  // numbering and can restart, skip, or not exist at all.
+  rowIndexInBlock: number | null
+  rowCountInBlock: number | null
+  innermostContainer: InnermostContainerInfo | null
 }
 
 // Describes a cursor for the follow screen AND for step 6's "reprise
@@ -611,10 +632,10 @@ export function describeCursor(content: GuideContent, cursor: Cursor): CursorDes
     const targetUnit = lastFrame.list[lastFrame.index]!
     const section = targetUnit.sectionId ? (piece.sections.find((candidate) => candidate.id === targetUnit.sectionId) ?? null) : null
 
+    const ancestorContainers = path.map((frame) => frame.container).filter((container): container is ContainerUnit => container !== null)
+
     const repeatLabel =
-      path
-        .map((frame) => frame.container)
-        .filter((container): container is ContainerUnit => container !== null)
+      ancestorContainers
         .map((container) => {
           const block = findNode(content, container.id)?.node as Block | undefined
           const pass = cursor.passages[container.id] ?? 1
@@ -623,6 +644,19 @@ export function describeCursor(content: GuideContent, cursor: Cursor): CursorDes
         .filter((label) => label.length > 0)
         .join(' · ') || null
 
+    const deepestContainer = ancestorContainers[ancestorContainers.length - 1] ?? null
+    const innermostContainer: InnermostContainerInfo | null =
+      deepestContainer && deepestContainer.kind !== 'stitch_count' && deepestContainer.kind !== 'measure' && deepestContainer.kind !== 'repeat'
+        ? null
+        : deepestContainer
+          ? {
+              nodeId: deepestContainer.id,
+              kind: deepestContainer.kind,
+              pass: cursor.passages[deepestContainer.id] ?? 1,
+              total: deepestContainer.kind === 'repeat' ? (deepestContainer.times ?? 1) : null,
+            }
+          : null
+
     const node = findNode(content, cursor.nodeId)?.node
 
     let rowLabel: string | null = null
@@ -630,6 +664,8 @@ export function describeCursor(content: GuideContent, cursor: Cursor): CursorDes
     let stitchesAfter: number | null = null
     let blockLabel: string | null = null
     let text = ''
+    let rowIndexInBlock: number | null = null
+    let rowCountInBlock: number | null = null
 
     if (cursor.step === 'row' && node) {
       const row = node as Row
@@ -637,6 +673,15 @@ export function describeCursor(content: GuideContent, cursor: Cursor): CursorDes
       side = row.side
       stitchesAfter = row.stitchesAfter
       text = row.instructions
+      const blockFound = cursor.blockId ? findNode(content, cursor.blockId) : undefined
+      const rowsBlock = blockFound?.kind === 'block' ? (blockFound.node as Extract<Block, { type: 'rows' }>) : undefined
+      if (rowsBlock) {
+        const index = rowsBlock.rows.findIndex((candidate) => candidate.id === cursor.nodeId)
+        if (index !== -1) {
+          rowIndexInBlock = index + 1
+          rowCountInBlock = rowsBlock.rows.length
+        }
+      }
     } else if (cursor.step === 'text' && node) {
       text = (node as Extract<Block, { type: 'text' }>).instructions
       blockLabel = 'Remarque'
@@ -653,7 +698,86 @@ export function describeCursor(content: GuideContent, cursor: Cursor): CursorDes
       blockLabel = block.type === 'measure' ? 'Longueur atteinte ?' : 'Nombre de mailles atteint ?'
     }
 
-    return { pieceName: piece.name, sectionName: section?.name ?? null, blockLabel, repeatLabel, rowLabel, side, stitchesAfter, text }
+    return {
+      pieceName: piece.name,
+      sectionName: section?.name ?? null,
+      blockLabel,
+      repeatLabel,
+      rowLabel,
+      side,
+      stitchesAfter,
+      text,
+      rowIndexInBlock,
+      rowCountInBlock,
+      innermostContainer,
+    }
+  }
+  return null
+}
+
+// --- Local overview of a repeat/measure/stitch_count block's own steps -----
+
+export interface StepOverviewEntry {
+  nodeId: string
+  // "Rang 3" for a row (falling back to "Rang" without a number), "Remarque"
+  // for a text block, an operation's own label, or a nested container's own
+  // formatted label (e.g. "Répétition 1 / 5") — never expanded further.
+  label: string
+  sideLabel: RowSide | null
+  text: string
+  isCurrent: boolean
+}
+
+function unitLabelAndText(content: GuideContent, unit: Unit): { label: string; sideLabel: RowSide | null; text: string } {
+  if (unit.kind === 'row') {
+    const found = findNode(content, unit.id)
+    const row = found?.kind === 'row' ? (found.node as Row) : undefined
+    return { label: row?.number != null ? `Rang ${row.number}` : 'Rang', sideLabel: row?.side ?? null, text: row?.instructions ?? '' }
+  }
+  if (unit.kind === 'text') {
+    const found = findNode(content, unit.id)
+    const block = found?.kind === 'block' ? (found.node as Extract<Block, { type: 'text' }>) : undefined
+    return { label: 'Remarque', sideLabel: null, text: block?.instructions ?? '' }
+  }
+  if (unit.kind === 'operation') {
+    const found = findNode(content, unit.id)
+    const operation = found?.kind === 'operation' ? (found.node as Operation) : undefined
+    return { label: operation ? OPERATION_LABELS[operation.kind] : '', sideLabel: null, text: operation?.note ?? '' }
+  }
+  // A nested container: summarized as a single line at passage 1, never
+  // expanded — this overview is informational only (see CLAUDE.md "Vue
+  // d'ensemble locale"), not a substitute for the full "Plan du guide".
+  const found = findNode(content, unit.id)
+  const block = found?.kind === 'block' ? (found.node as Block) : undefined
+  return { label: block ? formatContainerLabel(block, 1) : '', sideLabel: null, text: '' }
+}
+
+// True if `id` is `unit`'s own id, or belongs to any of its descendants —
+// used only to decide whether a nested container's single summary line
+// should show as "current" in the overview below.
+function unitContainsId(unit: Unit, id: string): boolean {
+  if (unit.id === id) return true
+  return isContainerUnit(unit) && unit.children.some((child) => unitContainsId(child, id))
+}
+
+// Flat, one-level list of a repeat/measure/stitch_count block's own
+// immediate children, for the "Vue d'ensemble" card on the follow screen —
+// purely informational (no navigation): a nested container's own children
+// are summarized as one line rather than expanded, since this card is only
+// meant as an at-a-glance recap of the current block, not a jump target
+// (see "Plan du guide" for that). Returns null if `containerNodeId` isn't a
+// repeat/measure/stitch_count block anywhere in the guide.
+export function getContainerStepOverview(content: GuideContent, containerNodeId: string, currentNodeId: string): StepOverviewEntry[] | null {
+  for (const piece of content.pieces) {
+    const units = buildPieceUnits(piece)
+    const path = locate(units, containerNodeId, true)
+    if (!path) continue
+    const lastFrame = path[path.length - 1]!
+    const container = lastFrame.list[lastFrame.index] as ContainerUnit
+    return container.children.map((child) => {
+      const { label, sideLabel, text } = unitLabelAndText(content, child)
+      return { nodeId: child.id, label, sideLabel, text, isCurrent: unitContainsId(child, currentNodeId) }
+    })
   }
   return null
 }

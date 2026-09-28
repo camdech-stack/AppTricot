@@ -5,6 +5,7 @@ import { useGuide } from '../../../hooks/useGuide'
 import { useGuideContent } from '../../../hooks/useGuideContent'
 import { useGuideProgress } from '../../../hooks/useGuideProgress'
 import { useProject } from '../../../hooks/useProject'
+import { usePattern } from '../../../hooks/usePattern'
 import { startGuide } from '../../../data'
 
 interface GuidePanelProps {
@@ -27,6 +28,7 @@ export function GuidePanel({ projectId, guideId, onBack }: GuidePanelProps) {
   const guide = useGuide(guideId)
   const content = useGuideContent(guideId)
   const progress = useGuideProgress(projectId, guideId)
+  const linkedPatternRecord = usePattern(guide?.patternId ?? undefined)
 
   const [mode, setMode] = useState<'summary' | 'active'>('summary')
   useEffect(() => {
@@ -37,7 +39,16 @@ export function GuidePanel({ projectId, guideId, onBack }: GuidePanelProps) {
 
   if (mode === 'active' && progress) {
     return (
-      <GuideFollowScreen projectId={projectId} guideId={guideId} project={project} content={content} progress={progress} onBack={onBack} />
+      <GuideFollowScreen
+        projectId={projectId}
+        guideId={guideId}
+        guideName={guide.name}
+        project={project}
+        content={content}
+        progress={progress}
+        linkedPattern={linkedPatternRecord ? { id: linkedPatternRecord.id, name: linkedPatternRecord.name } : null}
+        onBack={onBack}
+      />
     )
   }
 

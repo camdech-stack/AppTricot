@@ -8,6 +8,7 @@ import {
   countSteps,
   createEmptyPieceProgress,
   describeCursor,
+  getContainerStepOverview,
   getGuideProgress,
   getInitialCursor,
   getNextAvailablePieceId,
@@ -646,6 +647,57 @@ describe('describeCursor', () => {
   it('returns null for a cursor that matches nothing', () => {
     const { content } = buildLinearPiece()
     expect(describeCursor(content, { nodeId: 'nope', step: 'row', blockId: null, passages: {} })).toBeNull()
+  })
+
+  it('reports the row’s position within its own rows block, and no innermost container outside a repeat', () => {
+    const { content, rowsBlockId, row1Id } = buildLinearPiece()
+    const cursor: Cursor = { nodeId: row1Id, step: 'row', blockId: rowsBlockId, passages: {} }
+    const description = describeCursor(content, cursor)
+    expect(description).toMatchObject({ rowIndexInBlock: 1, rowCountInBlock: 2, innermostContainer: null })
+  })
+
+  it('reports the innermost repeat’s pass/total for a row inside it', () => {
+    const { content, repeatBlockId, rowsBlockId, rowBId } = buildRepeatPiece(10)
+    const cursor: Cursor = { nodeId: rowBId, step: 'row', blockId: rowsBlockId, passages: { [repeatBlockId]: 7 } }
+    const description = describeCursor(content, cursor)
+    expect(description).toMatchObject({ rowIndexInBlock: 2, rowCountInBlock: 2 })
+    expect(description?.innermostContainer).toEqual({ nodeId: repeatBlockId, kind: 'repeat', pass: 7, total: 10 })
+  })
+
+  it('reports the innermost of two nested repeats, not the outer one', () => {
+    const { content, outerId, innerId, rowId } = buildNestedRepeatPiece()
+    const cursor: Cursor = { nodeId: rowId, step: 'row', blockId: null, passages: { [outerId]: 2, [innerId]: 1 } }
+    const description = describeCursor(content, cursor)
+    expect(description?.innermostContainer).toEqual({ nodeId: innerId, kind: 'repeat', pass: 1, total: 2 })
+  })
+
+  it('reports a measure block’s pass with no total (unknown ahead of time)', () => {
+    const { content, measureId, rowId } = buildMeasurePiece()
+    const cursor: Cursor = { nodeId: rowId, step: 'row', blockId: null, passages: { [measureId]: 3 } }
+    const description = describeCursor(content, cursor)
+    expect(description?.innermostContainer).toEqual({ nodeId: measureId, kind: 'measure', pass: 3, total: null })
+  })
+})
+
+describe('getContainerStepOverview', () => {
+  it('lists a repeat block’s own rows, marking the current one', () => {
+    const { content, repeatBlockId, rowAId, rowBId } = buildRepeatPiece(10)
+    const overview = getContainerStepOverview(content, repeatBlockId, rowBId)
+    expect(overview).toEqual([
+      { nodeId: rowAId, label: 'Rang 1', sideLabel: null, text: '*2 m end, 2 m env*', isCurrent: false },
+      { nodeId: rowBId, label: 'Rang 2', sideLabel: null, text: 'tricoter les mailles comme elles se présentent', isCurrent: true },
+    ])
+  })
+
+  it('summarizes a nested container as a single line without expanding it', () => {
+    const { content, outerId, innerId, rowId } = buildNestedRepeatPiece()
+    const overview = getContainerStepOverview(content, outerId, rowId)
+    expect(overview).toEqual([{ nodeId: innerId, label: 'Répétition 1 / 2', sideLabel: null, text: '', isCurrent: true }])
+  })
+
+  it('returns null when the id isn’t a repeat/measure/stitch_count block', () => {
+    const { content, rowsBlockId } = buildLinearPiece()
+    expect(getContainerStepOverview(content, rowsBlockId, 'anything')).toBeNull()
   })
 })
 

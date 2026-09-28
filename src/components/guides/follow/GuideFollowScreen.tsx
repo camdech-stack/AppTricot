@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeft, MoreHorizontal, Pencil } from 'lucide-react'
+import { ArrowLeft, BookOpen, MoreHorizontal } from 'lucide-react'
 import styles from './GuideFollowScreen.module.css'
 import { CheckpointScreen } from './CheckpointScreen'
 import { PieceFinishedScreen } from './PieceFinishedScreen'
@@ -8,8 +8,12 @@ import { GuideFollowMenuSheet } from './GuideFollowMenuSheet'
 import { GuidePlanSheet } from './GuidePlanSheet'
 import { LinkedCounterSheet } from './LinkedCounterSheet'
 import { CorrectStepSheet } from './CorrectStepSheet'
+import { GuideProgressHeader } from './GuideProgressHeader'
+import { StepCards } from './StepCards'
+import { StepOverviewCard } from './StepOverviewCard'
 import { IconButton, Pill } from '../../ui'
 import { ChronoButton } from '../../counters/ChronoButton'
+import { PdfViewerCore } from '../../patterns/PdfViewerCore'
 import { useCounterChrono } from '../../../hooks/useCounterChrono'
 import { useSettings } from '../../../hooks/useSettings'
 import { useCounters } from '../../../hooks/useCounters'
@@ -19,7 +23,9 @@ import {
   createEmptyPieceProgress,
   describeCursor,
   findNode,
+  getContainerStepOverview,
   getNextAvailablePieceId,
+  getPieceProgress,
   repairActiveCursor,
   resetProgress,
   saveGuideContent,
@@ -54,15 +60,19 @@ function isInsideVariableLengthBlock(content: GuideContent, ancestorIds: string[
 interface GuideFollowScreenProps {
   projectId: string
   guideId: string
+  guideName: string
   project: ProjectRecord
   content: GuideContent
   progress: GuideProgressRecord
+  // Omitted when the guide has no linked pattern — see CLAUDE.md "Voir le
+  // patron depuis le suivi".
+  linkedPattern?: { id: string; name: string } | null
   // Omitted when embedded in a page that already has its own back button
   // (the project work view's "Guide" tab) — see CLAUDE.md "Vue de travail".
   onBack?: () => void
 }
 
-export function GuideFollowScreen({ projectId, guideId, project, content, progress, onBack }: GuideFollowScreenProps) {
+export function GuideFollowScreen({ projectId, guideId, guideName, project, content, progress, linkedPattern, onBack }: GuideFollowScreenProps) {
   const settings = useSettings()
   const chrono = useCounterChrono({ projectId }, 'guide')
   const counters = useCounters(projectId) ?? []
@@ -71,6 +81,7 @@ export function GuideFollowScreen({ projectId, guideId, project, content, progre
   const [planOpen, setPlanOpen] = useState(false)
   const [counterSheetOpen, setCounterSheetOpen] = useState(false)
   const [correctOpen, setCorrectOpen] = useState(false)
+  const [patternOpen, setPatternOpen] = useState(false)
   const [adjustedMessage, setAdjustedMessage] = useState<string | null>(null)
 
   const nextPieceId = getNextAvailablePieceId(content, progress)
@@ -99,11 +110,18 @@ export function GuideFollowScreen({ projectId, guideId, project, content, progre
   const header = (
     <div className={styles.header}>
       {onBack && <IconButton icon={<ArrowLeft strokeWidth={1.75} />} label="Retour" onClick={onBack} />}
-      <span className={styles.breadcrumb}>{breadcrumbFor(content, progress)}</span>
-      {settings?.trackingEnabled !== false && <ChronoButton chrono={chrono} />}
+      <span className={styles.headerTitle}>{guideName}</span>
       <IconButton icon={<MoreHorizontal strokeWidth={1.75} />} label="Menu du guide" onClick={() => setMenuOpen(true)} />
     </div>
   )
+
+  if (patternOpen && linkedPattern) {
+    return (
+      <div className={styles.pdfOverlay}>
+        <PdfViewerCore patternId={linkedPattern.id} projectId={projectId} patternName={linkedPattern.name} onBack={() => setPatternOpen(false)} />
+      </div>
+    )
+  }
 
   if (nextPieceId === null) {
     return (
@@ -144,17 +162,26 @@ export function GuideFollowScreen({ projectId, guideId, project, content, progre
 
   const cursor = pieceProgress.cursor
   const description = describeCursor(content, cursor)
+  const piecePercent = getPieceProgress(piece, pieceProgress).percent
 
   if (cursor.step === 'checkpoint') {
     return (
       <div className={styles.page}>
         {header}
-        <CheckpointScreen
-          description={description}
-          onReached={() => void advanceGuide(projectId, guideId, { type: 'reached' })}
-          onNotReached={() => void advanceGuide(projectId, guideId, { type: 'notReached' })}
-          onFinishNow={() => void advanceGuide(projectId, guideId, { type: 'finishBlock' })}
-        />
+        <div className={styles.body}>
+          <GuideProgressHeader
+            pieceName={piece.name}
+            sectionName={description?.sectionName}
+            percent={piecePercent}
+            chronoSlot={settings?.trackingEnabled !== false ? <ChronoButton chrono={chrono} /> : undefined}
+          />
+          <CheckpointScreen
+            description={description}
+            onReached={() => void advanceGuide(projectId, guideId, { type: 'reached' })}
+            onNotReached={() => void advanceGuide(projectId, guideId, { type: 'notReached' })}
+            onFinishNow={() => void advanceGuide(projectId, guideId, { type: 'finishBlock' })}
+          />
+        </div>
       </div>
     )
   }
@@ -167,27 +194,40 @@ export function GuideFollowScreen({ projectId, guideId, project, content, progre
   const nextButtonLabel = cursor.step === 'row' ? 'Rang suivant' : cursor.step === 'text' ? "J'ai fini" : 'Continuer'
   const canFinishBlockNow = isInsideVariableLengthBlock(content, Object.keys(cursor.passages))
   const textSizeClass = TEXT_SIZE_CLASS[settings?.guideRowTextSize ?? 'medium']
+  // A nested repeat's own chain ("Répétition 2 / 3 · Répétition 1 / 2") is
+  // only shown as extra context when there's more than one level — the
+  // innermost one already has its own card just below.
+  const nestedContext = description?.repeatLabel && description.repeatLabel.includes(' · ') ? description.repeatLabel : null
+  const overviewEntries = description?.innermostContainer ? getContainerStepOverview(content, description.innermostContainer.nodeId, cursor.nodeId) : null
 
   return (
     <div className={styles.page}>
       {header}
 
       <div className={`${styles.body} ${textSizeClass}`}>
-        {description?.repeatLabel && (
-          <div className={styles.repeatPill}>
-            <Pill color="gold">{description.repeatLabel}</Pill>
-          </div>
-        )}
+        <GuideProgressHeader
+          pieceName={piece.name}
+          sectionName={description?.sectionName}
+          percent={piecePercent}
+          chronoSlot={settings?.trackingEnabled !== false ? <ChronoButton chrono={chrono} /> : undefined}
+        />
+
+        {nestedContext && <p className={styles.nestedContext}>{nestedContext}</p>}
 
         {adjustedMessage && <Pill color="terracotta">{adjustedMessage}</Pill>}
+
+        <StepCards
+          cursorStep={cursor.step}
+          rowLabel={description?.rowLabel ?? null}
+          rowIndexInBlock={description?.rowIndexInBlock ?? null}
+          rowCountInBlock={description?.rowCountInBlock ?? null}
+          side={description?.side ?? null}
+          innermostContainer={description?.innermostContainer ?? null}
+        />
 
         <div className={styles.card}>
           {cursor.step === 'row' && (
             <>
-              <div className={styles.rowNumber}>
-                {description?.rowLabel ?? 'Rang'}
-                {description?.side && <Pill color={description.side === 'rs' ? 'primary' : 'blue'}> {description.side === 'rs' ? 'END' : 'ENV'}</Pill>}
-              </div>
               <p className={styles.rowText}>{description?.text || '—'}</p>
               {description?.stitchesAfter != null && <p className={styles.stitchesAfter}>Mailles après : {description.stitchesAfter}</p>}
             </>
@@ -201,23 +241,18 @@ export function GuideFollowScreen({ projectId, guideId, project, content, progre
             </>
           )}
           {cursor.step === 'single' && <p className={styles.rowText}>{description?.blockLabel}</p>}
-
-          <button type="button" className={styles.correctButton} onClick={() => setCorrectOpen(true)}>
-            <Pencil size={14} strokeWidth={1.75} />
-            Corriger
-          </button>
-          {canFinishBlockNow && (
-            <button
-              type="button"
-              className={styles.correctButton}
-              onClick={() => void advanceGuide(projectId, guideId, { type: 'finishBlock' })}
-            >
-              Terminer ce bloc maintenant
-            </button>
-          )}
         </div>
 
         {nextPreviewLabel && <p className={styles.nextPreview}>Ensuite : {nextPreviewLabel}</p>}
+
+        {overviewEntries && <StepOverviewCard entries={overviewEntries} />}
+
+        {linkedPattern && (
+          <button type="button" className={styles.patternButton} onClick={() => setPatternOpen(true)}>
+            <BookOpen size={18} strokeWidth={1.75} />
+            Voir le patron
+          </button>
+        )}
       </div>
 
       <div className={styles.buttonZone}>
@@ -236,6 +271,8 @@ export function GuideFollowScreen({ projectId, guideId, project, content, progre
         onOpenPlan={() => setPlanOpen(true)}
         onCorrect={() => setCorrectOpen(true)}
         canCorrect
+        onFinishBlock={() => void advanceGuide(projectId, guideId, { type: 'finishBlock' })}
+        canFinishBlock={canFinishBlockNow}
       />
 
       {planOpen && (
@@ -269,13 +306,4 @@ export function GuideFollowScreen({ projectId, guideId, project, content, progre
       )}
     </div>
   )
-}
-
-function breadcrumbFor(content: GuideContent, progress: GuideProgressRecord): string {
-  const piece = content.pieces.find((candidate) => candidate.id === progress.activePieceId)
-  if (!piece) return ''
-  const pieceProgress = progress.pieces[piece.id]
-  const cursor = pieceProgress?.cursor
-  const description = cursor ? describeCursor(content, cursor) : null
-  return [piece.name, description?.sectionName].filter(Boolean).join(' > ')
 }
