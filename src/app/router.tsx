@@ -11,6 +11,7 @@ import { PatternViewerPage } from '../pages/PatternViewerPage'
 import { ProjectWorkPage } from '../pages/ProjectWorkPage'
 import { LazyGuideEditorPage } from '../pages/LazyGuideEditorPage'
 import { LazyGuideFollowPage } from '../pages/LazyGuideFollowPage'
+import { LazyGuidePreviewPage } from '../pages/LazyGuidePreviewPage'
 import { YarnPage } from '../pages/YarnPage'
 import { YarnFormPage } from '../pages/YarnFormPage'
 import { YarnDetailPage } from '../pages/YarnDetailPage'
@@ -51,6 +52,7 @@ export const router = createHashRouter([
   { path: '/patrons/:patternId', element: <PatternDetailPage /> },
   { path: '/patrons/:patternId/lire', element: <PatternViewerPage /> },
   { path: '/guides/:guideId', element: <LazyGuideEditorPage /> },
+  { path: '/guides/:guideId/apercu', element: <LazyGuidePreviewPage /> },
   { path: '/laine/nouveau', element: <YarnFormPage /> },
   { path: '/laine/:yarnId', element: <YarnDetailPage /> },
   { path: '/laine/:yarnId/modifier', element: <YarnFormPage /> },

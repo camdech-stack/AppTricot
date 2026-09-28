@@ -591,6 +591,7 @@ function GuideEditorInner({ guideId, guide, initialContent }: GuideEditorInnerPr
         onClose={() => setGuideMenuOpen(false)}
         onEditMeta={() => setGuideMetaOpen(true)}
         onFollow={() => void followFlow.startFollow(guideId)}
+        onPreview={() => navigate(`/guides/${guideId}/apercu`)}
         onDuplicate={() => void handleDuplicateGuide()}
         onDelete={() => void handleDeleteGuide()}
         linkedProjects={linkedProjects}
