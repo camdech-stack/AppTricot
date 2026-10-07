@@ -15,6 +15,10 @@ function defaultSettings(now: string): AppSettingsRecord {
     ravelryEnabled: false,
     ravelryUsername: null,
     ravelryPassword: null,
+    lastBackupAt: null,
+    backupReminderEnabled: true,
+    backupReminderIntervalDays: 14,
+    backupReminderSnoozedAt: null,
     createdAt: now,
     updatedAt: now,
   }
@@ -49,6 +53,10 @@ export async function updateSettings(
       | 'ravelryEnabled'
       | 'ravelryUsername'
       | 'ravelryPassword'
+      | 'lastBackupAt'
+      | 'backupReminderEnabled'
+      | 'backupReminderIntervalDays'
+      | 'backupReminderSnoozedAt'
     >
   >,
 ): Promise<AppSettingsRecord> {

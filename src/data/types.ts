@@ -35,7 +35,18 @@ export interface AppSettingsRecord extends BaseEntity {
   ravelryEnabled: boolean
   ravelryUsername: string | null
   ravelryPassword: string | null
+  // Step 7: backup reminder. `lastBackupAt` is set only once an export was
+  // actually handed to the user (share completed / download triggered).
+  lastBackupAt: string | null
+  backupReminderEnabled: boolean
+  // null = "jamais".
+  backupReminderIntervalDays: BackupReminderInterval
+  // Set by "Plus tard": the reminder waits a full interval from here.
+  backupReminderSnoozedAt: string | null
 }
+
+export type BackupReminderInterval = 7 | 14 | 30 | null
+export const BACKUP_REMINDER_INTERVALS: readonly BackupReminderInterval[] = [7, 14, 30, null]
 
 export type ProjectCraft = 'knitting' | 'crochet'
 export type ProjectStatus = 'todo' | 'in_progress' | 'paused' | 'done'
