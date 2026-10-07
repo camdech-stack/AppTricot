@@ -11,6 +11,9 @@ export interface NewGuideInput {
   patternId?: string | null
   sizeLabel?: string | null
   notes?: string
+  // Step 9 import: a ready-made, already validated tree stored with the guide
+  // in the same transaction. Omitted for a manually created (empty) guide.
+  content?: GuideContent
 }
 
 export async function getGuides(): Promise<GuideRecord[]> {
@@ -30,7 +33,7 @@ export async function getGuideContent(guideId: string): Promise<GuideContent | u
   return record?.content
 }
 
-// Creates the guide and its (empty) content together in one transaction —
+// Creates the guide and its content (empty unless `input.content` is given) together in one transaction —
 // a guide never exists without a content row, same convention as
 // importPattern's metadata+file+cover write.
 export async function createGuide(input: NewGuideInput): Promise<GuideRecord> {
@@ -52,7 +55,7 @@ export async function createGuide(input: NewGuideInput): Promise<GuideRecord> {
       id,
       guideId: id,
       schemaVersion: 1,
-      content: emptyGuideContent(),
+      content: input.content ?? emptyGuideContent(),
       createdAt: now,
       updatedAt: now,
     }
