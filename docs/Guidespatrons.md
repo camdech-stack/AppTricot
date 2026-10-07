@@ -402,3 +402,67 @@ description prête à afficher (pièce, section, rang ou libellé de bloc,
 pourcentage) de la position courante — pensées pour l'étape 6 (« reprise
 rapide » de l'accueil), déjà utilisées par la carte « Guide de patron » de
 la fiche projet.
+
+## 10. Importer un guide produit hors de l'app (étape 9)
+
+L'app ne contient aucune IA et ne fait aucun appel réseau pour cela. Pour
+convertir un patron PDF en guide, on ouvre une conversation avec
+l'assistant IA de son choix (hors de l'app), on lui joint le PDF, on lui
+demande le JSON décrit à la section 7, puis on l'importe dans l'app :
+Patrons > Guides > « Importer un guide », ou depuis la fiche d'un patron
+(« Importer un guide pour ce patron », qui préremplit le patron lié).
+
+Champs facultatifs à côté de `schemaVersion` et `pieces`, uniquement pour
+préremplir le formulaire d'import (ils ne font pas partie du contenu
+stocké) :
+
+```jsonc
+{
+  "name": "Bonnet simple",   // nom proposé
+  "craft": "knitting",       // "knitting" (ou "tricot") ou "crochet"
+  "sizeLabel": "M",          // taille proposée
+  "schemaVersion": 1,
+  "pieces": [ /* voir section 7 */ ]
+}
+```
+
+Déroulé de l'analyse (`analyzeGuideImport`, `src/data/guideImport.ts`) :
+taille limitée à 5 Mo ; retrait d'une clôture markdown « ```json » si
+l'assistant en a mis une (signalé à l'écran) ; `JSON.parse` protégé
+(ligne/colonne de l'erreur quand le navigateur la donne) ; refus d'une
+`schemaVersion` plus récente que l'app ; mise à niveau d'une version plus
+ancienne ; `validateGuideContent`. Si la validation échoue mais qu'une
+réparation par `normalizeGuideContent` aboutit (identifiants manquants ou
+en double, valeurs hors bornes, champs texte absents…), l'app liste les
+problèmes et ne corrige qu'après un appui sur « Appliquer les
+corrections » — elle prévient quand la correction supprime du contenu
+(type de bloc inconnu, imbrication trop profonde). Rien n'est créé tant
+que le guide n'est pas valide ; à la fin, guide et contenu sont écrits
+dans une seule transaction (`createGuide` avec `content`).
+
+Exemple minimal inventé :
+
+```json
+{
+  "name": "Bonnet simple",
+  "schemaVersion": 1,
+  "pieces": [
+    {
+      "id": "p1", "name": "Bonnet", "category": "other", "customCategory": "Bonnet",
+      "castOn": { "id": "o1", "kind": "cast_on", "stitches": 80, "joinMode": null, "note": "" },
+      "sections": [
+        {
+          "id": "s1", "name": "Côtes", "category": "ribbing", "customCategory": "", "method": "round",
+          "blocks": [
+            { "id": "b1", "type": "rows", "rows": [
+              { "id": "r1", "number": 1, "side": null, "instructions": "*1 m end, 1 m env*", "stitchesAfter": null }
+            ] }
+          ]
+        }
+      ],
+      "finish": { "id": "o2", "kind": "bind_off", "stitches": null, "joinMode": null, "note": "" },
+      "notes": ""
+    }
+  ]
+}
+```
