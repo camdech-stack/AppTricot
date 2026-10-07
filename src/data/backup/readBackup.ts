@@ -1,4 +1,4 @@
-import JSZip from 'jszip'
+import type JSZip from 'jszip'
 import { CURRENT_SCHEMA_VERSION } from '../db'
 import { migrateGuideContent } from '../guideTree'
 import type { GuideContent } from '../guideModel'
@@ -71,7 +71,8 @@ function parseManifest(value: unknown): BackupManifest {
 export async function openBackup(file: Blob): Promise<OpenedBackup> {
   let zip: JSZip
   try {
-    zip = await JSZip.loadAsync(file)
+    const { default: JSZipClass } = await import('jszip')
+    zip = await JSZipClass.loadAsync(file)
   } catch {
     throw new BackupError('not_a_backup', NOT_A_BACKUP)
   }

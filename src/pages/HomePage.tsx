@@ -3,6 +3,7 @@ import { CalendarCheck, ListOrdered, Timer, Layers, Hourglass } from 'lucide-rea
 import styles from './HomePage.module.css'
 import { Button, Card, SectionTitle, StatTile } from '../components/ui'
 import { ResumeCard } from '../components/home/ResumeCard'
+import { BackupReminderBanner } from '../components/backup/BackupReminderBanner'
 import { useHomeDashboard } from '../hooks/useHomeDashboard'
 import { useSettings } from '../hooks/useSettings'
 import { useRelativeTime } from '../hooks/useRelativeTime'
@@ -40,6 +41,8 @@ export function HomePage() {
   return (
     <div className={styles.page}>
       <h1 className={styles.greeting}>{getGreeting(new Date())}</h1>
+
+      <BackupReminderBanner />
 
       <section className={styles.section}>
         <SectionTitle title="Reprendre" />

@@ -1,4 +1,3 @@
-import JSZip from 'jszip'
 import { db, CURRENT_SCHEMA_VERSION } from '../db'
 import {
   BACKUP_FORMAT,
@@ -69,6 +68,8 @@ export async function buildBackup(
   now: Date = new Date(),
 ): Promise<BuiltBackup> {
   const snapshot = await snapshotTables()
+  // Loaded on demand: JSZip stays out of the main bundle.
+  const { default: JSZip } = await import('jszip')
   const zip = new JSZip()
   const data: Record<string, unknown[]> = {}
   const counts: Record<string, number> = {}

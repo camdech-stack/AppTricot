@@ -5,6 +5,7 @@ import { useSettings } from '../hooks/useSettings'
 import { formatFileSize } from '../utils/formatFileSize'
 import { getPatterns, isStoragePersisted, requestPersistentStorage, updateSettings, type GuideRowTextSize, type LengthUnit, type YarnQuantityUnit } from '../data'
 import { RavelrySettingsSection } from '../ravelry'
+import { BackupSection } from '../components/backup/BackupSection'
 
 // TEMPORARY: diagnosing a bottom safe-area rendering bug on a real iPhone,
 // which can't be reproduced or measured from this dev environment. Remove
@@ -196,6 +197,8 @@ export function SettingsPage() {
       </section>
 
       <RavelrySettingsSection />
+
+      <BackupSection />
 
       <section className={styles.section}>
         <div className={styles.sectionTitle}>Stockage</div>
