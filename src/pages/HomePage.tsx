@@ -6,7 +6,7 @@ import { ResumeCard } from '../components/home/ResumeCard'
 import { useHomeDashboard } from '../hooks/useHomeDashboard'
 import { useSettings } from '../hooks/useSettings'
 import { useRelativeTime } from '../hooks/useRelativeTime'
-import { formatDuration } from '../utils/formatDuration'
+import { formatDuration, formatTotalDuration } from '../utils/formatDuration'
 import { formatSkeins } from '../utils/formatYarnQuantity'
 import { getGreeting } from '../utils/greeting'
 import type { RecentSession } from '../data'
@@ -75,7 +75,7 @@ export function HomePage() {
         <SectionTitle title="En un coup d'œil" />
         <Card className={styles.statsGrid}>
           {showTime && (
-            <StatTile icon={<Timer />} value={formatDuration(weekTime.totalMs)} label="Tricoté cette semaine" />
+            <StatTile icon={<Timer />} value={formatTotalDuration(weekTime.totalMs)} label="Tricoté cette semaine" />
           )}
           <StatTile icon={<Hourglass />} value={dashboard.byStatus.in_progress} label="Projets en cours" color="blue" />
           <StatTile icon={<CalendarCheck />} value={dashboard.completedThisMonth} label="Terminés ce mois" color="sage" />

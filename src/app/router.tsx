@@ -16,6 +16,7 @@ import { YarnPage } from '../pages/YarnPage'
 import { YarnFormPage } from '../pages/YarnFormPage'
 import { YarnDetailPage } from '../pages/YarnDetailPage'
 import { StatsPage } from '../pages/StatsPage'
+import { CompletedProjectsPage } from '../pages/CompletedProjectsPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { StyleguidePage } from '../pages/StyleguidePage'
 import { RavelryDiagnosticPage } from '../ravelry'
@@ -38,6 +39,7 @@ export const router = createHashRouter([
       { path: 'patrons', element: <PatternsPage /> },
       { path: 'laine', element: <YarnPage /> },
       { path: 'stats', element: <StatsPage /> },
+      { path: 'stats/termines', element: <CompletedProjectsPage /> },
       { path: 'reglages', element: <SettingsPage /> },
       { path: 'styleguide', element: <StyleguidePage /> },
     ],

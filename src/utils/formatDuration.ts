@@ -13,6 +13,12 @@ export function formatDuration(ms: number): string {
   return `${hours} h ${pad2(minutes)}`
 }
 
+// Like formatDuration, but an empty total reads "0 min" rather than "< 1 min"
+// (which suits a single short session, not a period with nothing in it).
+export function formatTotalDuration(ms: number): string {
+  return ms <= 0 ? '0 min' : formatDuration(ms)
+}
+
 function pad2(value: number): string {
   return String(value).padStart(2, '0')
 }
