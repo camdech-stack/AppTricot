@@ -9,8 +9,24 @@ import { getLastUsedGuideId, getProjectGuideProgressInputs, getProjectResumeSumm
 import { getSessionsForTarget } from './sessionsRepository'
 import { getLiveSessionId } from './sessionTrackingState'
 import { computeProjectProgress, type ProjectProgress } from './progress'
-import { computeProjectTimeStats, getSessionDuration, localDayKey, type TimeStats } from './timeStats'
-import { computeYarnStockSummary } from './yarnMath'
+import {
+  aggregateTimeByPeriod,
+  computeGlobalTimeStatsInRange,
+  computeProjectTimeStats,
+  countCompletedProjectsByPeriod,
+  getSessionDuration,
+  getStatsWindow,
+  listBucketKeys,
+  localDayKey,
+  type CompletedBucket,
+  type GlobalTimeStats,
+  type StatsView,
+  type StatsWindow,
+  type TimeBucket,
+  type TimeStats,
+} from './timeStats'
+import { computeYarnStockSummary, type YarnConsumptionStats } from './yarnMath'
+import { computeGlobalYarnStats } from './yarnsRepository'
 import type { CursorDescription } from './guideProgress'
 import type { ProjectRecord, ProjectStatus, SessionRecord } from './types'
 
@@ -173,5 +189,111 @@ export async function getActiveProjectsSummary(now: number = Date.now()): Promis
         continueTarget,
       }
     }),
+  )
+}
+
+const HOME_RECENT_SESSIONS_COUNT = 4
+
+export interface HomeDashboard {
+  active: ActiveProjectSummary[]
+  dashboard: GlobalDashboardStats
+  weekTime: GlobalTimeStats
+  monthYarn: YarnConsumptionStats
+  recentSessions: RecentSession[]
+}
+
+// Everything the home screen shows, gathered in one read so a single live
+// query (and a single re-render) covers it.
+export async function getHomeDashboard(now: number = Date.now()): Promise<HomeDashboard> {
+  const nowDate = new Date(now)
+  const week = getStatsWindow('week', nowDate).range
+  const month = getStatsWindow('month', nowDate).range
+
+  const [active, dashboard, sessions, monthYarn, recentSessions] = await Promise.all([
+    getActiveProjectsSummary(now),
+    computeGlobalDashboardStats(now),
+    db.sessions.toArray(),
+    computeGlobalYarnStats(month),
+    getRecentSessions(HOME_RECENT_SESSIONS_COUNT, {}, now),
+  ])
+
+  return {
+    active,
+    dashboard,
+    weekTime: computeGlobalTimeStatsInRange(sessions, week, now, getLiveSessionId()),
+    monthYarn,
+    recentSessions,
+  }
+}
+
+export interface StatsOverview {
+  view: StatsView
+  window: StatsWindow
+  dashboard: GlobalDashboardStats
+  time: GlobalTimeStats
+  // One entry per bucket of the window, empty periods included.
+  timeBuckets: TimeBucket[]
+  completedBuckets: CompletedBucket[]
+  completedInRange: number
+  yarn: YarnConsumptionStats
+}
+
+// The stats tab's data for one period view.
+export async function getStatsOverview(view: StatsView, now: number = Date.now()): Promise<StatsOverview> {
+  const [sessions, projects, usages, dashboard] = await Promise.all([
+    db.sessions.toArray(),
+    db.projects.toArray(),
+    db.yarnUsages.toArray(),
+    computeGlobalDashboardStats(now),
+  ])
+
+  const earliestCandidates = [
+    ...sessions.map((session) => new Date(session.startedAt).getTime()),
+    ...projects.flatMap((project) => (project.completedAt ? [new Date(`${project.completedAt}T00:00:00`).getTime()] : [])),
+    ...usages.map((usage) => new Date(`${usage.usedAt}T00:00:00`).getTime()),
+  ].filter((ms) => Number.isFinite(ms))
+  const earliestMs = earliestCandidates.length > 0 ? Math.min(...earliestCandidates) : null
+
+  const window = getStatsWindow(view, new Date(now), earliestMs)
+  const { range, period } = window
+  const liveId = getLiveSessionId()
+
+  const timeByKey = new Map(aggregateTimeByPeriod(sessions, period, range, now, liveId).map((bucket) => [bucket.key, bucket.ms]))
+  const completedByKey = new Map(
+    countCompletedProjectsByPeriod(projects, period, range).map((bucket) => [bucket.key, bucket.count]),
+  )
+  const keys = listBucketKeys(period, range)
+
+  const completedBuckets = keys.map((key) => ({ key, count: completedByKey.get(key) ?? 0 }))
+
+  return {
+    view,
+    window,
+    dashboard,
+    time: computeGlobalTimeStatsInRange(sessions, range, now, liveId),
+    timeBuckets: keys.map((key) => ({ key, ms: timeByKey.get(key) ?? 0 })),
+    completedBuckets,
+    completedInRange: completedBuckets.reduce((sum, bucket) => sum + bucket.count, 0),
+    yarn: await computeGlobalYarnStats(range),
+  }
+}
+
+export interface CompletedProjectEntry {
+  project: ProjectRecord
+  totalMs: number
+}
+
+// Every finished project with its total time (same computeProjectTimeStats
+// as the project page), newest completion first.
+export async function getCompletedProjectsHistory(now: number = Date.now()): Promise<CompletedProjectEntry[]> {
+  const projects = (await db.projects.where('status').equals('done').toArray()).sort((a, b) =>
+    (b.completedAt ?? b.updatedAt.slice(0, 10)).localeCompare(a.completedAt ?? a.updatedAt.slice(0, 10)),
+  )
+  const liveId = getLiveSessionId()
+  return Promise.all(
+    projects.map(async (project) => ({
+      project,
+      totalMs: computeProjectTimeStats(await getSessionsForTarget({ projectId: project.id }), now, liveId).totalMs,
+    })),
   )
 }

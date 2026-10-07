@@ -13,6 +13,7 @@ import { ProjectPatternCard } from '../components/projects/ProjectPatternCard'
 import { ProjectGuideCard } from '../components/projects/ProjectGuideCard'
 import { useProjectGuides } from '../hooks/useProjectGuides'
 import { useProjectGuideProgressInputs } from '../hooks/useProjectGuideProgressInputs'
+import { getContinueRoute } from '../components/projects/continueRoute'
 import { useLastUsedGuideId } from '../hooks/useLastUsedGuideId'
 import { CRAFT_LABELS, STATUS_LABELS, STATUS_PILL_COLORS } from '../components/projects/statusMeta'
 import { projectColorVar, projectColorSoftVar, projectGradient } from '../components/projects/colorMeta'
@@ -232,15 +233,7 @@ export function ProjectDetailPage() {
               size="lg"
               className={styles.continueButton}
               style={{ background: projectGradient(project.colorKey) }}
-              onClick={() =>
-                navigate(
-                  continueGuideId
-                    ? `/projets/${projectId}/guides/${continueGuideId}/suivre`
-                    : hasPatterns
-                      ? `/projets/${projectId}/travail`
-                      : `/projets/${projectId}/compteur`,
-                )
-              }
+              onClick={() => navigate(getContinueRoute(projectId, { guideId: continueGuideId ?? null, hasPatterns }))}
             >
               Continuer
             </Button>

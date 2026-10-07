@@ -11,13 +11,16 @@ import { emptyGuideContent, type GuideContent } from './guideModel'
 import { resetForegroundState } from './sessionTrackingState'
 import { computeProjectProgress } from './progress'
 import { computeProjectTimeStats } from './timeStats'
-import { getSessionsForTarget, stopSession } from './sessionsRepository'
+import { addManualSession, getSessionsForTarget, stopSession } from './sessionsRepository'
 import {
   STANDALONE_COUNTER_LABEL,
   computeGlobalDashboardStats,
   getActiveProjectsSummary,
+  getCompletedProjectsHistory,
   getContinueTarget,
+  getHomeDashboard,
   getRecentSessions,
+  getStatsOverview,
 } from './dashboardRepository'
 
 beforeEach(async () => {
@@ -234,5 +237,97 @@ describe('getContinueTarget / getLastUsedGuideId', () => {
     await advanceGuide(project.id, second.id, { type: 'next' })
     expect(await getLastUsedGuideId(project.id)).toBe(second.id)
     expect(await getContinueTarget(project.id)).toEqual({ guideId: second.id, hasPatterns: true })
+  })
+})
+
+const at = (month: number, day: number, hour: number, minute = 0) => new Date(2024, month, day, hour, minute).toISOString()
+
+describe('getStatsOverview', () => {
+  it('returns empty zero-filled buckets with no data', async () => {
+    const overview = await getStatsOverview('week', new Date(2024, 1, 7, 12).getTime())
+    expect(overview.time.totalMs).toBe(0)
+    expect(overview.timeBuckets).toHaveLength(7)
+    expect(overview.timeBuckets.every((bucket) => bucket.ms === 0)).toBe(true)
+    expect(overview.completedInRange).toBe(0)
+    expect(overview.yarn.yarnsUsedCount).toBe(0)
+  })
+
+  it('splits data across two periods and keeps week/month/year/all consistent', async () => {
+    const now = new Date(2024, 1, 7, 12).getTime() // Wed 2024-02-07
+    const project = await newProject('Pull')
+    await addManualSession({ projectId: project.id }, at(0, 31, 22), at(1, 1, 1)) // crosses Jan 31 -> Feb 1
+    await addManualSession({ projectId: project.id }, at(1, 6, 9), at(1, 6, 10)) // Tue of this week
+    await addManualSession({ projectId: null }, at(1, 7, 9), at(1, 7, 9, 30)) // standalone counter
+    await updateProject(project.id, { status: 'done', completedAt: '2024-02-05' })
+    const yarn = await createYarn({ name: 'Mérinos', skeinCount: 5, gramsPerSkein: 50 })
+    await addYarnUsage({ yarnId: yarn.id, projectId: project.id, value: 100, unit: 'g', usedAt: '2024-01-20' })
+    await addYarnUsage({ yarnId: yarn.id, projectId: project.id, value: 50, unit: 'g', usedAt: '2024-02-06' })
+
+    const week = await getStatsOverview('week', now)
+    expect(week.time.totalMs).toBe(60 * 60_000 + 30 * 60_000)
+    expect(week.time.sessionCount).toBe(2)
+    expect(week.completedInRange).toBe(1)
+    expect(week.yarn.totalGrams).toBe(50)
+    expect(week.timeBuckets.reduce((sum, bucket) => sum + bucket.ms, 0)).toBe(week.time.totalMs)
+
+    const month = await getStatsOverview('month', now)
+    expect(month.time.totalMs).toBe(60 * 60_000 + 60 * 60_000 + 30 * 60_000) // the 1 h after midnight counts in February
+    expect(month.timeBuckets).toHaveLength(29)
+
+    const all = await getStatsOverview('all', now)
+    expect(all.time.totalMs).toBe(4 * 60 * 60_000 + 30 * 60_000)
+    expect(all.window.range.from).toEqual(new Date(2024, 0, 1))
+    expect(all.yarn.totalGrams).toBe(150)
+    expect(all.dashboard.byStatus.done).toBe(1)
+
+    // Same figure as the project page for that project.
+    const projectStats = computeProjectTimeStats(await getSessionsForTarget({ projectId: project.id }), now, null)
+    expect(all.time.projectsMs).toBe(projectStats.totalMs)
+
+    const year = await getStatsOverview('year', now)
+    expect(year.timeBuckets.map((bucket) => bucket.key)).toHaveLength(12)
+    expect(year.completedBuckets.find((bucket) => bucket.key === '2024-02')?.count).toBe(1)
+  })
+})
+
+describe('getHomeDashboard', () => {
+  it('works on an empty database', async () => {
+    const home = await getHomeDashboard()
+    expect(home.active).toEqual([])
+    expect(home.recentSessions).toEqual([])
+    expect(home.weekTime.totalMs).toBe(0)
+    expect(home.monthYarn.totalSkeins).toBe(0)
+  })
+
+  it('combines active projects, this week time and recent sessions', async () => {
+    const now = new Date(2024, 1, 7, 12).getTime()
+    const project = await newProject('Pull')
+    await addManualSession({ projectId: project.id }, at(1, 6, 9), at(1, 6, 10))
+    await addManualSession({ projectId: project.id }, at(0, 2, 9), at(0, 2, 10))
+    const home = await getHomeDashboard(now)
+    expect(home.active).toHaveLength(1)
+    expect(home.weekTime.totalMs).toBe(60 * 60_000)
+    expect(home.recentSessions).toHaveLength(2)
+    expect(home.dashboard.byStatus.in_progress).toBe(1)
+  })
+})
+
+describe('getCompletedProjectsHistory', () => {
+  it('lists done projects newest completion first with their total time', async () => {
+    const older = await newProject('Ancien', 'done')
+    const newer = await newProject('Récent', 'done')
+    await newProject('En cours')
+    await updateProject(older.id, { completedAt: '2023-12-01' })
+    await updateProject(newer.id, { completedAt: '2024-01-15' })
+    await addManualSession({ projectId: newer.id }, at(0, 10, 9), at(0, 10, 11))
+
+    const history = await getCompletedProjectsHistory()
+    expect(history.map((entry) => entry.project.name)).toEqual(['Récent', 'Ancien'])
+    expect(history[0]!.totalMs).toBe(2 * 60 * 60_000)
+    expect(history[1]!.totalMs).toBe(0)
+  })
+
+  it('is empty without done projects', async () => {
+    expect(await getCompletedProjectsHistory()).toEqual([])
   })
 })

@@ -1,0 +1,35 @@
+.segmented {
+  --segmented-accent: var(--color-primary);
+  display: inline-flex;
+  max-width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.fullWidth {
+  display: flex;
+}
+
+.fullWidth button {
+  flex: 1 1 0;
+}
+
+.segmented button {
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  padding: var(--space-4) var(--space-12);
+  font-size: var(--text-xs);
+  min-height: var(--tap-min);
+}
+
+.segmented button + button {
+  border-left: 1px solid var(--color-border);
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--segmented-accent);
+  color: var(--color-on-primary);
+  font-weight: 600;
+}
