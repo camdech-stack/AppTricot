@@ -1,0 +1,133 @@
+.tree {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.toolbarButton {
+  min-height: 32px;
+  padding: 0 var(--space-12);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface-alt);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.piece,
+.section {
+  border: 3px solid var(--color-guide-piece);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  padding: var(--space-8);
+}
+
+.section {
+  border-color: var(--color-guide-section);
+}
+
+.nodeToggle,
+.blockToggle {
+  width: 100%;
+  min-height: var(--tap-min);
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  text-align: left;
+  color: var(--color-text);
+}
+
+.nodeTitle,
+.blockTitle {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.nodeSub {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.children {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+}
+
+.block {
+  border: 2px solid;
+  border-radius: var(--radius-sm);
+  padding: var(--space-4) var(--space-12) var(--space-12);
+}
+
+.blockHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-height: var(--tap-min);
+}
+
+.text {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--color-text);
+  white-space: pre-wrap;
+}
+
+.operation {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.empty {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rowRs,
+.rowWs {
+  display: flex;
+  gap: var(--space-8);
+  padding: var(--space-8);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.rowWs {
+  border-color: var(--color-blue);
+}
+
+.rowNumber {
+  flex: none;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.rowText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

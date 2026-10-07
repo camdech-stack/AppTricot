@@ -1,0 +1,175 @@
+.page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: calc(var(--safe-top) + var(--space-8)) calc(var(--safe-right) + var(--space-16)) var(--space-8) calc(var(--safe-left) + var(--space-16));
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--text-lg);
+  font-family: var(--font-heading);
+}
+
+.body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-16) calc(var(--safe-right) + var(--space-16)) calc(var(--safe-bottom) + var(--space-24)) calc(var(--safe-left) + var(--space-16));
+}
+
+.dropZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-24) var(--space-16);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.dropZoneActive {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.muted {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: var(--space-12);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-family: ui-monospace, monospace;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  resize: vertical;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-12);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.panelDanger {
+  border-color: var(--color-danger);
+}
+
+.panelWarn {
+  border-color: var(--color-gold);
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: var(--text-md);
+  font-family: var(--font-heading);
+}
+
+.list {
+  margin: 0;
+  padding-left: var(--space-16);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-16);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.input {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-12);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-size: var(--text-md);
+  font-family: var(--font-body);
+  color: var(--color-text);
+}
+
+.help {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  font-size: var(--text-md);
+}
+
+.help p,
+.help ol {
+  margin: 0;
+}
+
+.help ol {
+  padding-left: var(--space-24);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}

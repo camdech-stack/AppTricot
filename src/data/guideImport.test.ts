@@ -195,3 +195,19 @@ describe('creating a guide from an import', () => {
     expect((await getGuide(guide.id))?.patternId).toBe(pattern.id)
   })
 })
+
+describe('import module is offline', () => {
+  it('contains no network call', async () => {
+    const { readFileSync } = await import('node:fs')
+    const files = [
+      'src/data/guideImport.ts',
+      'src/pages/GuideImportPage.tsx',
+      'src/components/guides/import/GuidePreviewTree.tsx',
+      'src/components/guides/import/ImportHelpSheet.tsx',
+    ]
+    for (const file of files) {
+      const source = readFileSync(file, 'utf8')
+      expect(source, file).not.toMatch(/\bfetch\s*\(|XMLHttpRequest|WebSocket|sendBeacon|https?:\/\//)
+    }
+  })
+})

@@ -25,6 +25,7 @@ export function GuidesLibraryView({ createOpen, onOpenCreate, onCloseCreate }: G
   const context = useGuideLibraryContext()
   const [query, setQuery] = useState('')
   const followFlow = useFollowGuideFlow()
+  const openImport = () => navigate('/guides/importer', { state: { returnTo: '/patrons?vue=guides' } })
 
   const contents = useGuideContents(context?.guides)
 
@@ -58,7 +59,12 @@ export function GuidesLibraryView({ createOpen, onOpenCreate, onCloseCreate }: G
       {context.guides.length === 0 ? (
         <div className={styles.empty}>
           <p>Crée ton premier guide pour suivre un patron étape par étape.</p>
-          <Button onClick={onOpenCreate}>Créer un guide</Button>
+          <div className={styles.emptyActions}>
+            <Button onClick={onOpenCreate}>Créer un guide</Button>
+            <Button variant="secondary" onClick={openImport}>
+              Importer un guide
+            </Button>
+          </div>
         </div>
       ) : filtered.length === 0 ? (
         <div className={styles.empty}>

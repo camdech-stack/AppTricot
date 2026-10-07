@@ -198,3 +198,9 @@
   color: var(--color-danger);
   font-size: var(--text-sm);
 }
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}

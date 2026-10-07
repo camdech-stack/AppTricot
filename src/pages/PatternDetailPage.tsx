@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams, Link } from 'react-router-dom'
-import { ArrowLeft, BookOpen, NotebookPen, Image, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { ArrowLeft, BookOpen, FileJson, NotebookPen, Image, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import styles from './PatternDetailPage.module.css'
 import layoutStyles from '../components/layout/AppLayout.module.css'
 import { FloatingTabBar } from '../components/layout/FloatingTabBar'
@@ -319,7 +319,14 @@ export function PatternDetailPage() {
             <div className={styles.section}>
               <div className={styles.sectionHeader}>
                 <h2>Guides</h2>
-                <IconButton icon={<NotebookPen strokeWidth={1.75} />} label="Créer un guide pour ce patron" onClick={() => setCreateGuideOpen(true)} />
+                <div className={styles.headerActions}>
+                  <IconButton
+                    icon={<FileJson strokeWidth={1.75} />}
+                    label="Importer un guide pour ce patron"
+                    onClick={() => navigate('/guides/importer', { state: { returnTo: `/patrons/${patternId}`, patternId } })}
+                  />
+                  <IconButton icon={<NotebookPen strokeWidth={1.75} />} label="Créer un guide pour ce patron" onClick={() => setCreateGuideOpen(true)} />
+                </div>
               </div>
               {linkedGuides.length === 0 ? (
                 <p className={styles.emptyText}>Aucun guide pour ce patron.</p>

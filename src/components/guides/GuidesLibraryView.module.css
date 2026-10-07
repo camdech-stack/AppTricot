@@ -48,3 +48,10 @@
   padding: var(--space-40) var(--space-20);
   color: var(--color-text-muted);
 }
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-8);
+}

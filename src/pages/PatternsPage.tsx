@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Filter, Plus, Search } from 'lucide-react'
+import { FileJson, Filter, Plus, Search } from 'lucide-react'
 import styles from './PatternsPage.module.css'
 import { PatternCard } from '../components/patterns/PatternCard'
 import { PatternFilterSheet } from '../components/patterns/PatternFilterSheet'
@@ -72,6 +72,9 @@ export function PatternsPage() {
           </div>
         ) : (
           <div className={styles.headerActions}>
+            <Button variant="secondary" icon={<FileJson size={18} strokeWidth={1.75} />} onClick={() => navigate('/guides/importer', { state: { returnTo: '/patrons?vue=guides' } })}>
+              Importer un guide
+            </Button>
             <Button icon={<Plus size={18} strokeWidth={1.75} />} onClick={() => setCreateGuideOpen(true)}>
               Nouveau
             </Button>
