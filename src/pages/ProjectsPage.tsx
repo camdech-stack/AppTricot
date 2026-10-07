@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Filter, Plus } from 'lucide-react'
 import styles from './ProjectsPage.module.css'
 import { useProjects } from '../hooks/useProjects'
@@ -12,7 +12,12 @@ type StatusFilter = 'all' | ProjectStatus
 
 export function ProjectsPage() {
   const projects = useProjects()
-  const [filter, setFilter] = useState<StatusFilter>('all')
+  const [searchParams] = useSearchParams()
+  // `?statut=in_progress` comes from the home "Voir tous mes projets en cours" link.
+  const initialStatus = searchParams.get('statut')
+  const [filter, setFilter] = useState<StatusFilter>(
+    STATUS_FILTER_ORDER.includes(initialStatus as ProjectStatus) ? (initialStatus as ProjectStatus) : 'all',
+  )
   const [filterSheetOpen, setFilterSheetOpen] = useState(false)
 
   if (projects === undefined) {

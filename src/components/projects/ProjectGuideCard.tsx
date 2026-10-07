@@ -9,6 +9,7 @@ import { useGuideLibraryContext } from '../../hooks/useGuideLibraryContext'
 import { useGuideContents } from '../../hooks/useGuideContents'
 import { useGuideProgress } from '../../hooks/useGuideProgress'
 import { useProjectPatterns } from '../../hooks/useProjectPatterns'
+import { formatResumePoint } from '../../utils/formatResumePoint'
 import {
   computeGuideStats,
   getGuideProgress,
@@ -122,7 +123,7 @@ function GuideRow({ projectId, guide, content, onOpen, onResume, onRemove }: Gui
   const guideProgress = content && progress ? getGuideProgress(content, progress) : null
   const resumeSummary = content && progress ? getResumeSummary(content, progress) : null
   const stepLabel = resumeSummary?.description
-    ? [resumeSummary.description.pieceName, resumeSummary.description.rowLabel ?? resumeSummary.description.blockLabel].filter(Boolean).join(' · ')
+    ? formatResumePoint(resumeSummary.description)
     : null
 
   const metaText =

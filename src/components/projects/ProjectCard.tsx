@@ -10,15 +10,7 @@ import { useCoverImageUrl } from '../../hooks/useCoverImageUrl'
 import { formatDateFr } from '../../utils/formatDate'
 import { STATUS_LABELS, STATUS_PILL_COLORS } from './statusMeta'
 import { projectColorVar } from './colorMeta'
-
-const STRIPE_CLASS_BY_COLOR: Record<ProjectRecord['colorKey'], string | undefined> = {
-  prune: patterns.stripesProjectPrune,
-  pervenche: patterns.stripesProjectPervenche,
-  terracotta: patterns.stripesProjectTerracotta,
-  peche: patterns.stripesProjectPeche,
-  rouge: patterns.stripesProjectRouge,
-  rose: patterns.stripesProjectRose,
-}
+import { PROJECT_STRIPE_CLASS } from './stripeMeta'
 
 interface ProjectCardProps {
   project: ProjectRecord
@@ -44,7 +36,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
     >
       <div
         className={
-          coverUrl ? styles.cover : `${styles.cover} ${patterns.stripes} ${STRIPE_CLASS_BY_COLOR[project.colorKey]}`
+          coverUrl ? styles.cover : `${styles.cover} ${patterns.stripes} ${PROJECT_STRIPE_CLASS[project.colorKey]}`
         }
         style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined}
       />

@@ -39,3 +39,9 @@ export function formatYarnAmount(value: number, unit: 'g' | 'm' | 'skein', lengt
   if (unit === 'skein') return `${formatNumberFr(value, 2)} ${value <= 1 ? 'pelote' : 'pelotes'}`
   return lengthUnit === 'yd' ? `${formatNumberFr(metersToYards(value), 0)} yd` : `${formatNumberFr(value, 0)} m`
 }
+
+// A bare skein count ("3 pelotes"), for aggregates that mix several yarns
+// (only skeins can be summed across different yarns).
+export function formatSkeins(skeins: number): string {
+  return `${formatNumberFr(skeins, 1)} ${skeins <= 1 ? 'pelote' : 'pelotes'}`
+}
