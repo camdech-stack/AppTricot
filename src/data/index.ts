@@ -367,3 +367,7 @@ export type {
   ProjectYarnRecord,
   YarnUsageRecord,
 } from './types'
+export * from './backup'
+export { CURRENT_SCHEMA_VERSION } from './db'
+export { BACKUP_REMINDER_INTERVALS } from './types'
+export type { BackupReminderInterval } from './types'
