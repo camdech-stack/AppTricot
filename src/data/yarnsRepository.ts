@@ -1,7 +1,8 @@
 import { db } from './db'
 import { createId } from './id'
 import { nowIso } from './date'
-import { amountToSkeins, skeinsToAmount } from './yarnMath'
+import { amountToSkeins, computeYarnConsumptionStats, skeinsToAmount, type YarnConsumptionStats } from './yarnMath'
+import { localDayKey, type TimeRange } from './timeStats'
 import type {
   ProjectYarnRecord,
   YarnDraft,
@@ -262,6 +263,17 @@ export async function computeProjectYarnSummary(projectId: string): Promise<Proj
   const ratio = plannedSkeins > 0 ? consumedSkeins / plannedSkeins : null
 
   return { plannedSkeins, consumedSkeins, remainingSkeins, ratio }
+}
+
+// Global consumed-yarn stats for the step 6 dashboard, optionally limited to
+// a local-time range (applied on each usage's calendar `usedAt`).
+export async function computeGlobalYarnStats(range?: TimeRange): Promise<YarnConsumptionStats> {
+  const [yarns, usages] = await Promise.all([db.yarns.toArray(), db.yarnUsages.toArray()])
+  return computeYarnConsumptionStats(
+    yarns,
+    usages,
+    range ? { fromDay: localDayKey(range.from), toDay: localDayKey(range.to) } : undefined,
+  )
 }
 
 export { amountToSkeins, skeinsToAmount }

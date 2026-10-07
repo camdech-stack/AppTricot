@@ -441,3 +441,20 @@ export async function getProjectResumeSummary(projectId: string): Promise<Projec
     lastAdvancedAt: latest.lastAdvancedAt,
   }
 }
+
+// The guide a project's "Continuer"/"Reprendre" opens: whichever linked
+// guide was advanced most recently, else the first linked one (by
+// position). Null when no guide is linked.
+export async function getLastUsedGuideId(projectId: string): Promise<string | null> {
+  const links = (await db.projectGuides.where('projectId').equals(projectId).toArray()).sort(
+    (a, b) => a.position - b.position,
+  )
+  if (links.length === 0) return null
+  if (links.length === 1) return links[0]!.guideId
+
+  const records = await db.guideProgress.where('projectId').equals(projectId).toArray()
+  const linkedIds = new Set(links.map((link) => link.guideId))
+  const relevant = records.filter((record) => linkedIds.has(record.guideId))
+  if (relevant.length === 0) return links[0]!.guideId
+  return relevant.reduce((best, record) => (record.lastAdvancedAt > best.lastAdvancedAt ? record : best)).guideId
+}

@@ -249,3 +249,82 @@ export function computeProjectYarnLinkProgress(
   const ratio = plannedSkeins && plannedSkeins > 0 ? consumedSkeins / plannedSkeins : null
   return { plannedSkeins, consumedSkeins, ratio }
 }
+
+// --- Global consumption stats (step 6) ---------------------------------------
+
+export interface ConsumptionUsageLike extends UsageLike {
+  // Calendar date (YYYY-MM-DD).
+  usedAt: string
+}
+
+export interface ConsumptionYarnLike extends Pick<YarnRecord, 'id' | 'name' | 'gramsPerSkein' | 'metersPerSkein'> {}
+
+export interface YarnConsumptionRange {
+  // Inclusive / exclusive calendar dates (YYYY-MM-DD).
+  fromDay: string
+  toDay: string
+}
+
+export interface TopConsumedYarn {
+  yarnId: string
+  name: string
+  skeins: number
+}
+
+export interface YarnConsumptionStats {
+  totalGrams: number
+  totalMeters: number
+  totalSkeins: number
+  yarnsUsedCount: number
+  // The 3 most consumed yarns, ranked in skeins (the only unit that
+  // compares different yarns).
+  topYarns: TopConsumedYarn[]
+  // True when at least one usage couldn't be converted to grams or meters
+  // (the yarn lacks the per-skein figure), so those totals are a floor.
+  partial: boolean
+}
+
+const TOP_YARNS_COUNT = 3
+
+// Aggregates every usage (all projects, including unattached ones) into
+// grams, meters and skeins, via the same amountToSkeins/fromSkeins
+// conversions as the per-yarn stock math — never a hand-rolled one.
+export function computeYarnConsumptionStats(
+  yarns: ConsumptionYarnLike[],
+  usages: ConsumptionUsageLike[],
+  range?: YarnConsumptionRange,
+): YarnConsumptionStats {
+  const yarnById = new Map(yarns.map((yarn) => [yarn.id, yarn]))
+  let totalGrams = 0
+  let totalMeters = 0
+  let totalSkeins = 0
+  let partial = false
+  const skeinsByYarn = new Map<string, number>()
+  const usedYarnIds = new Set<string>()
+
+  for (const usage of usages) {
+    if (range && (usage.usedAt < range.fromDay || usage.usedAt >= range.toDay)) continue
+    const yarn = yarnById.get(usage.yarnId)
+    if (!yarn) continue
+    usedYarnIds.add(yarn.id)
+
+    const skeins = amountToSkeins(usage.value, usage.unit, yarn)
+    const grams = usage.unit === 'g' ? usage.value : skeins === null ? null : fromSkeins(skeins, 'g', yarn)
+    const meters = usage.unit === 'm' ? usage.value : skeins === null ? null : fromSkeins(skeins, 'm', yarn)
+
+    if (skeins !== null) {
+      totalSkeins += skeins
+      skeinsByYarn.set(yarn.id, (skeinsByYarn.get(yarn.id) ?? 0) + skeins)
+    }
+    if (grams === null || meters === null) partial = true
+    totalGrams += grams ?? 0
+    totalMeters += meters ?? 0
+  }
+
+  const topYarns = [...skeinsByYarn.entries()]
+    .map(([yarnId, skeins]) => ({ yarnId, name: yarnById.get(yarnId)!.name, skeins }))
+    .sort((a, b) => b.skeins - a.skeins || a.name.localeCompare(b.name))
+    .slice(0, TOP_YARNS_COUNT)
+
+  return { totalGrams, totalMeters, totalSkeins, yarnsUsedCount: usedYarnIds.size, topYarns, partial }
+}

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   checkProjectYarnAvailability,
   computeProjectYarnLinkProgress,
+  computeYarnConsumptionStats,
   computeYarnStockBarSegments,
   computeYarnStockSummary,
   fromSkeins,
@@ -212,5 +213,59 @@ describe('computeProjectYarnLinkProgress', () => {
       [{ yarnId: 'yarn-1', projectId: 'p1', value: 100, unit: 'g' }],
     )
     expect(progress.ratio).toBeCloseTo(0.5)
+  })
+})
+
+describe('computeYarnConsumptionStats', () => {
+  const merino = { id: 'y1', name: 'Mérinos', gramsPerSkein: 50, metersPerSkein: 100 }
+  const coton = { id: 'y2', name: 'Coton', gramsPerSkein: 100, metersPerSkein: null }
+
+  it('converts every unit to grams, meters and skeins and ranks the top yarns', () => {
+    const stats = computeYarnConsumptionStats(
+      [merino, coton],
+      [
+        { yarnId: 'y1', projectId: 'p1', value: 100, unit: 'g', usedAt: '2024-01-10' },
+        { yarnId: 'y1', projectId: null, value: 1, unit: 'skein', usedAt: '2024-01-11' },
+        { yarnId: 'y2', projectId: 'p1', value: 100, unit: 'g', usedAt: '2024-01-12' },
+      ],
+    )
+    // merino: 100 g (2 skeins) + 1 skein (50 g, 100 m) ; coton: 100 g, meters unknown.
+    expect(stats.totalGrams).toBe(250)
+    expect(stats.totalMeters).toBe(300)
+    expect(stats.totalSkeins).toBe(4)
+    expect(stats.yarnsUsedCount).toBe(2)
+    expect(stats.partial).toBe(true)
+    expect(stats.topYarns.map((yarn) => [yarn.name, yarn.skeins])).toEqual([
+      ['Mérinos', 3],
+      ['Coton', 1],
+    ])
+  })
+
+  it('limits to a date range (start inclusive, end exclusive)', () => {
+    const stats = computeYarnConsumptionStats(
+      [merino],
+      [
+        { yarnId: 'y1', projectId: null, value: 50, unit: 'g', usedAt: '2024-01-31' },
+        { yarnId: 'y1', projectId: null, value: 50, unit: 'g', usedAt: '2024-02-01' },
+        { yarnId: 'y1', projectId: null, value: 50, unit: 'g', usedAt: '2024-03-01' },
+      ],
+      { fromDay: '2024-02-01', toDay: '2024-03-01' },
+    )
+    expect(stats.totalGrams).toBe(50)
+    expect(stats.yarnsUsedCount).toBe(1)
+  })
+
+  it('returns zeros for no usage and keeps only 3 yarns in the top', () => {
+    expect(computeYarnConsumptionStats([merino], [])).toEqual({
+      totalGrams: 0,
+      totalMeters: 0,
+      totalSkeins: 0,
+      yarnsUsedCount: 0,
+      topYarns: [],
+      partial: false,
+    })
+    const yarns = ['a', 'b', 'c', 'd'].map((id) => ({ id, name: id, gramsPerSkein: 50, metersPerSkein: 100 }))
+    const usages = yarns.map((yarn, index) => ({ yarnId: yarn.id, projectId: null, value: index + 1, unit: 'skein' as const, usedAt: '2024-01-01' }))
+    expect(computeYarnConsumptionStats(yarns, usages).topYarns.map((yarn) => yarn.name)).toEqual(['d', 'c', 'b'])
   })
 })
