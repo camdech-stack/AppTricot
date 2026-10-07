@@ -1,4 +1,10 @@
 .card {
+  /* flex-shrink: 0 is load-bearing here, not cosmetic: this card's own
+     overflow: hidden (for rounded corners) makes its flexbox automatic
+     minimum size 0 instead of its content size, so inside the scrollable
+     .body column it would otherwise get squeezed toward zero height and
+     clip its row list rather than letting .body grow and scroll. */
+  flex-shrink: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);

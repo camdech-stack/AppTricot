@@ -105,6 +105,10 @@
 }
 
 .nextPreview {
+  /* Same reason as StepOverviewCard's .card: overflow: hidden here (for the
+     ellipsis) makes this flex item's automatic minimum size 0, letting it
+     get squeezed away instead of .body scrolling — see that file's comment. */
+  flex-shrink: 0;
   align-self: center;
   font-size: var(--text-sm);
   color: var(--color-text-muted);
