@@ -61,6 +61,8 @@ export default defineConfig({
         // data (see scripts/copy-pdfjs-assets.mjs) — both needed for the
         // PDF viewer to work fully offline (step 4).
         globPatterns: ['**/*.{js,css,html,svg,png,webmanifest,woff2,mjs,pfb,ttf}'],
+        // iOS launch screens are fetched by the OS, never by the app.
+        globIgnores: ['splash/**'],
         // The pdf.js worker alone is ~1.3MB, above workbox's 2MB default —
         // bumped so it (and the standard font files) still get precached
         // instead of silently skipped.
